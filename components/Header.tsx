@@ -80,7 +80,7 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ currentPage, setPage, isAuthent
           {/* Logo */}
           <div className="flex items-center">
             <button onClick={() => setPage('home')} className="flex-shrink-0 flex items-center gap-2 group">
-               <img src="https://ahanonline.com/logo/new-logo.svg" alt="Steel Online 20" className="h-8 w-auto" />
+               <img src="https://i.sstatic.net/zhhxJn5n.png" alt="Steel Online 20" className="h-8 w-auto" />
                <span className="text-xl font-bold text-slate-900 group-hover:text-corp-red transition-colors hidden sm:block">Steel Online 20</span>
             </button>
           </div>
