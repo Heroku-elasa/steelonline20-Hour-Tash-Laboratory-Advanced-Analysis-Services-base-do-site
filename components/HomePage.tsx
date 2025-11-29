@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useLanguage, Page, Article } from '../types';
+import SEO from './SEO';
 
 interface HomePageProps {
     setPage: (page: Page) => void;
@@ -23,16 +24,21 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
 
     return (
         <div className="animate-fade-in">
+            <SEO 
+                title={t('home.hero.mainTitle')} 
+                description="استیل آنلاین ۲۰، مرجع تخصصی قیمت روز آهن‌آلات، میلگرد، تیرآهن و ورق. خرید نقدی و اعتباری با تضمین بهترین قیمت و کیفیت." 
+                image="https://ahanonline.com/resize/?file=https://contents.ahanonline.com/website/d508722591eca912a58901f746d330c9.jpg&format=webp"
+            />
             {/* Hero Section */}
             <section className="relative py-32 sm:py-48 text-white overflow-hidden">
-                {/* Optimized LCP Image using img tag instead of background */}
+                {/* Optimized LCP Image */}
                 <img 
                     src="https://ahanonline.com/resize/?file=https://contents.ahanonline.com/website/d508722591eca912a58901f746d330c9.jpg&format=webp" 
                     alt="Industrial Steel Construction Site" 
                     className="absolute inset-0 w-full h-full object-cover z-0"
                     width="1920" 
                     height="1080"
-                    fetchPriority="high" // High priority for LCP
+                    fetchPriority="high" 
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-[#6B0029]/90 to-[#620025]/70 z-10"></div>
                 <div className="container mx-auto px-4 relative z-20 text-center">
@@ -85,7 +91,7 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
                 </div>
             </section>
             
-            {/* Featured Blocks - Products */}
+            {/* Featured Blocks */}
              <section className="py-16 bg-slate-50">
                 <div className="container mx-auto px-4">
                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -153,7 +159,7 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
                                         src={article.image} 
                                         alt={article.title[language]} 
                                         className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                        loading="lazy" // Lazy load below fold images
+                                        loading="lazy"
                                         width="400"
                                         height="300"
                                     />
@@ -189,10 +195,10 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
                     <h2 className="text-center text-xl font-bold text-slate-400 mb-8 uppercase tracking-widest">{t('home.partners.title')}</h2>
                     <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-6">
                         {[
-                            'https://ahanonline.com/resize/?file=https://contents.ahanonline.com/site/2c32ece75597560c3ac09274394f950a.png&format=webp', // Rebar icon
-                            'https://ahanonline.com/resize/?file=https://contents.ahanonline.com/site/57f1a453ec9b3c3a147794d1993a3f8c.png&format=webp', // Beam icon
-                            'https://ahanonline.com/resize/?file=https://contents.ahanonline.com/site/f408d553d26e51d1d4da5e898d498f21.png&format=webp', // Sheet icon
-                            'https://ahanonline.com/resize/?file=https://contents.ahanonline.com/site/39049d49715f83f5a2eef34e727bdf2c.png&format=webp', // Profile icon
+                            'https://ahanonline.com/resize/?file=https://contents.ahanonline.com/site/2c32ece75597560c3ac09274394f950a.png&format=webp', 
+                            'https://ahanonline.com/resize/?file=https://contents.ahanonline.com/site/57f1a453ec9b3c3a147794d1993a3f8c.png&format=webp', 
+                            'https://ahanonline.com/resize/?file=https://contents.ahanonline.com/site/f408d553d26e51d1d4da5e898d498f21.png&format=webp', 
+                            'https://ahanonline.com/resize/?file=https://contents.ahanonline.com/site/39049d49715f83f5a2eef34e727bdf2c.png&format=webp',
                         ].map((logo, index) => (
                             <img 
                                 key={index} 

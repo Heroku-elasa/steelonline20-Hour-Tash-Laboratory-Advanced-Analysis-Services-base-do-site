@@ -147,6 +147,195 @@ const ProductDistChart = ({ title }: { title: string }) => {
     );
 };
 
+const LiveDashboard = () => {
+    const { t } = useLanguage();
+    const [candles, setCandles] = useState<{time: number, open: number, close: number, high: number, low: number}[]>([]);
+    const [realtimeOrders, setRealtimeOrders] = useState<{product: string, quantity: string, city: string, time: string, status: string}[]>([]);
+    const [activeUsers, setActiveUsers] = useState(124);
+    const [tickerItems, setTickerItems] = useState([
+        { product: 'Rebar 14 Esf', price: 28500, change: 1.2 },
+        { product: 'IPE 180 Zob', price: 34200, change: -0.5 },
+        { product: 'Sheet 2mm', price: 38100, change: 0.8 },
+        { product: 'Rebar 16 Bonab', price: 27900, change: -1.5 },
+        { product: 'Profile 2x2', price: 42000, change: 0.0 },
+    ]);
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    // Simulate Real-time Data
+    useEffect(() => {
+        // Initial candles for Rebar Price
+        let lastPrice = 28500;
+        const initialCandles = [];
+        let now = Date.now();
+        for (let i = 0; i < 40; i++) {
+            const open = lastPrice;
+            const close = open + (Math.random() - 0.5) * 100;
+            const high = Math.max(open, close) + Math.random() * 30;
+            const low = Math.min(open, close) - Math.random() * 30;
+            initialCandles.push({ time: now - (40 - i) * 1000, open, close, high, low });
+            lastPrice = close;
+        }
+        setCandles(initialCandles);
+
+        // Simulation Interval
+        const interval = setInterval(() => {
+            // Update Candles
+            setCandles(prev => {
+                if (prev.length === 0) return prev;
+                const last = prev[prev.length - 1];
+                const open = last.close;
+                const change = (Math.random() - 0.5) * 50; 
+                const close = open + change;
+                const high = Math.max(open, close) + Math.random() * 10;
+                const low = Math.min(open, close) - Math.random() * 10;
+                const newCandle = { time: Date.now(), open, close, high, low };
+                return [...prev.slice(1), newCandle];
+            });
+
+            // Update Active Users
+            setActiveUsers(prev => prev + Math.floor(Math.random() * 3) - 1);
+
+            // Update Ticker
+            setTickerItems(prev => prev.map(item => ({
+                ...item,
+                price: Math.floor(item.price + (Math.random() - 0.5) * 50),
+                change: parseFloat((item.change + (Math.random() - 0.5) * 0.1).toFixed(2))
+            })));
+
+            // Simulate New Orders
+            if (Math.random() > 0.6) {
+                const products = ['Rebar 14', 'Rebar 16', 'IPE 140', 'IPE 180', 'Sheet 2mm', 'Sheet 10mm', 'Corner 5'];
+                const cities = ['Tehran', 'Isfahan', 'Mashhad', 'Tabriz', 'Shiraz', 'Ahvaz', 'Yazd'];
+                const statuses = ['Processing', 'Confirmed', 'Pending'];
+                const newOrder = {
+                    product: products[Math.floor(Math.random() * products.length)],
+                    quantity: (Math.floor(Math.random() * 25) + 1) + ' Tons',
+                    city: cities[Math.floor(Math.random() * cities.length)],
+                    time: new Date().toLocaleTimeString('en-US', { hour12: false }),
+                    status: statuses[Math.floor(Math.random() * statuses.length)]
+                };
+                setRealtimeOrders(prev => [newOrder, ...prev].slice(0, 10)); // Keep last 10
+            }
+        }, 1500);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = 0; 
+        }
+    }, [realtimeOrders]);
+
+    // Simple SVG Chart Config
+    const width = 600;
+    const height = 300;
+    
+    // Calculate max/min for scaling with safety check
+    const highs = candles.map(c => c.high);
+    const lows = candles.map(c => c.low);
+    const maxPrice = highs.length ? Math.max(...highs) : 1000;
+    const minPrice = lows.length ? Math.min(...lows) : 0;
+    const range = maxPrice - minPrice || 1;
+    
+    const getY = (price: number) => height - ((price - minPrice) / range) * height;
+
+    return (
+        <div className="space-y-6 animate-fade-in">
+            {/* Ticker */}
+            <div className="bg-slate-900 text-white p-3 rounded-lg overflow-hidden whitespace-nowrap flex gap-8 shadow-md">
+                 {tickerItems.map((item, i) => (
+                     <div key={i} className="flex items-center gap-2">
+                         <span className="font-bold text-slate-400">{item.product}</span>
+                         <span>{item.price.toLocaleString()}</span>
+                         <span className={item.change >= 0 ? 'text-green-400' : 'text-red-400'}>
+                             {item.change >= 0 ? '▲' : '▼'} {Math.abs(item.change)}%
+                         </span>
+                     </div>
+                 ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Chart */}
+                <div className="lg:col-span-2 bg-slate-800 rounded-xl p-4 border border-slate-700 shadow-lg">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-white font-bold flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                            {t('dashboard.live.risingwave')}
+                        </h3>
+                        <div className="flex gap-2 text-xs">
+                            <span className="bg-slate-700 text-slate-300 px-2 py-1 rounded cursor-pointer hover:bg-slate-600">1M</span>
+                            <span className="bg-slate-700 text-slate-300 px-2 py-1 rounded cursor-pointer hover:bg-slate-600">5M</span>
+                            <span className="bg-corp-blue text-white px-2 py-1 rounded">15M</span>
+                        </div>
+                    </div>
+                    <div className="h-64 w-full">
+                        <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+                            {candles.map((c, i) => {
+                                const x = (i / 40) * width; // 40 candles shown
+                                const candleW = (width / 40) * 0.6;
+                                const yHigh = getY(c.high);
+                                const yLow = getY(c.low);
+                                const yOpen = getY(c.open);
+                                const yClose = getY(c.close);
+                                const isGreen = c.close >= c.open;
+                                const color = isGreen ? '#10B981' : '#EF4444';
+                                
+                                return (
+                                    <g key={c.time}>
+                                        <line x1={x + candleW/2} y1={yLow} x2={x + candleW/2} y2={yHigh} stroke={color} strokeWidth="1" />
+                                        <rect 
+                                            x={x} 
+                                            y={Math.min(yOpen, yClose)} 
+                                            width={candleW} 
+                                            height={Math.max(1, Math.abs(yOpen - yClose))} 
+                                            fill={color} 
+                                        />
+                                    </g>
+                                );
+                            })}
+                        </svg>
+                    </div>
+                </div>
+
+                {/* Order Stream & Stats */}
+                <div className="space-y-4">
+                    <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 shadow-lg">
+                         <h3 className="text-white font-bold mb-4">{t('dashboard.live.systemStatus')}</h3>
+                         <div className="space-y-3">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-slate-400">Active Users</span>
+                                <span className="text-white font-mono">{activeUsers}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-slate-400">Order/Sec</span>
+                                <span className="text-green-400 font-mono">12.5</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-slate-400">Latency</span>
+                                <span className="text-green-400 font-mono">24ms</span>
+                            </div>
+                         </div>
+                    </div>
+                    <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 flex-1 overflow-hidden shadow-lg h-60">
+                         <h3 className="text-white font-bold mb-3">{t('dashboard.live.logs')}</h3>
+                         <div className="space-y-2 h-44 overflow-y-auto font-mono text-xs pr-1" ref={scrollRef}>
+                            {realtimeOrders.map((order, i) => (
+                                <div key={i} className="flex gap-2 text-slate-300 border-b border-slate-700/50 pb-1 animate-fade-in">
+                                    <span className="text-slate-500 opacity-70">{order.time}</span>
+                                    <span className="text-corp-blue-light">{order.product}</span>
+                                    <span className="text-slate-400">{order.quantity}</span>
+                                    <span className="ml-auto text-slate-500 opacity-70">{order.city}</span>
+                                </div>
+                            ))}
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const DashboardPage: React.FC = () => {
     const { t, dir } = useLanguage();
     const [activeSection, setActiveSection] = useState('overview');
@@ -183,193 +372,6 @@ const DashboardPage: React.FC = () => {
         { key: 'settings', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> },
     ];
 
-    const LiveDashboard = () => {
-        const [candles, setCandles] = useState<{time: number, open: number, close: number, high: number, low: number}[]>([]);
-        const [realtimeOrders, setRealtimeOrders] = useState<{product: string, quantity: string, city: string, time: string, status: string}[]>([]);
-        const [activeUsers, setActiveUsers] = useState(124);
-        const [tickerItems, setTickerItems] = useState([
-            { product: 'Rebar 14 Esf', price: 28500, change: 1.2 },
-            { product: 'IPE 180 Zob', price: 34200, change: -0.5 },
-            { product: 'Sheet 2mm', price: 38100, change: 0.8 },
-            { product: 'Rebar 16 Bonab', price: 27900, change: -1.5 },
-            { product: 'Profile 2x2', price: 42000, change: 0.0 },
-        ]);
-        const scrollRef = useRef<HTMLDivElement>(null);
-
-        // Simulate Real-time Data
-        useEffect(() => {
-            // Initial candles for Rebar Price
-            let lastPrice = 28500;
-            const initialCandles = [];
-            let now = Date.now();
-            for (let i = 0; i < 40; i++) {
-                const open = lastPrice;
-                const close = open + (Math.random() - 0.5) * 100;
-                const high = Math.max(open, close) + Math.random() * 30;
-                const low = Math.min(open, close) - Math.random() * 30;
-                initialCandles.push({ time: now - (40 - i) * 1000, open, close, high, low });
-                lastPrice = close;
-            }
-            setCandles(initialCandles);
-
-            // Simulation Interval
-            const interval = setInterval(() => {
-                // Update Candles
-                setCandles(prev => {
-                    const last = prev[prev.length - 1];
-                    const open = last.close;
-                    const change = (Math.random() - 0.5) * 50; 
-                    const close = open + change;
-                    const high = Math.max(open, close) + Math.random() * 10;
-                    const low = Math.min(open, close) - Math.random() * 10;
-                    const newCandle = { time: Date.now(), open, close, high, low };
-                    return [...prev.slice(1), newCandle];
-                });
-
-                // Update Active Users
-                setActiveUsers(prev => prev + Math.floor(Math.random() * 3) - 1);
-
-                // Update Ticker
-                setTickerItems(prev => prev.map(item => ({
-                    ...item,
-                    price: Math.floor(item.price + (Math.random() - 0.5) * 50),
-                    change: parseFloat((item.change + (Math.random() - 0.5) * 0.1).toFixed(2))
-                })));
-
-                // Simulate New Orders
-                if (Math.random() > 0.6) {
-                    const products = ['Rebar 14', 'Rebar 16', 'IPE 140', 'IPE 180', 'Sheet 2mm', 'Sheet 10mm', 'Corner 5'];
-                    const cities = ['Tehran', 'Isfahan', 'Mashhad', 'Tabriz', 'Shiraz', 'Ahvaz', 'Yazd'];
-                    const statuses = ['Processing', 'Confirmed', 'Pending'];
-                    const newOrder = {
-                        product: products[Math.floor(Math.random() * products.length)],
-                        quantity: (Math.floor(Math.random() * 25) + 1) + ' Tons',
-                        city: cities[Math.floor(Math.random() * cities.length)],
-                        time: new Date().toLocaleTimeString('en-US', { hour12: false }),
-                        status: statuses[Math.floor(Math.random() * statuses.length)]
-                    };
-                    setRealtimeOrders(prev => [newOrder, ...prev].slice(0, 10)); // Keep last 10
-                }
-            }, 1500);
-
-            return () => clearInterval(interval);
-        }, []);
-
-        useEffect(() => {
-            if (scrollRef.current) {
-                scrollRef.current.scrollTop = 0; 
-            }
-        }, [realtimeOrders]);
-
-        // Simple SVG Chart Config
-        const width = 600;
-        const height = 300;
-        
-        // Calculate max/min for scaling with safety check
-        const highs = candles.map(c => c.high);
-        const lows = candles.map(c => c.low);
-        const maxPrice = highs.length ? Math.max(...highs) : 1000;
-        const minPrice = lows.length ? Math.min(...lows) : 0;
-        const range = maxPrice - minPrice || 1;
-        
-        const getY = (price: number) => height - ((price - minPrice) / range) * height;
-
-        return (
-            <div className="space-y-6 animate-fade-in">
-                {/* Ticker */}
-                <div className="bg-slate-900 text-white p-3 rounded-lg overflow-hidden whitespace-nowrap flex gap-8 shadow-md">
-                     {tickerItems.map((item, i) => (
-                         <div key={i} className="flex items-center gap-2">
-                             <span className="font-bold text-slate-400">{item.product}</span>
-                             <span>{item.price.toLocaleString()}</span>
-                             <span className={item.change >= 0 ? 'text-green-400' : 'text-red-400'}>
-                                 {item.change >= 0 ? '▲' : '▼'} {Math.abs(item.change)}%
-                             </span>
-                         </div>
-                     ))}
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Chart */}
-                    <div className="lg:col-span-2 bg-slate-800 rounded-xl p-4 border border-slate-700 shadow-lg">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-white font-bold flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                {t('dashboard.live.risingwave')}
-                            </h3>
-                            <div className="flex gap-2 text-xs">
-                                <span className="bg-slate-700 text-slate-300 px-2 py-1 rounded cursor-pointer hover:bg-slate-600">1M</span>
-                                <span className="bg-slate-700 text-slate-300 px-2 py-1 rounded cursor-pointer hover:bg-slate-600">5M</span>
-                                <span className="bg-corp-blue text-white px-2 py-1 rounded">15M</span>
-                            </div>
-                        </div>
-                        <div className="h-64 w-full">
-                            <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-                                {candles.map((c, i) => {
-                                    const x = (i / 40) * width; // 40 candles shown
-                                    const candleW = (width / 40) * 0.6;
-                                    const yHigh = getY(c.high);
-                                    const yLow = getY(c.low);
-                                    const yOpen = getY(c.open);
-                                    const yClose = getY(c.close);
-                                    const isGreen = c.close >= c.open;
-                                    const color = isGreen ? '#10B981' : '#EF4444';
-                                    
-                                    return (
-                                        <g key={c.time}>
-                                            <line x1={x + candleW/2} y1={yLow} x2={x + candleW/2} y2={yHigh} stroke={color} strokeWidth="1" />
-                                            <rect 
-                                                x={x} 
-                                                y={Math.min(yOpen, yClose)} 
-                                                width={candleW} 
-                                                height={Math.max(1, Math.abs(yOpen - yClose))} 
-                                                fill={color} 
-                                            />
-                                        </g>
-                                    );
-                                })}
-                            </svg>
-                        </div>
-                    </div>
-
-                    {/* Order Stream & Stats */}
-                    <div className="space-y-4">
-                        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 shadow-lg">
-                             <h3 className="text-white font-bold mb-4">{t('dashboard.live.systemStatus')}</h3>
-                             <div className="space-y-3">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-slate-400">Active Users</span>
-                                    <span className="text-white font-mono">{activeUsers}</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-slate-400">Order/Sec</span>
-                                    <span className="text-green-400 font-mono">12.5</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-slate-400">Latency</span>
-                                    <span className="text-green-400 font-mono">24ms</span>
-                                </div>
-                             </div>
-                        </div>
-                        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 flex-1 overflow-hidden shadow-lg h-60">
-                             <h3 className="text-white font-bold mb-3">{t('dashboard.live.logs')}</h3>
-                             <div className="space-y-2 h-44 overflow-y-auto font-mono text-xs pr-1" ref={scrollRef}>
-                                {realtimeOrders.map((order, i) => (
-                                    <div key={i} className="flex gap-2 text-slate-300 border-b border-slate-700/50 pb-1 animate-fade-in">
-                                        <span className="text-slate-500 opacity-70">{order.time}</span>
-                                        <span className="text-corp-blue-light">{order.product}</span>
-                                        <span className="text-slate-400">{order.quantity}</span>
-                                        <span className="ml-auto text-slate-500 opacity-70">{order.city}</span>
-                                    </div>
-                                ))}
-                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
     return (
         <div className="min-h-screen bg-slate-100 flex animate-fade-in" dir={dir}>
             {/* Sidebar */}
@@ -389,6 +391,10 @@ const DashboardPage: React.FC = () => {
                             <span className="mx-3 hidden md:block text-sm font-medium">{t(`dashboard.menu.${item.key}`)}</span>
                         </button>
                     ))}
+                    <button onClick={() => window.location.href = '/'} className="w-full flex items-center px-4 py-3 transition-colors text-slate-400 hover:bg-slate-800 hover:text-white mt-auto border-t border-slate-800">
+                         <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                         <span className="mx-3 hidden md:block text-sm font-medium">View Site</span>
+                    </button>
                 </nav>
                 <div className="p-4 border-t border-slate-800">
                     <div className="flex items-center gap-3">

@@ -271,9 +271,9 @@ const translations = {
         blog: { title: 'Market Insights', subtitle: 'Latest steel industry news.' },
         partners: { title: 'Top Brands' },
         newsletter: { title: 'Market Watch', subtitle: 'Get daily price alerts.', placeholder: 'Enter your email', button: 'Subscribe' },
-        footer: { col1: { title: 'About Steel Online' }, col2: { title: 'Products' }, col3: { title: 'Services' }, col4: { title: 'Contact', email: 'Email', message: 'Inquiry', button: 'Send' } }
+        footer: { col1: { title: 'Contact Us' }, col2: { title: 'Products' }, col3: { title: 'Services' }, col4: { title: 'Contact', email: 'Email', message: 'Inquiry', button: 'Send' } }
     },
-    footer: { contactInfo: 'No. 18, Taheri St, Jordan (Nelson Mandela Blvd), Amaniyeh, Tehran, Iran.', copyright: '© 2024 Steel Online 20. All rights reserved.' },
+    footer: { contactInfo: 'No. 18, Taheri St, Jordan, Tehran', workingHours: 'Sat to Wed 8:30 to 17:00', copyright: '© 2024 Steel Online 20. All rights reserved.' },
     hero: { title: 'Steel Online 20', cta: 'Smart Purchase' },
     validation: { required: 'Required', email: 'Invalid email', passwordLength: 'Must be at least 6 characters', fillRequiredFields: 'Please fill all required fields' },
     loginModal: { title: 'Login', emailPlaceholder: 'Email', passwordPlaceholder: 'Password', loginButton: 'Login', or: 'OR' },
@@ -371,9 +371,9 @@ const translations = {
         blog: { title: 'اخبار و مقالات', subtitle: 'تحلیل‌های روزانه بازار آهن و فولاد.' },
         partners: { title: 'برندهای همکار' },
         newsletter: { title: 'لیست علاقمندی‌ها', subtitle: 'رصد نوسانات قیمت محصولات محبوب شما.', placeholder: 'ایمیل خود را وارد کنید', button: 'عضویت' },
-        footer: { col1: { title: 'درباره استیل آنلاین' }, col2: { title: 'محصولات' }, col3: { title: 'خدمات' }, col4: { title: 'تماس', email: 'ایمیل', message: 'پیام', button: 'ارسال' } }
+        footer: { col1: { title: 'تماس با ما' }, col2: { title: 'محصولات' }, col3: { title: 'خدمات' }, col4: { title: 'تماس', email: 'ایمیل', message: 'پیام', button: 'ارسال' } }
     },
-    footer: { contactInfo: 'تهران، امانیه، جردن، خیابان طاهری، پلاک ۱۸', copyright: '© ۱۴۰۳ استیل آنلاین ۲۰. تمامی حقوق محفوظ است.' },
+    footer: { contactInfo: 'تهران، جردن، خیابان طاهری، پلاک ۱۸', workingHours: 'شنبه تا چهارشنبه ۸:۳۰ تا ۱۷:۰۰', copyright: '© ۱۴۰۳ استیل آنلاین ۲۰. تمامی حقوق محفوظ است.' },
     hero: { title: 'استیل آنلاین ۲۰', cta: 'مشاوره خرید هوشمند' },
     validation: { required: 'الزامی', email: 'ایمیل نامعتبر', passwordLength: 'حداقل ۶ کاراکتر', fillRequiredFields: 'لطفا موارد الزامی را پر کنید' },
     loginModal: { title: 'ورود به حساب', emailPlaceholder: 'ایمیل / موبایل', passwordPlaceholder: 'رمز عبور', loginButton: 'ورود', or: 'یا' },
@@ -471,9 +471,9 @@ const translations = {
         blog: { title: 'تحليلات السوق', subtitle: 'أحدث أخبار صناعة الصلب.' },
         partners: { title: 'شركاؤنا' },
         newsletter: { title: 'قائمة الرغبات', subtitle: 'تابع أسعار منتجاتك المفضلة.', placeholder: 'أدخل بريدك الإلكتروني', button: 'اشترك' },
-        footer: { col1: { title: 'عن ستيل أونلاين' }, col2: { title: 'المنتجات' }, col3: { title: 'الخدمات' }, col4: { title: 'اتصل بنا', email: 'البريد', message: 'الرسالة', button: 'إرسال' } }
+        footer: { col1: { title: 'اتصل بنا' }, col2: { title: 'المنتجات' }, col3: { title: 'الخدمات' }, col4: { title: 'اتصل بنا', email: 'البريد', message: 'الرسالة', button: 'إرسال' } }
     },
-    footer: { contactInfo: 'رقم 18، شارع طاهري، جوردان، أمانية، طهران، إيران', copyright: '© 2024 ستيل أونلاين 20. جميع الحقوق محفوظة.' },
+    footer: { contactInfo: 'رقم 18، شارع طاهري، جوردان، أمانية، طهران، إيران', workingHours: 'السبت إلى الأربعاء 8:30 إلى 17:00', copyright: '© 2024 ستيل أونلاين 20. جميع الحقوق محفوظة.' },
     hero: { title: 'ستيل أونلاين 20', cta: 'شراء ذكي' },
     validation: { required: 'مطلوب', email: 'بريد غير صالح', passwordLength: '6 أحرف على الأقل', fillRequiredFields: 'يرجى ملء الحقول المطلوبة' },
     loginModal: { title: 'تسجيل الدخول', emailPlaceholder: 'البريد / الهاتف', passwordPlaceholder: 'كلمة المرور', loginButton: 'دخول', or: 'أو' },
