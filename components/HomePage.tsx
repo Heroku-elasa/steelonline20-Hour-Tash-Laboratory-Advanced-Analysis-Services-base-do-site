@@ -24,12 +24,18 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
     return (
         <div className="animate-fade-in">
             {/* Hero Section */}
-            <section 
-                className="relative bg-cover bg-center text-white py-32 sm:py-48"
-                style={{ backgroundImage: "url('https://ahanonline.com/resize/?file=https://contents.ahanonline.com/website/d508722591eca912a58901f746d330c9.jpg&format=webp')" }}
-            >
-                <div className="absolute inset-0 bg-gradient-to-r from-[#6B0029]/90 to-[#620025]/70"></div>
-                <div className="container mx-auto px-4 relative z-10 text-center">
+            <section className="relative py-32 sm:py-48 text-white overflow-hidden">
+                {/* Optimized LCP Image using img tag instead of background */}
+                <img 
+                    src="https://ahanonline.com/resize/?file=https://contents.ahanonline.com/website/d508722591eca912a58901f746d330c9.jpg&format=webp" 
+                    alt="Industrial Steel Construction Site" 
+                    className="absolute inset-0 w-full h-full object-cover z-0"
+                    width="1920" 
+                    height="1080"
+                    fetchPriority="high" // High priority for LCP
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#6B0029]/90 to-[#620025]/70 z-10"></div>
+                <div className="container mx-auto px-4 relative z-20 text-center">
                     <p className="text-lg sm:text-xl font-light text-slate-200">{t('hero.title')}</p>
                     <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mt-4 leading-tight">
                         {t('home.hero.mainTitle')}
@@ -54,7 +60,7 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-800">{t('home.infoBar.call.title')}</h3>
+                            <h2 className="text-base font-bold text-slate-800">{t('home.infoBar.call.title')}</h2>
                             <p className="text-corp-teal font-mono text-lg font-bold dir-ltr">{t('home.infoBar.call.value')}</p>
                         </div>
                     </div>
@@ -63,7 +69,7 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-800">{t('home.infoBar.email.title')}</h3>
+                            <h2 className="text-base font-bold text-slate-800">{t('home.infoBar.email.title')}</h2>
                             <p className="text-slate-500 font-mono text-sm">{t('home.infoBar.email.value')}</p>
                         </div>
                     </div>
@@ -72,7 +78,7 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-800">{t('home.infoBar.location.title')}</h3>
+                            <h2 className="text-base font-bold text-slate-800">{t('home.infoBar.location.title')}</h2>
                             <p className="text-slate-500 text-sm">{t('home.infoBar.location.value')}</p>
                         </div>
                     </div>
@@ -87,7 +93,7 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
                             <div className="w-12 h-12 bg-red-50 text-corp-red rounded-lg flex items-center justify-center mb-4 group-hover:bg-corp-red group-hover:text-white transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
                             </div>
-                            <h3 className="text-xl font-bold mb-2 text-slate-900">{t('home.featuredBlocks.block1.title')}</h3>
+                            <h2 className="text-xl font-bold mb-2 text-slate-900">{t('home.featuredBlocks.block1.title')}</h2>
                             <p className="text-sm text-slate-600 mb-6 leading-relaxed">{t('home.featuredBlocks.block1.desc')}</p>
                             <button onClick={() => setPage('content_hub')} className="text-corp-teal font-semibold text-sm hover:underline">{t('home.featuredBlocks.button')} &rarr;</button>
                         </div>
@@ -95,12 +101,12 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
                             <div className="w-12 h-12 bg-red-50 text-corp-red rounded-lg flex items-center justify-center mb-4 group-hover:bg-corp-red group-hover:text-white transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                             </div>
-                            <h3 className="text-xl font-bold mb-2 text-slate-900">{t('home.featuredBlocks.block2.title')}</h3>
+                            <h2 className="text-xl font-bold mb-2 text-slate-900">{t('home.featuredBlocks.block2.title')}</h2>
                             <p className="text-sm text-slate-600 mb-6 leading-relaxed">{t('home.featuredBlocks.block2.desc')}</p>
                             <button onClick={() => setPage('partnerships')} className="text-corp-teal font-semibold text-sm hover:underline">{t('home.featuredBlocks.button')} &rarr;</button>
                         </div>
                         <div className="bg-corp-red text-white p-8 rounded-xl shadow-lg">
-                            <h3 className="text-xl font-bold mb-4">{t('home.featuredBlocks.block3.title')}</h3>
+                            <h2 className="text-xl font-bold mb-4">{t('home.featuredBlocks.block3.title')}</h2>
                             <ul className="space-y-3 text-sm">
                                <li className="flex items-center gap-2"><svg className="h-4 w-4 text-corp-teal" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg> {t('home.featuredBlocks.block3.line1')}</li>
                                <li className="flex items-center gap-2"><svg className="h-4 w-4 text-corp-teal" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg> {t('home.featuredBlocks.block3.line2')}</li>
@@ -143,7 +149,14 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
                         {recentArticles.map(article => (
                             <div key={article.id} className="group flex flex-col bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden hover:shadow-xl transition-shadow">
                                 <button onClick={() => onSelectArticle(article)} className="block overflow-hidden relative">
-                                    <img src={article.image} alt={article.title[language]} className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-300"/>
+                                    <img 
+                                        src={article.image} 
+                                        alt={article.title[language]} 
+                                        className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                        loading="lazy" // Lazy load below fold images
+                                        width="400"
+                                        height="300"
+                                    />
                                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
                                         <span className="text-xs font-bold text-white bg-corp-red px-2 py-1 rounded">{article.category[language]}</span>
                                     </div>
@@ -181,7 +194,15 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
                             'https://ahanonline.com/resize/?file=https://contents.ahanonline.com/site/f408d553d26e51d1d4da5e898d498f21.png&format=webp', // Sheet icon
                             'https://ahanonline.com/resize/?file=https://contents.ahanonline.com/site/39049d49715f83f5a2eef34e727bdf2c.png&format=webp', // Profile icon
                         ].map((logo, index) => (
-                            <img key={index} src={logo} alt={`Partner logo ${index + 1}`} className="h-16 sm:h-20 object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all hover:scale-110" />
+                            <img 
+                                key={index} 
+                                src={logo} 
+                                alt={`Partner logo ${index + 1}`} 
+                                className="h-16 sm:h-20 object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all hover:scale-110"
+                                loading="lazy"
+                                width="100"
+                                height="80"
+                            />
                         ))}
                     </div>
                 </div>

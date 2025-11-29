@@ -1,9 +1,10 @@
 
+
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
 
 // Basic Types
 export type Language = 'en' | 'fa' | 'ar';
-export type Page = 'home' | 'test_recommender' | 'sample_dropoff' | 'ai_consultant' | 'content_hub' | 'our_experts' | 'partnerships' | 'blog' | 'article' | 'tools';
+export type Page = 'home' | 'test_recommender' | 'sample_dropoff' | 'ai_consultant' | 'content_hub' | 'our_experts' | 'partnerships' | 'blog' | 'article' | 'tools' | 'iron_snapp' | 'dashboard';
 
 // User info from authentication
 export interface User {
@@ -142,6 +143,34 @@ export interface ShippingEstimate {
     vehicleType: string;
 }
 
+// IronSnapp Marketplace Types
+export interface MarketplaceRequest {
+    product: string;
+    quantity: string;
+    location: string;
+    paymentType: 'cash' | 'check' | 'credit';
+    checkMonths?: number;
+}
+
+export interface MarketplaceOffer {
+    sellerName: string;
+    location: string;
+    distanceKm: number;
+    pricePerUnit: string;
+    totalPrice: string;
+    deliveryCost: string;
+    matchScore: number; // 0-100
+    paymentFlexibility: string;
+    deliveryTime: string;
+}
+
+export interface CreditCheckResult {
+    allowed: boolean;
+    score: number;
+    maxAmount: string;
+    reason: string;
+}
+
 // Blog & Article Pages
 interface LocalizedString {
   en: string;
@@ -172,7 +201,66 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 const translations = {
   en: {
-    header: { home: 'Home', recommendationEngine: 'Smart Advisor', distributorFinder: 'Find Suppliers', aiChat: 'AI Consultant', contentHub: 'Market News', blog: 'Blog', ourTeam: 'Sales Team', partnerships: 'Credit Purchase', login: 'Login / Register', logout: 'Logout', tools: 'Tools' },
+    header: { home: 'Home', recommendationEngine: 'Smart Advisor', distributorFinder: 'Find Suppliers', aiChat: 'AI Consultant', contentHub: 'Market News', blog: 'Blog', ourTeam: 'Sales Team', partnerships: 'Credit Purchase', login: 'Login / Register', logout: 'Logout', tools: 'Tools', ironSnapp: 'IronSnapp', dashboard: 'Dashboard' },
+    dashboard: {
+        title: 'Admin Dashboard',
+        menu: { overview: 'Overview', products: 'Products', pricing: 'Pricing', orders: 'Orders', customers: 'Customers', reports: 'Reports', settings: 'Settings', live: 'Live Monitor' },
+        metrics: { orders: "Today's Orders", sales: "Today's Sales", newCustomers: "New Customers", visits: "Site Visits" },
+        charts: { salesTitle: 'Monthly Sales', productDist: 'Product Distribution' },
+        tables: {
+            ordersTitle: 'Recent Orders',
+            pricesTitle: 'Live Product Prices',
+            headers: { orderId: 'Order ID', customer: 'Customer', product: 'Product', amount: 'Amount', status: 'Status', price: 'Price', change: 'Change', lastUpdate: 'Updated', stock: 'Stock', category: 'Category', actions: 'Actions', phone: 'Phone', company: 'Company', credit: 'Credit' }
+        },
+        products: { add: 'Add Product', search: 'Search Products...' },
+        activity: { title: 'Recent Activity' },
+        notifications: { title: 'Notifications' },
+        live: {
+          title: 'Live Market Monitor',
+          subtitle: 'Real-time Steel Market Data & Orders Stream',
+          systemStatus: 'System Status',
+          kafka: 'Orders Stream',
+          risingwave: 'Price Engine',
+          grafana: 'Analytics',
+          features: 'Live Features',
+          logs: 'Live Order Stream',
+          activeUsers: 'Active Users',
+          trending: 'Trending Products',
+        }
+    },
+    ironSnapp: {
+        title: 'IronSnapp Marketplace',
+        subtitle: 'Connect directly with sellers. Best prices, check payments, and smart matching.',
+        form: {
+            title: 'Request Quote',
+            productLabel: 'Product Name',
+            productPlaceholder: 'e.g., Rebar 16 Esfahan',
+            qtyLabel: 'Quantity (Tons)',
+            locationLabel: 'Delivery City',
+            paymentLabel: 'Payment Method',
+            paymentCash: 'Cash',
+            paymentCheck: 'Check',
+            paymentCredit: 'Credit',
+            monthsLabel: 'Check Duration (Months)',
+            submit: 'Find Best Offers'
+        },
+        results: {
+            title: 'Best Matches',
+            score: 'Match Score',
+            distance: 'Distance',
+            price: 'Total Price',
+            delivery: 'Delivery',
+            buy: 'Buy Now',
+            creditCheck: 'Credit Check Required'
+        },
+        credit: {
+            checking: 'Analyzing Credit Score...',
+            approved: 'Credit Approved',
+            rejected: 'Credit Rejected',
+            reason: 'Reason',
+            score: 'Score'
+        }
+    },
     products: { food_feed: { title: 'Rebar & Mesh', description: 'High quality ribbed and plain rebar, wire mesh, and thermal rebar.' }, microbiology: { title: 'Beams (Tir-Ahan)', description: 'IPE, IPB, and INP beams from top brands.' }, environmental: { title: 'Sheets & Plate', description: 'Hot rolled (Black), Cold rolled (Oiled), Galvanized, and Color sheets.' } },
     ourTeam: { title: 'Meet Our Experts', subtitle: 'Our specialized sales team is here to guide you.', tableHeaders: { license: 'Ext.' }, doctors: [ { name: 'Eng. Reza Alavi', specialty: 'Rebar Specialist', bio: 'Expert in construction rebar grades.', licenseNumber: '101' }, { name: 'Mrs. Sara Tehrani', specialty: 'Sheet & Plate Manager', bio: 'Specialist in industrial sheets.', licenseNumber: '102' }, { name: 'Eng. Kaveh Rad', specialty: 'Beam & Profile Lead', bio: 'Technical advisor for heavy structures.', licenseNumber: '103' } ] },
     home: {
@@ -213,7 +301,66 @@ const translations = {
     }
   },
   fa: {
-    header: { home: 'خانه', recommendationEngine: 'مشاور خرید', distributorFinder: 'مراکز فروش', aiChat: 'هوش مصنوعی', contentHub: 'تحلیل بازار', blog: 'مجله آهن', ourTeam: 'تیم فروش', partnerships: 'خرید اعتباری', login: 'ورود / ثبت‌نام', logout: 'خروج', tools: 'ابزارها' },
+    header: { home: 'خانه', recommendationEngine: 'مشاور خرید', distributorFinder: 'مراکز فروش', aiChat: 'هوش مصنوعی', contentHub: 'تحلیل بازار', blog: 'مجله آهن', ourTeam: 'تیم فروش', partnerships: 'خرید اعتباری', login: 'ورود / ثبت‌نام', logout: 'خروج', tools: 'ابزارها', ironSnapp: 'آهن‌اسنپ', dashboard: 'داشبورد مدیریت' },
+    dashboard: {
+        title: 'داشبورد مدیریت',
+        menu: { overview: 'نمای کلی', products: 'محصولات', pricing: 'قیمت‌گذاری', orders: 'سفارشات', customers: 'مشتریان', reports: 'گزارشات', settings: 'تنظیمات', live: 'مانیتور زنده' },
+        metrics: { orders: "سفارشات امروز", sales: "فروش امروز", newCustomers: "مشتریان جدید", visits: "بازدید سایت" },
+        charts: { salesTitle: 'نمودار فروش ماهانه', productDist: 'توزیع فروش محصولات' },
+        tables: {
+            ordersTitle: 'سفارشات اخیر',
+            pricesTitle: 'قیمت لحظه‌ای محصولات',
+            headers: { orderId: 'شماره', customer: 'مشتری', product: 'محصول', amount: 'مبلغ', status: 'وضعیت', price: 'قیمت', change: 'تغییر', lastUpdate: 'بروزرسانی', stock: 'موجودی', category: 'دسته‌بندی', actions: 'عملیات', phone: 'تلفن', company: 'شرکت', credit: 'اعتبار' }
+        },
+        products: { add: 'افزودن محصول', search: 'جستجوی محصول...' },
+        activity: { title: 'فعالیت‌های اخیر' },
+        notifications: { title: 'اعلان‌ها' },
+        live: {
+          title: 'مانیتور زنده بازار',
+          subtitle: 'مانیتورینگ لحظه‌ای داده‌های بازار فولاد و سفارشات',
+          systemStatus: 'وضعیت سیستم',
+          kafka: 'جریان سفارشات',
+          risingwave: 'موتور قیمت',
+          grafana: 'تحلیل‌گر',
+          features: 'شاخص‌های زنده',
+          logs: 'جریان زنده سفارشات',
+          activeUsers: 'کاربران آنلاین',
+          trending: 'محصولات داغ',
+        }
+    },
+    ironSnapp: {
+        title: 'بازار هوشمند آهن‌اسنپ',
+        subtitle: 'اتصال مستقیم به فروشندگان. بهترین قیمت، خرید چکی و مچینگ هوشمند.',
+        form: {
+            title: 'درخواست خرید',
+            productLabel: 'نام کالا',
+            productPlaceholder: 'مثلا: میلگرد ۱۶ ذوب آهن',
+            qtyLabel: 'مقدار (تن)',
+            locationLabel: 'شهر مقصد',
+            paymentLabel: 'نحوه پرداخت',
+            paymentCash: 'نقدی',
+            paymentCheck: 'چکی / اعتباری',
+            paymentCredit: 'اعتباری (LC)',
+            monthsLabel: 'مدت چک (ماه)',
+            submit: 'یافتن بهترین پیشنهاد'
+        },
+        results: {
+            title: 'پیشنهادات هوشمند',
+            score: 'امتیاز تطابق',
+            distance: 'فاصله',
+            price: 'قیمت کل',
+            delivery: 'تحویل',
+            buy: 'خرید نهایی',
+            creditCheck: 'نیاز به اعتبارسنجی'
+        },
+        credit: {
+            checking: 'در حال اعتبارسنجی...',
+            approved: 'اعتبار تایید شد',
+            rejected: 'اعتبار رد شد',
+            reason: 'دلیل',
+            score: 'امتیاز اعتباری'
+        }
+    },
     products: { food_feed: { title: 'میلگرد و توری', description: 'انواع میلگرد آجدار و ساده، توری مش و میلگرد حرارتی با بهترین کیفیت.' }, microbiology: { title: 'تیرآهن و هاش', description: 'تیرآهن‌های IPE، IPB و لانه زنبوری از برندهای ذوب آهن و فایکو.' }, environmental: { title: 'انواع ورق', description: 'ورق سیاه (ST37, ST52)، روغنی، گالوانیزه و رنگی در ابعاد مختلف.' } },
     ourTeam: { title: 'کارشناسان فروش', subtitle: 'تیم متخصص ما آماده ارائه مشاوره فنی و راهنمایی در خرید آهن‌آلات است.', tableHeaders: { license: 'داخلی' }, doctors: [ { name: 'مهندس رضا علوی', specialty: 'کارشناس میلگرد', bio: 'متخصص در آنالیز قیمت و استانداردهای میلگرد ساختمانی.', licenseNumber: '۱۰۱' }, { name: 'خانم سارا تهرانی', specialty: 'مدیر بخش ورق', bio: 'مشاور تخصصی در زمینه ورق‌های آلیاژی و صنعتی.', licenseNumber: '۱۰۲' }, { name: 'مهندس کاوه راد', specialty: 'سرپرست تیرآهن', bio: 'مشاور فنی پروژه‌های اسکلت فلزی و سازه‌های سنگین.', licenseNumber: '۱۰۳' } ] },
     home: {
@@ -254,9 +401,68 @@ const translations = {
     }
   },
   ar: {
-    header: { home: 'الرئيسية', recommendationEngine: 'المستشار الذكي', distributorFinder: 'الموردين', aiChat: 'استشارة ذكية', contentHub: 'تحليل السوق', blog: 'المدونة', ourTeam: 'فريق المبيعات', partnerships: 'شراء بالائتمان', login: 'دخول / تسجيل', logout: 'خروج', tools: 'أدوات' },
+    header: { home: 'الرئيسية', recommendationEngine: 'المستشار الذكي', distributorFinder: 'الموردين', aiChat: 'استشارة ذكية', contentHub: 'تحليل السوق', blog: 'المدونة', ourTeam: 'فريق المبيعات', partnerships: 'شراء بالائتمان', login: 'دخول / تسجيل', logout: 'خروج', tools: 'أدوات', ironSnapp: 'آيرون سناب', dashboard: 'لوحة التحكم' },
+    dashboard: {
+        title: 'لوحة التحكم',
+        menu: { overview: 'نظرة عامة', products: 'المنتجات', pricing: 'التسعير', orders: 'الطلبات', customers: 'العملاء', reports: 'التقارير', settings: 'الإعدادات', live: 'مراقبة حية' },
+        metrics: { orders: "طلبات اليوم", sales: "مبيعات اليوم", newCustomers: "عملاء جدد", visits: "زيارات الموقع" },
+        charts: { salesTitle: 'المبيعات الشهرية', productDist: 'توزيع المنتجات' },
+        tables: {
+            ordersTitle: 'أحدث الطلبات',
+            pricesTitle: 'أسعار المنتجات المباشرة',
+            headers: { orderId: 'الرقم', customer: 'العميل', product: 'المنتج', amount: 'المبلغ', status: 'الحالة', price: 'السعر', change: 'التغيير', lastUpdate: 'التحديث', stock: 'المخزون', category: 'الفئة', actions: 'الإجراءات', phone: 'الهاتف', company: 'الشركة', credit: 'الائتمان' }
+        },
+        products: { add: 'إضافة منتج', search: 'بحث عن منتجات...' },
+        activity: { title: 'النشاط الأخير' },
+        notifications: { title: 'الإشعارات' },
+        live: {
+          title: 'مراقبة السوق الحية',
+          subtitle: 'بيانات سوق الصلب في الوقت الفعلي وتدفق الطلبات',
+          systemStatus: 'حالة النظام',
+          kafka: 'تدفق الطلبات',
+          risingwave: 'محرك الأسعار',
+          grafana: 'التحليلات',
+          features: 'الميزات الحية',
+          logs: 'تدفق الطلبات المباشر',
+          activeUsers: 'المستخدمون النشطون',
+          trending: 'المنتجات الرائجة',
+        }
+    },
+    ironSnapp: {
+        title: 'سوق آيرون سناب',
+        subtitle: 'تواصل مباشرة مع البائعين. أفضل الأسعار، الدفع بالشيكات، والمطابقة الذكية.',
+        form: {
+            title: 'طلب عرض سعر',
+            productLabel: 'اسم المنتج',
+            productPlaceholder: 'مثلاً: حديد تسليح 16 أصفهان',
+            qtyLabel: 'الكمية (طن)',
+            locationLabel: 'مدينة التسليم',
+            paymentLabel: 'طريقة الدفع',
+            paymentCash: 'نقدي',
+            paymentCheck: 'شيك / ائتمان',
+            paymentCredit: 'ائتمان (LC)',
+            monthsLabel: 'مدة الشيك (أشهر)',
+            submit: 'ابحث عن أفضل العروض'
+        },
+        results: {
+            title: 'أفضل المطابقات',
+            score: 'درجة التطابق',
+            distance: 'المسافة',
+            price: 'السعر الإجمالي',
+            delivery: 'التوصيل',
+            buy: 'شراء الآن',
+            creditCheck: 'مطلوب فحص الائتمان'
+        },
+        credit: {
+            checking: 'جارٍ تحليل الائتمان...',
+            approved: 'تمت الموافقة',
+            rejected: 'مرفوض',
+            reason: 'السبب',
+            score: 'النقاط'
+        }
+    },
     products: { food_feed: { title: 'حديد التسليح', description: 'قضبان التسليح المضلعة والملساء وشبكات الصلب.' }, microbiology: { title: 'الجسور والكمرات', description: 'جسور IPE و IPB من أفضل المصانع.' }, environmental: { title: 'الصفائح والألواح', description: 'صفائح ساخنة (سوداء)، باردة (زيتية)، مجلفنة وملونة.' } },
-    ourTeam: { title: 'فريق المبيعات', subtitle: 'فريقنا المتخصص جاهز لتقديم الاستشارات الفنية.', tableHeaders: { license: 'تحويلة' }, doctors: [ { name: 'م. رضا علوي', specialty: 'أخصائي حديد التسليح', bio: 'خبير في تحليل الأسعار ومعايير البناء.', licenseNumber: '101' }, { name: 'السيدة سارة طهراني', specialty: 'مديرة قسم الصفائح', bio: 'متخصصة في الصفائح الصناعية والمجلفنة.', licenseNumber: '102' }, { name: 'م. كاوة راد', specialty: 'مشرف الجسور', bio: 'مستشار فني للمشاريع الهيكلية الثقيلة.', licenseNumber: '103' } ] },
+    ourTeam: { title: 'فريق المبيعات', subtitle: 'فريقنا المتخصص جاهز لتقديم الاستشارات الفنية.', tableHeaders: { license: 'تحويلة' }, doctors: [ { name: 'م. رضا علوی', specialty: 'أخصائي حديد التسليح', bio: 'خبير في تحليل الأسعار ومعايير البناء.', licenseNumber: '101' }, { name: 'السيدة سارة طهراني', specialty: 'مديرة قسم الصفائح', bio: 'متخصص في الصفائح الصناعية والمجلفنة.', licenseNumber: '102' }, { name: 'م. كاوة راد', specialty: 'مشرف الجسور', bio: 'مستشار فني للمشاريع الهيكلية الثقيلة.', licenseNumber: '103' } ] },
     home: {
         hero: { mainTitle: 'ستيل أونلاين 20: المصدر الموثوق للحديد', aboutButton: 'خدماتنا' },
         infoBar: { call: { title: 'المبيعات', value: '+98 21 2204 1655' }, email: { title: 'البريد', value: 'sales@steelonline20.com' }, location: { title: 'المقر', value: 'طهران، جوردان' } },
@@ -276,16 +482,16 @@ const translations = {
     aiChat: { title: 'مستشار الحديد', subtitle: 'اسأل عن الأسعار، المعايير الفنية، أو تكاليف الشحن.', placeholder: 'مثلاً: كم سعر طن الحديد اليوم؟', suggestions: ['سعر حديد 16؟', 'الفرق بين ST37 و ST52؟', 'تكلفة الشحن لمشهد؟'] },
     distributorFinder: { title: 'البحث عن المستودعات', subtitle: 'حدد موقع أقرب مستودعات الحديد ونقاط التحميل.', searchTypeLabel: 'أبحث عن:', distributor: 'مستودع حديد', veterinarian: 'وكيل رسمي', searchPlaceholder: 'المدينة أو المنطقة...', searchButton: 'بحث', findNearMe: 'بالقرب مني', searching: 'جارٍ البحث...', resultsTitle: 'الموردون القريبون', noResults: 'لا يوجد موردين.', suggestionsTitle: 'المراكز الرئيسية', suggestionQueries: ['طهران', 'أصفهان', 'مشهد', 'الأهواز'] },
     recommendationEngine: {
-        title: 'مستشار الشراء الذكي', subtitle: 'أخبرنا عن مشروعك للحصول على أفضل التوصيات.', uploadImageTitle: 'تحميل مخطط/صورة', removeImage: 'إزالة', uploadButton: 'تحميل', cameraButton: 'تصوير', formTitle: 'تفاصيل المشروع', symptomsLabel: 'وصف المشروع', symptomsPlaceholder: 'مثلاً: بناء مبنى سكني 5 طوابق...', suggestionPromptsTitle: 'تحديد سريع:', suggestionPrompts: ['مبنى سكني', 'هنجر صناعي', 'جسر', 'سياج'], detailsTitle: 'المواصفات الفنية', autoFillCheckboxLabel: 'تعبئة تلقائية', sampleTypeLabel: 'فئة المنتج', sampleTypePlaceholder: 'مثلاً: حديد، جسور، صاج...', batchSizeOriginLabel: 'الكمية / الوجهة', batchSizeOriginPlaceholder: 'مثلاً: 25 طن، تبريز', specificConditions: 'التفاصيل الإنشائية', controlSampleInfo: 'الماركات المفضلة', sampleAge: 'موعد التسليم', sampleAgePlaceholder: 'مثلاً: الأسبوع القادم', previousTests: 'الميزانية', additives: 'خدمات إضافية', buttonText: 'احصل على توصية', generating: 'جارٍ التحليل...', resultTitle: 'توصية المواد', primaryAssessmentTitle: 'تحليل المشروع', potentialConditionsTitle: 'اعتبارات فنية', recommendedProductsTitle: 'المنتجات المقترحة', managementAdviceTitle: 'نصائح الشراء', nextStepsTitle: 'الخطوات التالية', findDropoffLocation: 'عثور على مورد', getTreatmentPlan: 'تقدير السعر', gettingPlan: 'جارٍ الحساب...', detailedPlanTitle: 'عرض سعر تقديري', purpose: 'الاستخدام', methodology: 'المعيار', turnaroundTime: 'التوفر', estimatedCost: 'السعر التقديري', disclaimerTitle: 'تنويه', startNewAnalysis: 'طلب جديد', savePdf: 'تحميل العرض', symptomsSuggestions: ['مقاومة شد عالية', 'مقاومة صدأ', 'مقاوم للزلازل', 'اقتصادی'], animalTypeSuggestions: ['حديد تسليح', 'جسور', 'صاج', 'بروفيل', 'أنابيب', 'زوايا', 'قنوات']
+        title: 'مستشار الشراء الذكي', subtitle: 'أخبرنا عن مشروعك للحصول على أفضل التوصيات.', uploadImageTitle: 'تحميل مخطط/صورة', removeImage: 'إزالة', uploadButton: 'تحميل', cameraButton: 'تصوير', formTitle: 'تفاصيل المشروع', symptomsLabel: 'وصف المشروع', symptomsPlaceholder: 'مثلاً: بناء مبنى سكني 5 طوابق...', suggestionPromptsTitle: 'تحديد سريع:', suggestionPrompts: ['مبنى سكني', 'هنجر صناعي', 'جسر', 'سياج'], detailsTitle: 'المواصفات الفنية', autoFillCheckboxLabel: 'تعبئة تلقائية', sampleTypeLabel: 'فئة المنتج', sampleTypePlaceholder: 'مثلاً: حديد، جسور، صاج...', batchSizeOriginLabel: 'الكمية / الوجهة', batchSizeOriginPlaceholder: 'مثلاً: 25 طن، تبريز', specificConditions: 'التفاصيل الإنشائية', controlSampleInfo: 'الماركات المفضلة', sampleAge: 'موعد التسليم', sampleAgePlaceholder: 'مثلاً: الأسبوع القادم', previousTests: 'الميزانية', additives: 'خدمات إضافية', buttonText: 'احصل على توصية', generating: 'جارٍ التحليل...', resultTitle: 'توصية المواد', primaryAssessmentTitle: 'تحلیل المشروع', potentialConditionsTitle: 'اعتبارات فنية', recommendedProductsTitle: 'المنتجات المقترحة', managementAdviceTitle: 'نصائح الشراء', nextStepsTitle: 'الخطوات التالية', findDropoffLocation: 'عثور على مورد', getTreatmentPlan: 'تقدير السعر', gettingPlan: 'جارٍ الحساب...', detailedPlanTitle: 'عرض سعر تقديري', purpose: 'الاستخدام', methodology: 'المعيار', turnaroundTime: 'التوفر', estimatedCost: 'السعر التقديري', disclaimerTitle: 'تنويه', startNewAnalysis: 'طلب جديد', savePdf: 'تحميل العرض', symptomsSuggestions: ['مقاومة شد عالية', 'مقاومة صدأ', 'مقاوم للزلازل', 'اقتصادی'], animalTypeSuggestions: ['حديد تسليح', 'جسور', 'صاج', 'بروفيل', 'أنابيب', 'زوايا', 'قنوات']
     },
     contentHub: {
         title: 'تحليلات السوق', subtitle: 'تحليل الاتجاهات وإنشاء تقارير.', platformSelectorTitle: '1. المنصة', topicTitle: '2. الموضوع', trendsTab: 'اتجاهات السوق', textTab: 'موضوع مخصص', searchTab: 'بحث', fetchingTrends: 'جلب البيانات...', customTextPlaceholder: 'موضوع التحليل (مثلاً: "تأثير الدولار على الحديد")...', selectSearchTopic: 'مواضيع شائعة:', userSearchSuggestions: ['توقعات أسعار الحديد', 'تعريفات التصدير', 'موسم البناء', 'تكاليف المواد الخام'], generatingPost: 'جارٍ الإنشاء...', generateButton: 'إنشاء تحليل', resultsTitle: 'المحتوى', placeholder: 'اختر موضوعًا.', copyButton: 'نسخ', copySuccess: 'تم النسخ!', connectAccountToPublish: 'ربط الحساب', publishToPlatformButton: 'نشر على {platform}', adaptForWebsiteButton: 'تحويل لمقال', adaptingForWebsite: 'جارٍ الكتابة...', websitePreviewTitle: 'معاينة المقال', publishToWebsiteButton: 'نشر', publishedSuccess: 'تم النشر!',
-        getStrategyButton: 'استراتيجية المحتوى', fetchingStrategy: 'تحليل...', strategyTitle: 'الاستراتيجية', bestTime: 'أفضل وقت', nextPost: 'الموضوع التالي',
+        getStrategyButton: 'استراتژی محتوا', fetchingStrategy: 'تحلیل...', strategyTitle: 'استراتژی انتشار', bestTime: 'أفضل وقت', nextPost: 'الموضوع التالي',
         generateVideoButton: 'سيناريو فيديو', generatingVideo: 'كتابة...', timecode: 'وقت', visual: 'بصري', voiceover: 'صوت', emotion: 'نبرة',
         findVideoTools: 'أدوات الفيديو', findingTools: 'بحث...', toolName: 'أداة', toolCost: 'تكلفة', toolFarsi: 'فارسي', toolFeatures: 'ميزات', toolQuality: 'تقييم'
     },
     partnerships: { title: 'شراء بالائتمان', subtitle: 'خيارات دفع مرنة (شيك، اعتماد).', name: 'الاسم الكامل', company: 'اسم الشركة', email: 'البريد', message: 'التفاصيل', submit: 'طلب' },
-    blogPage: { title: 'مجلة الصلب', subtitle: 'أخبار، تحليلات، ومقالات تعليمية.', readMore: 'اقرأ المزيد' },
+    blogPage: { title: 'مجله الصلب', subtitle: 'أخبار، تحليلات، ومقالات تعليمية.', readMore: 'اقرأ المزيد' },
     articlePage: { backToBlog: 'عودة للأخبار' },
     toolsPage: {
         title: 'أدوات الحديد', subtitle: 'حاسبات وأدوات مساعدة',

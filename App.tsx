@@ -1,27 +1,32 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import SiteHeader from './components/Header';
-import HomePage from './components/HomePage';
-import PartnershipsPage from './components/PartnershipsPage';
+import HomePage from './components/HomePage'; // Keep Home eager for LCP
 import QuotaErrorModal from './components/QuotaErrorModal';
 import LoginModal from './components/LoginModal';
-import AIChatPage from './components/AIChatPage';
-import TeamPage from './components/TeamPage';
-import DistributorFinderPage from './components/DistributorFinderPage';
-import RecommendationEnginePage from './components/RecommendationEnginePage';
 import SearchModal from './components/SearchModal';
 import FloatingChatbot from './components/FloatingChatbot';
-import ContentHubPage from './components/ContentHubPage';
-import BlogPage from './components/BlogPage';
-import ArticlePage from './components/ArticlePage';
-import ToolsPage from './components/ToolsPage';
+import SiteFooter from './components/Footer';
 import { Page, ProviderSearchResult, Message, SearchResultItem, useLanguage, TestSubmissionFormInputs, TestRecommendationResult, DailyTrend, GeneratedPost, TestDetailsResult, Article, ARTICLES, User } from './types';
 import { useToast } from './components/Toast';
 import { performSemanticSearch, findLocalProviders, getAIRecommendation, fetchDailyTrends, generateSocialPost, generatePostImage, getTestDetails, adaptPostForWebsite } from './services/geminiService';
-import SiteFooter from './components/Footer';
 
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY! });
+// Lazy load other pages to reduce initial bundle size
+const PartnershipsPage = lazy(() => import('./components/PartnershipsPage'));
+const AIChatPage = lazy(() => import('./components/AIChatPage'));
+const TeamPage = lazy(() => import('./components/TeamPage'));
+const DistributorFinderPage = lazy(() => import('./components/DistributorFinderPage'));
+const RecommendationEnginePage = lazy(() => import('./components/RecommendationEnginePage'));
+const ContentHubPage = lazy(() => import('./components/ContentHubPage'));
+const BlogPage = lazy(() => import('./components/BlogPage'));
+const ArticlePage = lazy(() => import('./components/ArticlePage'));
+const ToolsPage = lazy(() => import('./components/ToolsPage'));
+const IronSnappPage = lazy(() => import('./components/IronSnappPage'));
+const DashboardPage = lazy(() => import('./components/DashboardPage'));
+
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
 const systemInstruction = `You are a professional, helpful, and knowledgeable AI assistant for "Steel Online 20", a leading online marketplace for steel and iron products in Iran. Your purpose is to assist users (builders, contractors, traders) by providing accurate information about steel prices, product specifications, and purchasing processes.
 
 **Your capabilities:**
@@ -30,9 +35,13 @@ const systemInstruction = `You are a professional, helpful, and knowledgeable AI
 *   Explain our services: Credit purchase (Check/LC), Shipping, and Price Guarantees.
 *   Help users find information on the website.
 
+**Search Usage:**
+*   You have access to Google Search. ALWAYS use it to provide the most up-to-date prices, news, and technical data. Do not rely on stale internal knowledge for pricing.
+
 **App Features & Navigation:**
 You can also guide users to the right tools on our website. When a user's query matches one of the features below, you should recommend they use it and provide a special link.
 *   **Smart Steel Advisor**: Use this for users asking for product recommendations for a specific project. Suggest it with the link format: [Smart Steel Advisor](page:test_recommender)
+*   **IronSnapp Marketplace**: Use this for users wanting to buy steel directly from sellers, compare prices, or find the nearest warehouse. Especially useful for CHECK payments. Suggest it with the link format: [IronSnapp Marketplace](page:iron_snapp)
 *   **Find Suppliers**: Use this for users asking where to buy or find warehouses. Suggest it with the link format: [Find Suppliers](page:sample_dropoff)
 *   **Tools (Weight/Shipping)**: Use this for weight calculation or shipping cost queries. Suggest it with the link format: [Steel Tools](page:tools)
 *   **Credit Purchase**: Use this for payment inquiries. Suggest it with the link format: [Credit Purchase](page:partnerships)
@@ -49,6 +58,11 @@ Example response: "For a detailed estimate of the shipping cost to Mashhad, plea
 *   **DO NOT PROVIDE STRUCTURAL ENGINEERING PLANS.** You are an AI assistant providing product information. Always advise users to consult with a certified structural engineer for safety calculations.
 `;
 
+const LoadingSpinner = () => (
+  <div className="min-h-[50vh] flex items-center justify-center">
+    <div className="w-12 h-12 border-4 border-slate-200 border-t-corp-red rounded-full animate-spin"></div>
+  </div>
+);
 
 const App: React.FC = () => {
   const [currentPage, setPage] = useState<Page>('home');
@@ -106,6 +120,7 @@ const App: React.FC = () => {
 
     Website Pages & Tools:
     - Page: Home ('home'). Content: Main page with daily steel prices and product categories.
+    - Tool: IronSnapp Marketplace ('iron_snapp'). Content: A marketplace to buy steel directly from sellers, find the nearest warehouse, and pay via check or cash.
     - Tool: Smart Steel Advisor ('test_recommender'). Content: AI tool to recommend steel products for construction projects based on type and location.
     - Page: Find Suppliers ('sample_dropoff'). Content: Map and search tool to find steel warehouses and iron depots.
     - Tool: AI Consultant ('ai_consultant'). Content: Chat interface to ask about steel prices and standards.
@@ -159,18 +174,54 @@ const App: React.FC = () => {
             contents: historyForApi,
             config: {
                 systemInstruction: systemInstruction,
+                tools: [{ googleSearch: {} }],
             }
         });
 
         let fullResponse = '';
+        let groundingMetadata: any = null;
+
         for await (const chunk of responseStream) {
             fullResponse += chunk.text;
+            
+            if (chunk.candidates?.[0]?.groundingMetadata) {
+                groundingMetadata = chunk.candidates[0].groundingMetadata;
+            }
+
             setChatHistory(prev => {
                 const newHistory = [...prev];
                 newHistory[newHistory.length - 1] = { role: 'model', parts: [{ text: fullResponse }] };
                 return newHistory;
             });
         }
+
+        // Append grounding sources if available
+        if (groundingMetadata?.groundingChunks) {
+            const uniqueSources = new Set();
+            const sourcesList: string[] = [];
+
+            groundingMetadata.groundingChunks.forEach((chunk: any) => {
+                if (chunk.web?.uri && chunk.web?.title) {
+                    const sourceKey = chunk.web.uri;
+                    if (!uniqueSources.has(sourceKey)) {
+                        uniqueSources.add(sourceKey);
+                        sourcesList.push(`[${chunk.web.title}](${chunk.web.uri})`);
+                    }
+                }
+            });
+
+            if (sourcesList.length > 0) {
+                 const sourcesText = `\n\n**Sources:**\n${sourcesList.map(s => `- ${s}`).join('\n')}`;
+                 fullResponse += sourcesText;
+                 
+                 setChatHistory(prev => {
+                    const newHistory = [...prev];
+                    newHistory[newHistory.length - 1] = { role: 'model', parts: [{ text: fullResponse }] };
+                    return newHistory;
+                });
+            }
+        }
+
     } catch (error) {
         handleApiError(error);
         setChatHistory(prev => prev.slice(0, -1)); 
@@ -336,88 +387,103 @@ const App: React.FC = () => {
   };
 
   const renderPage = () => {
-    switch (currentPage) {
-      case 'home':
-        return <HomePage setPage={setPage} articles={ARTICLES} onSelectArticle={handleSelectArticle} />;
-      case 'test_recommender':
-        return <RecommendationEnginePage 
-            onGetRecommendation={handleGetRecommendation}
-            isLoading={isGettingRecommendation}
-            result={recommendationResult}
-            onClearResult={() => {
-                setRecommendationResult(null);
-                setTestDetails(null);
-            }}
-            onGetTestDetails={handleGetTestDetails}
-            isFetchingTestDetails={isFetchingTestDetails}
-            testDetails={testDetails}
-            onFindDropoffLocation={handleFindDropoffLocation}
-        />;
-      case 'sample_dropoff':
-        return <DistributorFinderPage 
-            onSearch={handleProviderSearch}
-            isLoading={isFindingProviders}
-            results={providerResults}
-            isQuotaExhausted={isQuotaExhausted}
-        />;
-      case 'ai_consultant':
-        return <AIChatPage
-            chatHistory={chatHistory} 
-            isStreaming={isStreaming} 
-            onSendMessage={handleAiSendMessage}
-            setPage={setPage}
-        />;
-      case 'blog':
-        return <BlogPage articles={ARTICLES} onSelectArticle={handleSelectArticle} />;
-      case 'article':
-        return selectedArticle 
-            ? <ArticlePage article={selectedArticle} setPage={setPage} /> 
-            : <BlogPage articles={ARTICLES} onSelectArticle={handleSelectArticle} />;
-      case 'content_hub':
-        return <ContentHubPage
-            onFetchTrends={handleFetchTrends}
-            isFetchingTrends={isFetchingTrends}
-            trends={dailyTrends}
-            trendsError={trendsError}
-            onGeneratePost={handleGeneratePost}
-            isGeneratingPost={isGeneratingPost}
-            generatedPost={generatedPost}
-            onClearPost={() => {
-                setGeneratedPost(null);
-                setAdaptedPost(null);
-            }}
-            onAdaptPost={handleAdaptPost}
-            isAdapting={isAdapting}
-            adaptedPost={adaptedPost}
-        />;
-      case 'our_experts':
-        return <TeamPage />;
-      case 'partnerships':
-        return <PartnershipsPage setPage={setPage} />;
-      case 'tools':
-        return <ToolsPage />;
-      default:
-        return <HomePage setPage={setPage} articles={ARTICLES} onSelectArticle={handleSelectArticle} />;
-    }
+    return (
+      <Suspense fallback={<LoadingSpinner />}>
+        {(() => {
+          switch (currentPage) {
+            case 'home':
+              return <HomePage setPage={setPage} articles={ARTICLES} onSelectArticle={handleSelectArticle} />;
+            case 'iron_snapp':
+              return <IronSnappPage />;
+            case 'test_recommender':
+              return <RecommendationEnginePage 
+                  onGetRecommendation={handleGetRecommendation}
+                  isLoading={isGettingRecommendation}
+                  result={recommendationResult}
+                  onClearResult={() => {
+                      setRecommendationResult(null);
+                      setTestDetails(null);
+                  }}
+                  onGetTestDetails={handleGetTestDetails}
+                  isFetchingTestDetails={isFetchingTestDetails}
+                  testDetails={testDetails}
+                  onFindDropoffLocation={handleFindDropoffLocation}
+              />;
+            case 'sample_dropoff':
+              return <DistributorFinderPage 
+                  onSearch={handleProviderSearch}
+                  isLoading={isFindingProviders}
+                  results={providerResults}
+                  isQuotaExhausted={isQuotaExhausted}
+              />;
+            case 'ai_consultant':
+              return <AIChatPage
+                  chatHistory={chatHistory} 
+                  isStreaming={isStreaming} 
+                  onSendMessage={handleAiSendMessage}
+                  setPage={setPage}
+              />;
+            case 'blog':
+              return <BlogPage articles={ARTICLES} onSelectArticle={handleSelectArticle} />;
+            case 'article':
+              return selectedArticle 
+                  ? <ArticlePage article={selectedArticle} setPage={setPage} /> 
+                  : <BlogPage articles={ARTICLES} onSelectArticle={handleSelectArticle} />;
+            case 'content_hub':
+              return <ContentHubPage
+                  onFetchTrends={handleFetchTrends}
+                  isFetchingTrends={isFetchingTrends}
+                  trends={dailyTrends}
+                  trendsError={trendsError}
+                  onGeneratePost={handleGeneratePost}
+                  isGeneratingPost={isGeneratingPost}
+                  generatedPost={generatedPost}
+                  onClearPost={() => {
+                      setGeneratedPost(null);
+                      setAdaptedPost(null);
+                  }}
+                  onAdaptPost={handleAdaptPost}
+                  isAdapting={isAdapting}
+                  adaptedPost={adaptedPost}
+              />;
+            case 'our_experts':
+              return <TeamPage />;
+            case 'partnerships':
+              return <PartnershipsPage setPage={setPage} />;
+            case 'tools':
+              return <ToolsPage />;
+            case 'dashboard':
+              return <DashboardPage />;
+            default:
+              return <HomePage setPage={setPage} articles={ARTICLES} onSelectArticle={handleSelectArticle} />;
+          }
+        })()}
+      </Suspense>
+    );
   };
 
   const isAuthenticated = !!user;
 
   return (
       <div className="bg-slate-50 text-slate-800 font-sans">
-        <SiteHeader
-          currentPage={currentPage}
-          setPage={setPage}
-          isAuthenticated={isAuthenticated}
-          user={user}
-          onLoginClick={() => setIsLoginModalOpen(true)}
-          onLogoutClick={handleLogout}
-          onSearchClick={() => setIsSearchModalOpen(true)}
-        />
+        {currentPage !== 'dashboard' && (
+            <SiteHeader
+            currentPage={currentPage}
+            setPage={setPage}
+            isAuthenticated={isAuthenticated}
+            user={user}
+            onLoginClick={() => setIsLoginModalOpen(true)}
+            onLogoutClick={handleLogout}
+            onSearchClick={() => setIsSearchModalOpen(true)}
+            />
+        )}
+        
         <main>
             {renderPage()}
         </main>
-        <SiteFooter setPage={setPage} />
+        
+        {currentPage !== 'dashboard' && <SiteFooter setPage={setPage} />}
+        
         <QuotaErrorModal isOpen={isQuotaExhausted} onClose={() => setIsQuotaExhausted(false)} />
         <LoginModal 
             isOpen={isLoginModalOpen} 
@@ -433,12 +499,14 @@ const App: React.FC = () => {
           error={searchError}
           onNavigate={handleNavigateFromSearch}
         />
-        <FloatingChatbot
-            chatHistory={chatHistory}
-            isStreaming={isStreaming}
-            onSendMessage={handleAiSendMessage}
-            setPage={setPage}
-        />
+        {currentPage !== 'dashboard' && (
+            <FloatingChatbot
+                chatHistory={chatHistory}
+                isStreaming={isStreaming}
+                onSendMessage={handleAiSendMessage}
+                setPage={setPage}
+            />
+        )}
       </div>
   );
 };

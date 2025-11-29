@@ -32,7 +32,7 @@ const SiteFooter: React.FC<SiteFooterProps> = ({ setPage }) => {
                         <p className="text-sm opacity-90 mt-1">{t('home.newsletter.subtitle')}</p>
                     </div>
                     <form className="flex items-center gap-2">
-                        <input type="email" placeholder={t('home.newsletter.placeholder')} className="w-full bg-white/10 border-white/20 rounded-md p-3 text-white placeholder-white/60 focus:ring-2 focus:ring-white focus:outline-none" />
+                        <input type="email" placeholder={t('home.newsletter.placeholder')} className="w-full bg-white/10 border-white/20 rounded-md p-3 text-white placeholder-white/60 focus:ring-2 focus:ring-white focus:outline-none" aria-label="Email for newsletter"/>
                         <button type="submit" className="px-6 py-3 bg-white text-corp-red font-bold rounded-md hover:bg-slate-100 transition-colors">{t('home.newsletter.button')}</button>
                     </form>
                 </div>
@@ -45,21 +45,21 @@ const SiteFooter: React.FC<SiteFooterProps> = ({ setPage }) => {
                         <h3 className="font-bold text-white text-lg">{t('home.footer.col1.title')}</h3>
                         <p className="text-sm leading-relaxed">{t('footer.contactInfo')}</p>
                          <div className="space-y-2 text-sm">
-                            <a href="mailto:sales@steelonline20.com" className="flex items-center gap-2 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-corp-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg> sales@steelonline20.com</a>
-                            <a href="tel:+982122041655" className="flex items-center gap-2 hover:text-white font-mono dir-ltr"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-corp-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg> +98 21 2204 1655</a>
+                            <a href="mailto:sales@steelonline20.com" className="flex items-center gap-2 hover:text-white" aria-label="Send email to sales"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-corp-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg> sales@steelonline20.com</a>
+                            <a href="tel:+982122041655" className="flex items-center gap-2 hover:text-white font-mono dir-ltr" aria-label="Call support"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-corp-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg> +98 21 2204 1655</a>
                          </div>
                          {/* Map Links */}
                          <div className="pt-4 border-t border-slate-700">
                             <h4 className="text-xs font-semibold text-slate-400 mb-2">Find us on:</h4>
                             <div className="flex gap-2 flex-wrap">
-                                <a href="https://www.google.com/maps/search/?api=1&query=35.78193,51.42218" target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs rounded border border-slate-600 transition-colors flex items-center gap-1">
-                                   <img src="https://www.google.com/images/branding/product/ico/maps15_bnuw3a_32dp.ico" alt="" className="w-3 h-3"/> Google
+                                <a href="https://www.google.com/maps/search/?api=1&query=35.78193,51.42218" target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs rounded border border-slate-600 transition-colors flex items-center gap-1" aria-label="Open in Google Maps">
+                                   <img src="https://www.google.com/images/branding/product/ico/maps15_bnuw3a_32dp.ico" alt="" className="w-3 h-3" width="12" height="12"/> Google
                                 </a>
-                                <a href="https://neshan.org/maps/municipal/836ca735770943cdb97e6566686dac0d" target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs rounded border border-slate-600 transition-colors flex items-center gap-1">
-                                    <img src="https://neshan.org/favicon.ico" alt="" className="w-3 h-3"/> Neshan
+                                <a href="https://neshan.org/maps/municipal/836ca735770943cdb97e6566686dac0d" target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs rounded border border-slate-600 transition-colors flex items-center gap-1" aria-label="Open in Neshan Map">
+                                    <img src="https://neshan.org/favicon.ico" alt="" className="w-3 h-3" width="12" height="12"/> Neshan
                                 </a>
-                                <a href="https://balad.ir/maps/tehran/amaniyeh#14.43/35.78193/51.42218" target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs rounded border border-slate-600 transition-colors flex items-center gap-1">
-                                    <img src="https://balad.ir/favicon.ico" alt="" className="w-3 h-3"/> Balad
+                                <a href="https://balad.ir/maps/tehran/amaniyeh#14.43/35.78193/51.42218" target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs rounded border border-slate-600 transition-colors flex items-center gap-1" aria-label="Open in Balad Map">
+                                    <img src="https://balad.ir/favicon.ico" alt="" className="w-3 h-3" width="12" height="12"/> Balad
                                 </a>
                             </div>
                          </div>
@@ -91,8 +91,8 @@ const SiteFooter: React.FC<SiteFooterProps> = ({ setPage }) => {
                     <div>
                         <h3 className="font-bold text-white text-lg">{t('home.footer.col4.title')}</h3>
                         <form className="space-y-3 mt-4">
-                            <input type="email" placeholder={t('home.footer.col4.email')} className="w-full bg-slate-800 border-slate-700 rounded-md p-2 text-white placeholder-slate-500 text-sm focus:ring-1 focus:ring-corp-red focus:border-corp-red focus:outline-none"/>
-                            <textarea placeholder={t('home.footer.col4.message')} rows={2} className="w-full bg-slate-800 border-slate-700 rounded-md p-2 text-white placeholder-slate-500 text-sm focus:ring-1 focus:ring-corp-red focus:border-corp-red focus:outline-none"></textarea>
+                            <input type="email" placeholder={t('home.footer.col4.email')} className="w-full bg-slate-800 border-slate-700 rounded-md p-2 text-white placeholder-slate-500 text-sm focus:ring-1 focus:ring-corp-red focus:border-corp-red focus:outline-none" aria-label="Your email"/>
+                            <textarea placeholder={t('home.footer.col4.message')} rows={2} className="w-full bg-slate-800 border-slate-700 rounded-md p-2 text-white placeholder-slate-500 text-sm focus:ring-1 focus:ring-corp-red focus:border-corp-red focus:outline-none" aria-label="Your message"></textarea>
                             <button type="submit" className="w-full px-4 py-2 bg-corp-red text-white font-semibold rounded-md hover:bg-corp-red-dark transition-colors text-sm">{t('home.footer.col4.button')}</button>
                         </form>
                     </div>
@@ -103,7 +103,7 @@ const SiteFooter: React.FC<SiteFooterProps> = ({ setPage }) => {
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
                     <p>{t('footer.copyright')}</p>
                     <div className="flex gap-4 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all">
-                         <img src="https://trustseal.enamad.ir/logo.aspx?id=155864&Code=ar6IDMFRdHkoKTNAXlsv" alt="Enamad" className="h-10 w-auto" />
+                         <img src="https://trustseal.enamad.ir/logo.aspx?id=155864&Code=ar6IDMFRdHkoKTNAXlsv" alt="Enamad Trust Seal" className="h-10 w-auto" width="40" height="40" />
                     </div>
                 </div>
             </div>
