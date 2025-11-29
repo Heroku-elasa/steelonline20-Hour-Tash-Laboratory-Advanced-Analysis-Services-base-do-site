@@ -1,6 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useLanguage } from '../types';
+import { useLanguage, Page } from '../types';
+
+interface DashboardPageProps {
+  setPage: (page: Page) => void;
+}
 
 // Mock Data for Charts
 const salesData = [
@@ -336,7 +340,7 @@ const LiveDashboard = () => {
     );
 };
 
-const DashboardPage: React.FC = () => {
+const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
     const { t, dir } = useLanguage();
     const [activeSection, setActiveSection] = useState('overview');
 
@@ -373,143 +377,151 @@ const DashboardPage: React.FC = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-100 flex animate-fade-in" dir={dir}>
-            {/* Sidebar */}
-            <aside className="w-20 md:w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 transition-all duration-300">
-                <div className="h-16 flex items-center justify-center border-b border-slate-800">
-                     <span className="text-2xl font-bold text-corp-red hidden md:block">S.O.20</span>
-                     <span className="text-2xl font-bold text-corp-red md:hidden">S</span>
+        <div className="min-h-screen bg-slate-100 flex flex-col animate-fade-in font-sans" dir={dir}>
+            {/* Top Admin Bar (WordPress Style) */}
+            <div className="h-8 bg-[#1d2327] text-white flex items-center justify-between px-4 text-sm z-50 sticky top-0">
+                <div className="flex items-center gap-4">
+                     <span className="font-bold flex items-center gap-1">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8z"/><path d="M12 6a1 1 0 0 0-1 1v4H8a1 1 0 0 0 0 2h3v4a1 1 0 0 0 2 0v-4h3a1 1 0 0 0 0-2h-3V7a1 1 0 0 0-1-1z"/></svg>
+                        SteelOnline
+                     </span>
+                     <button onClick={() => setPage('home')} className="flex items-center gap-1 hover:text-blue-400 transition-colors text-xs sm:text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
+                        Visit Site
+                     </button>
+                     <div className="hidden sm:flex items-center gap-1 hover:text-blue-400 transition-colors cursor-pointer">
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        <span className="text-xs">Updates</span>
+                        <span className="bg-orange-500 text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center">2</span>
+                     </div>
                 </div>
-                <nav className="flex-1 py-4 space-y-1">
-                    {menuItems.map(item => (
-                        <button
-                            key={item.key}
-                            onClick={() => setActiveSection(item.key)}
-                            className={`w-full flex items-center px-4 py-3 transition-colors ${activeSection === item.key ? 'bg-corp-red text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
-                        >
-                            {item.icon}
-                            <span className="mx-3 hidden md:block text-sm font-medium">{t(`dashboard.menu.${item.key}`)}</span>
-                        </button>
-                    ))}
-                    <button onClick={() => window.location.href = '/'} className="w-full flex items-center px-4 py-3 transition-colors text-slate-400 hover:bg-slate-800 hover:text-white mt-auto border-t border-slate-800">
-                         <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-                         <span className="mx-3 hidden md:block text-sm font-medium">View Site</span>
-                    </button>
-                </nav>
-                <div className="p-4 border-t border-slate-800">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-700"></div>
-                        <div className="hidden md:block">
-                            <p className="text-sm font-bold">Admin</p>
-                            <p className="text-xs text-slate-500">Super User</p>
-                        </div>
-                    </div>
+                <div className="flex items-center gap-3">
+                     <span className="text-xs text-slate-400">Howdy, Admin</span>
+                     <img src="https://i.pravatar.cc/150?img=12" alt="Admin" className="w-5 h-5 rounded-full border border-slate-600" />
                 </div>
-            </aside>
+            </div>
 
-            {/* Main Content */}
-            <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50">
-                <header className="bg-white shadow-sm h-16 flex items-center justify-between px-6">
-                    <h1 className="text-xl font-bold text-slate-800">{t(`dashboard.menu.${activeSection}`)}</h1>
-                    <div className="flex items-center gap-4">
-                        <button className="p-2 text-slate-400 hover:text-slate-600 relative">
-                             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            <div className="flex flex-1 overflow-hidden">
+                {/* Sidebar (WordPress Style) */}
+                <aside className="w-16 md:w-48 bg-[#23282d] text-slate-300 flex flex-col flex-shrink-0 transition-all duration-300 h-full relative">
+                    <nav className="flex-1 py-0 space-y-0">
+                        {menuItems.map(item => (
+                            <button
+                                key={item.key}
+                                onClick={() => setActiveSection(item.key)}
+                                className={`w-full flex items-center px-4 py-3 transition-colors border-l-4 ${activeSection === item.key ? 'bg-[#0073aa] text-white border-[#0073aa]' : 'border-transparent hover:bg-[#191e23] hover:text-blue-400 hover:border-[#0073aa]'}`}
+                            >
+                                <span className={`flex-shrink-0 ${activeSection === item.key ? 'text-white' : 'text-slate-400'}`}>{item.icon}</span>
+                                <span className="mx-3 hidden md:block text-sm font-medium">{t(`dashboard.menu.${item.key}`)}</span>
+                            </button>
+                        ))}
+                         <div className="my-2 border-t border-slate-700"></div>
+                         <button onClick={() => setPage('home')} className="w-full flex items-center px-4 py-3 transition-colors text-slate-400 hover:bg-[#191e23] hover:text-white border-l-4 border-transparent hover:border-[#0073aa]">
+                             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                             <span className="mx-3 hidden md:block text-sm font-medium">Log Out</span>
                         </button>
-                    </div>
-                </header>
+                    </nav>
+                </aside>
 
-                <div className="p-6">
-                    {activeSection === 'overview' && (
-                        <div className="space-y-6 animate-fade-in">
-                            {/* Metrics */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {metrics.map((metric, i) => (
-                                    <div key={i} className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                                        <p className="text-sm text-slate-500 font-medium">{metric.label}</p>
-                                        <div className="mt-2 flex items-baseline gap-2">
-                                            <span className="text-2xl font-bold text-slate-800">{metric.value}</span>
-                                            <span className={`text-xs font-bold ${metric.isPositive ? 'text-green-500' : 'text-red-500'}`}>{metric.change}</span>
+                {/* Main Content */}
+                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-[#f1f1f1]">
+                    <div className="p-4 sm:p-8">
+                        <header className="mb-6 flex justify-between items-center">
+                             <h1 className="text-2xl font-normal text-[#23282d]">{t(`dashboard.menu.${activeSection}`)}</h1>
+                             <button className="px-3 py-1 border border-[#0073aa] text-[#0073aa] text-sm hover:bg-[#0073aa] hover:text-white transition-colors">Screen Options</button>
+                        </header>
+
+                        {activeSection === 'overview' && (
+                            <div className="space-y-6 animate-fade-in">
+                                {/* Metrics Cards */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {metrics.map((metric, i) => (
+                                        <div key={i} className="bg-white p-5 shadow-[0_1px_1px_rgba(0,0,0,0.04)] border border-slate-200 border-t-4 border-t-white hover:border-t-[#0073aa] transition-all">
+                                            <p className="text-sm text-slate-500 font-medium">{metric.label}</p>
+                                            <div className="mt-2 flex items-baseline gap-2">
+                                                <span className="text-2xl font-bold text-[#23282d]">{metric.value}</span>
+                                                <span className={`text-xs font-bold ${metric.isPositive ? 'text-green-600' : 'text-red-600'}`}>{metric.change}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                 {/* Interactive Charts Section */}
+                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <SalesChart title={t('dashboard.charts.salesTitle')} />
+                                    <ProductDistChart title={t('dashboard.charts.productDist')} />
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    {/* Recent Orders Table */}
+                                    <div className="bg-white shadow-[0_1px_1px_rgba(0,0,0,0.04)] border border-slate-200">
+                                        <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-center">
+                                            <h3 className="font-semibold text-slate-800">{t('dashboard.tables.ordersTitle')}</h3>
+                                            <button className="text-[#0073aa] text-sm hover:underline">View All</button>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-sm text-left">
+                                                <thead className="bg-slate-50 text-slate-600">
+                                                    <tr>
+                                                        <th className="px-4 py-2 font-medium">{t('dashboard.tables.headers.orderId')}</th>
+                                                        <th className="px-4 py-2 font-medium">{t('dashboard.tables.headers.customer')}</th>
+                                                        <th className="px-4 py-2 font-medium">{t('dashboard.tables.headers.amount')}</th>
+                                                        <th className="px-4 py-2 font-medium text-right">{t('dashboard.tables.headers.status')}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100">
+                                                    {recentOrders.map((order, i) => (
+                                                        <tr key={i} className="hover:bg-[#f9f9f9]">
+                                                            <td className="px-4 py-3 font-mono text-[#0073aa]">{order.id}</td>
+                                                            <td className="px-4 py-3 font-medium text-slate-800">{order.customer}</td>
+                                                            <td className="px-4 py-3 text-slate-600">{order.amount}</td>
+                                                            <td className="px-4 py-3 text-right">
+                                                                <span className={`px-2 py-1 text-xs font-bold ${order.statusColor}`}>{order.status}</span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-
-                             {/* Interactive Charts Section */}
-                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <SalesChart title={t('dashboard.charts.salesTitle')} />
-                                <ProductDistChart title={t('dashboard.charts.productDist')} />
-                            </div>
-
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {/* Recent Orders Table */}
-                                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                                    <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                                        <h3 className="font-bold text-slate-800">{t('dashboard.tables.ordersTitle')}</h3>
-                                        <button className="text-corp-blue-dark text-sm hover:underline">View All</button>
-                                    </div>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm text-left">
-                                            <thead className="bg-slate-50 text-slate-500">
-                                                <tr>
-                                                    <th className="px-6 py-3 font-medium">{t('dashboard.tables.headers.orderId')}</th>
-                                                    <th className="px-6 py-3 font-medium">{t('dashboard.tables.headers.customer')}</th>
-                                                    <th className="px-6 py-3 font-medium">{t('dashboard.tables.headers.amount')}</th>
-                                                    <th className="px-6 py-3 font-medium text-right">{t('dashboard.tables.headers.status')}</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-100">
-                                                {recentOrders.map((order, i) => (
-                                                    <tr key={i} className="hover:bg-slate-50">
-                                                        <td className="px-6 py-3 font-mono text-slate-600">{order.id}</td>
-                                                        <td className="px-6 py-3 font-medium text-slate-800">{order.customer}</td>
-                                                        <td className="px-6 py-3 text-slate-600">{order.amount}</td>
-                                                        <td className="px-6 py-3 text-right">
-                                                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${order.statusColor}`}>{order.status}</span>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                                
-                                {/* Live Prices List */}
-                                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                                    <div className="px-6 py-4 border-b border-slate-100">
-                                        <h3 className="font-bold text-slate-800">{t('dashboard.tables.pricesTitle')}</h3>
-                                    </div>
-                                    <div className="divide-y divide-slate-100">
-                                        {livePrices.map((item, i) => (
-                                            <div key={i} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50">
-                                                <div>
-                                                    <p className="font-bold text-slate-800">{item.product}</p>
-                                                    <p className="text-xs text-slate-400">{item.time}</p>
+                                    
+                                    {/* Live Prices List */}
+                                    <div className="bg-white shadow-[0_1px_1px_rgba(0,0,0,0.04)] border border-slate-200">
+                                        <div className="px-4 py-3 border-b border-slate-100">
+                                            <h3 className="font-semibold text-slate-800">{t('dashboard.tables.pricesTitle')}</h3>
+                                        </div>
+                                        <div className="divide-y divide-slate-100">
+                                            {livePrices.map((item, i) => (
+                                                <div key={i} className="px-4 py-3 flex items-center justify-between hover:bg-[#f9f9f9]">
+                                                    <div>
+                                                        <p className="font-bold text-[#0073aa]">{item.product}</p>
+                                                        <p className="text-xs text-slate-400">{item.time}</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="font-mono font-bold text-slate-700">{item.price}</p>
+                                                        <p className={`text-xs font-bold ${item.change.includes('↑') ? 'text-green-600' : item.change.includes('↓') ? 'text-red-600' : 'text-slate-400'}`}>
+                                                            {item.change}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className="font-mono font-bold text-slate-700">{item.price}</p>
-                                                    <p className={`text-xs font-bold ${item.change.includes('↑') ? 'text-green-500' : item.change.includes('↓') ? 'text-red-500' : 'text-slate-400'}`}>
-                                                        {item.change}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {activeSection === 'live' && <LiveDashboard />}
+                        {activeSection === 'live' && <LiveDashboard />}
 
-                    {activeSection !== 'overview' && activeSection !== 'live' && (
-                        <div className="flex flex-col items-center justify-center py-20 text-slate-400 bg-white rounded-xl border border-dashed border-slate-300">
-                            <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                            <p className="text-lg">Section under construction</p>
-                        </div>
-                    )}
-                </div>
-            </main>
+                        {activeSection !== 'overview' && activeSection !== 'live' && (
+                            <div className="flex flex-col items-center justify-center py-20 text-slate-400 bg-white border border-dashed border-slate-300">
+                                <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                                <p className="text-lg">Section under construction</p>
+                            </div>
+                        )}
+                    </div>
+                </main>
+            </div>
         </div>
     );
 };

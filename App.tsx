@@ -453,7 +453,7 @@ const App: React.FC = () => {
             case 'tools':
               return <ToolsPage />;
             case 'dashboard':
-              return <DashboardPage />;
+              return <DashboardPage setPage={setPage} />;
             default:
               return <HomePage setPage={setPage} articles={ARTICLES} onSelectArticle={handleSelectArticle} />;
           }

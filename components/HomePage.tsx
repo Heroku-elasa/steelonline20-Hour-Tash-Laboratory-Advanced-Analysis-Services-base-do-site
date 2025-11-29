@@ -19,7 +19,7 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
         { icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>, title: t('home.whyUs.item1.title'), desc: t('home.whyUs.item1.desc') }, // Price Guarantee
         { icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>, title: t('home.whyUs.item2.title'), desc: t('home.whyUs.item2.desc') }, // Fast Logistics
         { icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>, title: t('home.whyUs.item3.title'), desc: t('home.whyUs.item3.desc') }, // Credit Purchase
-        { icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>, title: t('home.whyUs.item4.title'), desc: t('home.whyUs.item4.desc') }  // Quality Guarantee
+        { icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>, title: t('home.whyUs.item4.title'), desc: t('home.whyUs.item4.desc') }  // Quality Guarantee
     ];
 
     return (
@@ -27,31 +27,32 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
             <SEO 
                 title={t('home.hero.mainTitle')} 
                 description="استیل آنلاین ۲۰، مرجع تخصصی قیمت روز آهن‌آلات، میلگرد، تیرآهن و ورق. خرید نقدی و اعتباری با تضمین بهترین قیمت و کیفیت." 
-                image="https://ahanonline.com/resize/?file=https://contents.ahanonline.com/website/d508722591eca912a58901f746d330c9.jpg&format=webp"
+                image="https://i.sstatic.net/MBH09S1p.png"
             />
             {/* Hero Section */}
-            <section className="relative py-32 sm:py-48 text-white overflow-hidden">
+            <section className="relative py-32 sm:py-48 text-white overflow-hidden bg-slate-900">
                 {/* Optimized LCP Image */}
+                {/* Mobile: object-contain to ensure whole image is seen. Desktop: object-cover for full width hero */}
                 <img 
-                    src="https://ahanonline.com/resize/?file=https://contents.ahanonline.com/website/d508722591eca912a58901f746d330c9.jpg&format=webp" 
+                    src="https://i.sstatic.net/MBH09S1p.png" 
                     alt="Industrial Steel Construction Site" 
-                    className="absolute inset-0 w-full h-full object-cover z-0"
+                    className="absolute inset-0 w-full h-full md:object-cover object-contain object-center z-0 bg-slate-900"
                     width="1920" 
                     height="1080"
                     fetchPriority="high" 
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#6B0029]/90 to-[#620025]/70 z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#6B0029]/90 to-[#620025]/70 z-10 opacity-90 sm:opacity-100"></div>
                 <div className="container mx-auto px-4 relative z-20 text-center">
                     <p className="text-lg sm:text-xl font-light text-slate-200">{t('hero.title')}</p>
                     <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mt-4 leading-tight">
                         {t('home.hero.mainTitle')}
                     </h1>
                     <div className="mt-8 flex flex-wrap justify-center gap-4">
-                        <button onClick={() => setPage('test_recommender')} className="px-8 py-3 bg-corp-teal text-white font-semibold rounded-md hover:bg-corp-teal-dark transition-colors shadow-lg flex items-center gap-2">
+                        <button onClick={() => setPage('test_recommender')} className="px-8 py-4 bg-corp-teal text-white font-semibold rounded-md hover:bg-corp-teal-dark transition-colors shadow-lg flex items-center gap-2 touch-manipulation">
                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg>
                            {t('hero.cta')}
                         </button>
-                         <button onClick={() => setPage('tools')} className="px-8 py-3 bg-transparent border-2 border-white text-white font-semibold rounded-md hover:bg-white hover:text-corp-red-dark transition-colors shadow-lg">
+                         <button onClick={() => setPage('tools')} className="px-8 py-4 bg-transparent border-2 border-white text-white font-semibold rounded-md hover:bg-white hover:text-corp-red-dark transition-colors shadow-lg touch-manipulation">
                            {t('home.hero.aboutButton')}
                         </button>
                     </div>
@@ -101,7 +102,7 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
                             </div>
                             <h2 className="text-xl font-bold mb-2 text-slate-900">{t('home.featuredBlocks.block1.title')}</h2>
                             <p className="text-sm text-slate-600 mb-6 leading-relaxed">{t('home.featuredBlocks.block1.desc')}</p>
-                            <button onClick={() => setPage('content_hub')} className="text-corp-teal font-semibold text-sm hover:underline">{t('home.featuredBlocks.button')} &rarr;</button>
+                            <button onClick={() => setPage('content_hub')} className="text-corp-teal font-semibold text-sm hover:underline p-2 -ml-2">{t('home.featuredBlocks.button')} &rarr;</button>
                         </div>
                         <div className="bg-white border border-slate-200 p-8 rounded-xl shadow-sm hover:shadow-lg transition-shadow group">
                             <div className="w-12 h-12 bg-red-50 text-corp-red rounded-lg flex items-center justify-center mb-4 group-hover:bg-corp-red group-hover:text-white transition-colors">
@@ -109,7 +110,7 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
                             </div>
                             <h2 className="text-xl font-bold mb-2 text-slate-900">{t('home.featuredBlocks.block2.title')}</h2>
                             <p className="text-sm text-slate-600 mb-6 leading-relaxed">{t('home.featuredBlocks.block2.desc')}</p>
-                            <button onClick={() => setPage('partnerships')} className="text-corp-teal font-semibold text-sm hover:underline">{t('home.featuredBlocks.button')} &rarr;</button>
+                            <button onClick={() => setPage('partnerships')} className="text-corp-teal font-semibold text-sm hover:underline p-2 -ml-2">{t('home.featuredBlocks.button')} &rarr;</button>
                         </div>
                         <div className="bg-corp-red text-white p-8 rounded-xl shadow-lg">
                             <h2 className="text-xl font-bold mb-4">{t('home.featuredBlocks.block3.title')}</h2>
@@ -177,7 +178,7 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
                                     </h3>
                                     <p className="text-sm text-slate-600 leading-relaxed flex-grow">{article.excerpt[language]}</p>
                                     <div className="mt-4 pt-4 border-t border-slate-100">
-                                        <button onClick={() => onSelectArticle(article)} className="text-sm font-semibold text-corp-teal hover:underline flex items-center gap-1">
+                                        <button onClick={() => onSelectArticle(article)} className="text-sm font-semibold text-corp-teal hover:underline flex items-center gap-1 p-2 -ml-2">
                                             {t('blogPage.readMore')} 
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 rtl:rotate-180" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
                                         </button>

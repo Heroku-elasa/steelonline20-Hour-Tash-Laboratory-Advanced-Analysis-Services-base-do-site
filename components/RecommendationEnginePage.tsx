@@ -77,14 +77,26 @@ const ResultDisplay: React.FC<{
         }
     };
 
-    const handleSavePdf = () => {
+    const handleSavePdf = async () => {
         const element = document.getElementById('recommendation-report-content');
         if (!element) return;
         
+        // Dynamic load of html2pdf
         // @ts-ignore
         if (typeof window.html2pdf === 'undefined') {
-            addToast("PDF library loading...", "info");
-            return;
+            addToast("Loading PDF generator...", "info");
+            try {
+                await new Promise<void>((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+                    script.onload = () => resolve();
+                    script.onerror = () => reject(new Error('Failed to load html2pdf'));
+                    document.body.appendChild(script);
+                });
+            } catch (e) {
+                addToast("Failed to load PDF library. Check your connection.", "error");
+                return;
+            }
         }
 
         const opt = {
