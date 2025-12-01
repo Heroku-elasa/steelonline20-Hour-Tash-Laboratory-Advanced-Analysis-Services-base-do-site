@@ -66,7 +66,7 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
             {/* Hero Section */}
             {/* Reduced vertical padding on mobile to allow more image width visibility relative to height */}
             <section className="relative py-20 sm:py-48 text-white w-full">
-                <div className="absolute inset-0 z-0">
+                <div className="absolute inset-0 z-0 bg-slate-900">
                     <img 
                         src="https://i.sstatic.net/iwMPmj8z.png" 
                         alt="انبار آهن و میلگرد استیل آنلاین" 
@@ -74,8 +74,12 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
                         width="1920" 
                         height="1080"
                         fetchPriority="high"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                        }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 to-slate-800/70"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 to-slate-800/60"></div>
                 </div>
                 
                 <div className="container mx-auto px-4 relative z-10 text-center">

@@ -1,534 +1,325 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useLanguage, Page } from '../types';
+import React, { useState, useEffect } from 'react';
+import { useLanguage, Page, DashboardStats, AuditAlert, CheckItem, AuditDocument, CustomerCredit } from '../types';
+import { getDashboardStats, getAlerts, getChecks, getAuditDocuments, getCustomers } from '../services/dashboardService';
+import { StatCard, InternalControlGauge, AlertsList, CheckStatusChart, CashFlowChart } from './DashboardComponents';
 
 interface DashboardPageProps {
     setPage: (page: Page) => void;
 }
 
-// Mock Data for Charts
-const salesData = [
-  { month: 'Farvardin', value: 120 },
-  { month: 'Ordibehesht', value: 145 },
-  { month: 'Khordad', value: 130 },
-  { month: 'Tir', value: 160 },
-  { month: 'Mordad', value: 150 },
-  { month: 'Shahrivar', value: 175 },
-];
-
-const distData = [
-    { label: 'Rebar', value: 45, color: '#ef4444' }, // red-500
-    { label: 'Beams', value: 30, color: '#3b82f6' }, // blue-500
-    { label: 'Sheets', value: 15, color: '#10b981' }, // green-500
-    { label: 'Profiles', value: 10, color: '#f59e0b' }, // amber-500
-];
-
-const Tooltip = ({ x, y, children }: { x: number, y: number, children?: React.ReactNode }) => (
-    <div 
-        className="absolute bg-slate-800 text-white text-xs rounded px-2 py-1 pointer-events-none transform -translate-x-1/2 -translate-y-full mb-2 z-10 shadow-lg whitespace-nowrap"
-        style={{ left: x, top: y - 5 }}
-    >
-        {children}
-        <div className="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-1 border-4 border-transparent border-t-slate-800"></div>
-    </div>
-);
-
-const SalesChart = ({ title }: { title: string }) => {
-    const [hovered, setHovered] = useState<number | null>(null);
-    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-    const containerRef = useRef<HTMLDivElement>(null);
-    
-    const maxVal = Math.max(...salesData.map(d => d.value));
-
-    const handleMouseMove = (e: React.MouseEvent, index: number) => {
-        if (containerRef.current) {
-            const rect = containerRef.current.getBoundingClientRect();
-            setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-        }
-        setHovered(index);
-    };
-
-    return (
-        <div className="h-64 bg-white p-6 rounded-xl shadow-sm border border-slate-200 relative" ref={containerRef}>
-            <h3 className="font-bold text-slate-700 mb-6">{title}</h3>
-            <div className="flex items-end justify-between h-40 gap-2 px-2 border-b border-slate-100 pb-2">
-                {salesData.map((d, i) => {
-                    const barHeight = (d.value / maxVal) * 100;
-                    return (
-                        <div key={i} className="flex-1 flex flex-col items-center gap-2 group relative h-full justify-end">
-                            <div 
-                                className={`w-full rounded-t-sm transition-all duration-300 relative cursor-pointer ${hovered === i ? 'bg-corp-red' : 'bg-corp-red/70'}`}
-                                style={{ height: `${barHeight}%` }}
-                                onMouseMove={(e) => handleMouseMove(e, i)}
-                                onMouseLeave={() => setHovered(null)}
-                            >
-                            </div>
-                            <span className="text-[10px] text-slate-500 truncate w-full text-center">{d.month}</span>
-                        </div>
-                    );
-                })}
-            </div>
-             {hovered !== null && (
-                <Tooltip x={mousePos.x} y={mousePos.y}>
-                    <p className="font-bold">{salesData[hovered].month}</p>
-                    <p>{salesData[hovered].value}M IRR</p>
-                </Tooltip>
-            )}
-        </div>
-    );
-};
-
-const ProductDistChart = ({ title }: { title: string }) => {
-    const [hovered, setHovered] = useState<number | null>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    const total = distData.reduce((acc, curr) => acc + curr.value, 0);
-    let cumulativePercent = 0;
-
-    const getCoordinatesForPercent = (percent: number) => {
-        const x = Math.cos(2 * Math.PI * percent);
-        const y = Math.sin(2 * Math.PI * percent);
-        return [x, y];
-    };
-    
-    return (
-        <div className="h-64 bg-white p-6 rounded-xl shadow-sm border border-slate-200 relative flex flex-col" ref={containerRef}>
-            <h3 className="font-bold text-slate-700 mb-4">{title}</h3>
-            <div className="flex-1 flex items-center justify-center gap-8">
-                <div className="relative w-32 h-32">
-                    <svg viewBox="-1 -1 2 2" className="transform -rotate-90 w-full h-full">
-                        {distData.map((d, i) => {
-                            const startPercent = cumulativePercent;
-                            const endPercent = cumulativePercent + (d.value / total);
-                            cumulativePercent = endPercent;
-
-                            const [startX, startY] = getCoordinatesForPercent(startPercent);
-                            const [endX, endY] = getCoordinatesForPercent(endPercent);
-                            
-                            const largeArcFlag = d.value / total > 0.5 ? 1 : 0;
-                            
-                            const pathData = [
-                                `M ${startX} ${startY}`,
-                                `A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY}`,
-                                `L 0 0`,
-                            ].join(' ');
-
-                            return (
-                                <path 
-                                    key={i} 
-                                    d={pathData} 
-                                    fill={d.color} 
-                                    stroke="white" 
-                                    strokeWidth="0.05"
-                                    className="hover:opacity-80 transition-opacity cursor-pointer"
-                                    onMouseEnter={() => setHovered(i)}
-                                    onMouseLeave={() => setHovered(null)}
-                                />
-                            );
-                        })}
-                        <circle cx="0" cy="0" r="0.6" fill="white" />
-                    </svg>
-                    {hovered !== null && (
-                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <div className="text-center">
-                                <p className="text-xs text-slate-500 font-bold">{distData[hovered].label}</p>
-                                <p className="text-sm font-bold text-slate-800">{distData[hovered].value}%</p>
-                            </div>
-                        </div>
-                    )}
-                </div>
-                <div className="space-y-2">
-                    {distData.map((d, i) => (
-                        <div key={i} className={`flex items-center gap-2 text-xs transition-opacity ${hovered !== null && hovered !== i ? 'opacity-30' : 'opacity-100'}`}>
-                            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }}></span>
-                            <span className="text-slate-600 font-medium">{d.label}</span>
-                            <span className="text-slate-400">{d.value}%</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
-};
-
 const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
     const { t, dir } = useLanguage();
     const [activeSection, setActiveSection] = useState('overview');
+    
+    // Data State
+    const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [alerts, setAlerts] = useState<AuditAlert[]>([]);
+    const [checks, setChecks] = useState<CheckItem[]>([]);
+    const [auditDocs, setAuditDocs] = useState<AuditDocument[]>([]);
+    const [customers, setCustomers] = useState<CustomerCredit[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const metrics = [
-        { label: t('dashboard.metrics.orders'), value: '24', change: '↑ 12%', isPositive: true },
-        { label: t('dashboard.metrics.sales'), value: '1,250,000,000 IRR', change: '↑ 8%', isPositive: true },
-        { label: t('dashboard.metrics.newCustomers'), value: '8', change: '↑ 25%', isPositive: true },
-        { label: t('dashboard.metrics.visits'), value: '1,542', change: '↓ 5%', isPositive: false },
-    ];
-
-    const recentOrders = [
-        { id: '#1234', customer: 'شرکت آلفا', product: 'میلگرد ۱۴', amount: '500,000,000', status: 'در انتظار', statusColor: 'bg-yellow-100 text-yellow-700' },
-        { id: '#1233', customer: 'آقای احمدی', product: 'تیرآهن ۱۸', amount: '320,000,000', status: 'ارسال شده', statusColor: 'bg-blue-100 text-blue-700' },
-        { id: '#1232', customer: 'پیمانکاری سازه', product: 'ورق سیاه ۱۰', amount: '180,000,000', status: 'تکمیل شده', statusColor: 'bg-green-100 text-green-700' },
-        { id: '#1231', customer: 'بازرگانی آهن', product: 'نبشی ۵', amount: '450,000,000', status: 'لغو شده', statusColor: 'bg-red-100 text-red-700' },
-    ];
-
-    const livePrices = [
-        { product: 'میلگرد ۱۴ اصفهان', price: '28,500', change: '↑ 2%', time: '10:30' },
-        { product: 'میلگرد ۱۶ بناب', price: '28,200', change: '↓ 1%', time: '10:25' },
-        { product: 'تیرآهن ۱۴ ذوب آهن', price: '32,000', change: '─ 0%', time: '10:30' },
-        { product: 'ورق سیاه ۲ میل', price: '38,500', change: '↑ 1.5%', time: '10:15' },
-    ];
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const [statsData, alertsData, checksData, docsData, customersData] = await Promise.all([
+                    getDashboardStats(),
+                    getAlerts(),
+                    getChecks(),
+                    getAuditDocuments(),
+                    getCustomers()
+                ]);
+                setStats(statsData);
+                setAlerts(alertsData);
+                setChecks(checksData);
+                setAuditDocs(docsData);
+                setCustomers(customersData);
+            } catch (error) {
+                console.error("Failed to fetch dashboard data", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
 
     const menuItems = [
         { key: 'overview', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> },
+        { key: 'financial', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+        { key: 'audit', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+        { key: 'customers', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> },
+        { key: 'reports', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> },
         { key: 'live', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> },
-        { key: 'products', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg> },
-        { key: 'pricing', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg> },
-        { key: 'orders', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg> },
-        { key: 'customers', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg> },
-        { key: 'reports', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
-        { key: 'settings', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> },
     ];
 
-    const LiveDashboard = () => {
-        const [candles, setCandles] = useState<{time: number, open: number, close: number, high: number, low: number}[]>([]);
-        const [realtimeOrders, setRealtimeOrders] = useState<{product: string, quantity: string, city: string, time: string, status: string}[]>([]);
-        const [activeUsers, setActiveUsers] = useState(124);
-        const [tickerItems, setTickerItems] = useState([
-            { product: 'Rebar 14 Esf', price: 28500, change: 1.2 },
-            { product: 'IPE 180 Zob', price: 34200, change: -0.5 },
-            { product: 'Sheet 2mm', price: 38100, change: 0.8 },
-            { product: 'Rebar 16 Bonab', price: 27900, change: -1.5 },
-            { product: 'Profile 2x2', price: 42000, change: 0.0 },
-        ]);
-        const scrollRef = useRef<HTMLDivElement>(null);
-
-        // Simulate Real-time Data
-        useEffect(() => {
-            // Initial candles for Rebar Price
-            let lastPrice = 28500;
-            const initialCandles = [];
-            let now = Date.now();
-            for (let i = 0; i < 40; i++) {
-                const open = lastPrice;
-                const close = open + (Math.random() - 0.5) * 100;
-                const high = Math.max(open, close) + Math.random() * 30;
-                const low = Math.min(open, close) - Math.random() * 30;
-                initialCandles.push({ time: now - (40 - i) * 1000, open, close, high, low });
-                lastPrice = close;
-            }
-            setCandles(initialCandles);
-
-            // Simulation Interval
-            const interval = setInterval(() => {
-                // Update Candles
-                setCandles(prev => {
-                    const last = prev[prev.length - 1];
-                    const open = last.close;
-                    const change = (Math.random() - 0.5) * 50; 
-                    const close = open + change;
-                    const high = Math.max(open, close) + Math.random() * 10;
-                    const low = Math.min(open, close) - Math.random() * 10;
-                    const newCandle = { time: Date.now(), open, close, high, low };
-                    return [...prev.slice(1), newCandle];
-                });
-
-                // Update Active Users
-                setActiveUsers(prev => prev + Math.floor(Math.random() * 3) - 1);
-
-                // Update Ticker
-                setTickerItems(prev => prev.map(item => ({
-                    ...item,
-                    price: Math.floor(item.price + (Math.random() - 0.5) * 50),
-                    change: parseFloat((item.change + (Math.random() - 0.5) * 0.1).toFixed(2))
-                })));
-
-                // Simulate New Orders
-                if (Math.random() > 0.6) {
-                    const products = ['Rebar 14', 'Rebar 16', 'IPE 140', 'IPE 180', 'Sheet 2mm', 'Sheet 10mm', 'Corner 5'];
-                    const cities = ['Tehran', 'Isfahan', 'Mashhad', 'Tabriz', 'Shiraz', 'Ahvaz', 'Yazd'];
-                    const statuses = ['Processing', 'Confirmed', 'Pending'];
-                    const newOrder = {
-                        product: products[Math.floor(Math.random() * products.length)],
-                        quantity: (Math.floor(Math.random() * 25) + 1) + ' Tons',
-                        city: cities[Math.floor(Math.random() * cities.length)],
-                        time: new Date().toLocaleTimeString('en-US', { hour12: false }),
-                        status: statuses[Math.floor(Math.random() * statuses.length)]
-                    };
-                    setRealtimeOrders(prev => [newOrder, ...prev].slice(0, 10)); // Keep last 10
-                }
-            }, 1500);
-
-            return () => clearInterval(interval);
-        }, []);
-
-        useEffect(() => {
-            if (scrollRef.current) {
-                scrollRef.current.scrollTop = 0; 
-            }
-        }, [realtimeOrders]);
-
-        // Simple SVG Chart Config
-        const width = 600;
-        const height = 300;
-        
-        // Calculate max/min for scaling with safety check
-        const highs = candles.map(c => c.high);
-        const lows = candles.map(c => c.low);
-        const maxPrice = highs.length ? Math.max(...highs) : 1000;
-        const minPrice = lows.length ? Math.min(...lows) : 0;
-        const range = maxPrice - minPrice || 1;
-        
-        const getY = (price: number) => height - ((price - minPrice) / range) * height;
-
-        return (
-            <div className="space-y-6 animate-fade-in">
-                {/* Ticker */}
-                <div className="bg-slate-900 text-white p-3 rounded-lg overflow-hidden whitespace-nowrap flex gap-8 shadow-md">
-                     {tickerItems.map((item, i) => (
-                         <div key={i} className="flex items-center gap-2">
-                             <span className="font-bold text-slate-400">{item.product}</span>
-                             <span>{item.price.toLocaleString()}</span>
-                             <span className={item.change >= 0 ? 'text-green-400' : 'text-red-400'}>
-                                 {item.change >= 0 ? '▲' : '▼'} {Math.abs(item.change)}%
-                             </span>
-                         </div>
-                     ))}
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Chart */}
-                    <div className="lg:col-span-2 bg-slate-800 rounded-xl p-4 border border-slate-700 shadow-lg">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-white font-bold flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                {t('dashboard.live.risingwave')}
-                            </h3>
-                            <div className="flex gap-2 text-xs">
-                                <span className="bg-slate-700 text-slate-300 px-2 py-1 rounded cursor-pointer hover:bg-slate-600">1M</span>
-                                <span className="bg-slate-700 text-slate-300 px-2 py-1 rounded cursor-pointer hover:bg-slate-600">5M</span>
-                                <span className="bg-corp-blue text-white px-2 py-1 rounded">15M</span>
-                            </div>
-                        </div>
-                        <div className="h-64 w-full">
-                            <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-                                {candles.map((c, i) => {
-                                    const x = (i / 40) * width; // 40 candles shown
-                                    const candleW = (width / 40) * 0.6;
-                                    const yHigh = getY(c.high);
-                                    const yLow = getY(c.low);
-                                    const yOpen = getY(c.open);
-                                    const yClose = getY(c.close);
-                                    const isGreen = c.close >= c.open;
-                                    const color = isGreen ? '#10B981' : '#EF4444';
-                                    
-                                    return (
-                                        <g key={c.time}>
-                                            <line x1={x + candleW/2} y1={yLow} x2={x + candleW/2} y2={yHigh} stroke={color} strokeWidth="1" />
-                                            <rect 
-                                                x={x} 
-                                                y={Math.min(yOpen, yClose)} 
-                                                width={candleW} 
-                                                height={Math.max(1, Math.abs(yOpen - yClose))} 
-                                                fill={color} 
-                                            />
-                                        </g>
-                                    );
-                                })}
-                            </svg>
-                        </div>
-                    </div>
-
-                    {/* Order Stream & Stats */}
-                    <div className="space-y-4">
-                        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 shadow-lg">
-                             <h3 className="text-white font-bold mb-4">{t('dashboard.live.systemStatus')}</h3>
-                             <div className="space-y-3">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-slate-400">Active Users</span>
-                                    <span className="text-white font-mono">{activeUsers}</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-slate-400">Order/Sec</span>
-                                    <span className="text-green-400 font-mono">12.5</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-slate-400">Latency</span>
-                                    <span className="text-green-400 font-mono">24ms</span>
-                                </div>
-                             </div>
-                        </div>
-                        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 flex-1 overflow-hidden shadow-lg h-60">
-                             <h3 className="text-white font-bold mb-3">{t('dashboard.live.logs')}</h3>
-                             <div className="space-y-2 h-44 overflow-y-auto font-mono text-xs pr-1" ref={scrollRef}>
-                                {realtimeOrders.map((order, i) => (
-                                    <div key={i} className="flex gap-2 text-slate-300 border-b border-slate-700/50 pb-1 animate-fade-in">
-                                        <span className="text-slate-500 opacity-70">{order.time}</span>
-                                        <span className="text-corp-blue-light">{order.product}</span>
-                                        <span className="text-slate-400">{order.quantity}</span>
-                                        <span className="ml-auto text-slate-500 opacity-70">{order.city}</span>
-                                    </div>
-                                ))}
-                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
+    const formatCurrency = (amount: number) => {
+        return (amount / 1000000000).toFixed(1) + 'B IRR';
     };
 
     return (
         <div className="min-h-screen bg-[#f0f0f1] flex animate-fade-in" dir={dir}>
-            {/* Sidebar (WordPress Style: #1d2327) */}
-            <aside className="w-16 md:w-48 bg-[#1d2327] text-white flex flex-col flex-shrink-0 transition-all duration-300 relative z-20">
-                <div className="h-12 flex items-center justify-center border-b border-[#3c434a] bg-[#1d2327]">
-                     <span className="text-xl font-bold text-white hidden md:block">S.O.20</span>
+            {/* Sidebar */}
+            <aside className="w-16 md:w-56 bg-[#1d2327] text-white flex flex-col flex-shrink-0 transition-all duration-300 relative z-20">
+                <div className="h-14 flex items-center justify-center border-b border-[#3c434a] bg-[#1d2327]">
+                     <span className="text-xl font-bold text-white hidden md:block">Steel Online 20</span>
                      <span className="text-xl font-bold text-white md:hidden">S</span>
                 </div>
                 
-                {/* Visit Site Button - WordPress Style */}
                 <div className="border-b border-[#3c434a] mb-2">
-                    <button 
-                        onClick={() => setPage('home')}
-                        className="w-full flex items-center px-4 py-3 text-[#f0f0f1] hover:text-[#72aee6] hover:bg-[#2c3338] transition-colors group"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 group-hover:text-[#72aee6] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                        </svg>
+                    <button onClick={() => setPage('home')} className="w-full flex items-center px-4 py-3 text-[#f0f0f1] hover:text-[#72aee6] hover:bg-[#2c3338] transition-colors group">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 group-hover:text-[#72aee6] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
                         <span className="mx-3 hidden md:block text-sm font-medium">Visit Site</span>
                     </button>
                 </div>
 
                 <nav className="flex-1 py-2 space-y-0.5">
                     {menuItems.map(item => (
-                        <button
-                            key={item.key}
-                            onClick={() => setActiveSection(item.key)}
-                            className={`w-full flex items-center px-4 py-2.5 transition-colors relative group ${activeSection === item.key ? 'bg-[#2271b1] text-white' : 'text-[#f0f0f1] hover:bg-[#2c3338] hover:text-[#72aee6]'}`}
-                        >
-                            {/* Active Indicator Strip */}
-                            {activeSection === item.key && (
-                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#72aee6] md:hidden"></div>
-                            )}
-                            <div className={`${activeSection === item.key ? 'text-white' : 'text-[#a7aaad] group-hover:text-[#72aee6]'}`}>
-                                {item.icon}
-                            </div>
+                        <button key={item.key} onClick={() => setActiveSection(item.key)} className={`w-full flex items-center px-4 py-3 transition-colors relative group ${activeSection === item.key ? 'bg-[#2271b1] text-white' : 'text-[#f0f0f1] hover:bg-[#2c3338] hover:text-[#72aee6]'}`}>
+                            {activeSection === item.key && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#72aee6] md:hidden"></div>}
+                            <div className={`${activeSection === item.key ? 'text-white' : 'text-[#a7aaad] group-hover:text-[#72aee6]'}`}>{item.icon}</div>
                             <span className="mx-3 hidden md:block text-sm font-medium">{t(`dashboard.menu.${item.key}`)}</span>
-                            {/* Triangle indicator for active item (Desktop) */}
-                            {activeSection === item.key && (
-                                <div className="hidden md:block absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 w-3 h-3 bg-[#f0f0f1] rotate-45"></div>
-                            )}
+                            {activeSection === item.key && <div className="hidden md:block absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 w-3 h-3 bg-[#f0f0f1] rotate-45"></div>}
                         </button>
                     ))}
                 </nav>
-                <div className="p-4 border-t border-[#3c434a]">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-500 border-2 border-[#3c434a]"></div>
-                        <div className="hidden md:block">
-                            <p className="text-sm font-bold text-[#f0f0f1]">Admin</p>
-                            <button onClick={() => setPage('home')} className="text-xs text-[#a7aaad] hover:text-[#72aee6] text-left">Log Out</button>
-                        </div>
-                    </div>
-                </div>
             </aside>
 
             {/* Main Content */}
             <main className="flex-1 overflow-x-hidden overflow-y-auto bg-[#f0f0f1]">
-                {/* Admin Top Bar */}
-                <header className="bg-white shadow-sm h-12 flex items-center justify-between px-6 sticky top-0 z-10 border-b border-[#dcdcde]">
+                {/* Header */}
+                <header className="bg-white shadow-sm h-14 flex items-center justify-between px-6 sticky top-0 z-10 border-b border-[#dcdcde]">
                     <h1 className="text-lg font-semibold text-[#1d2327]">{t(`dashboard.menu.${activeSection}`)}</h1>
                     <div className="flex items-center gap-4">
-                        <button className="text-[#50575e] hover:text-[#2271b1] text-sm font-medium">Help</button>
-                        <button className="text-[#50575e] hover:text-[#2271b1] text-sm font-medium">Screen Options</button>
+                        <span className="text-xs text-slate-500 font-mono">v2.4.0 (Audit System Active)</span>
+                        <div className="w-8 h-8 rounded-full bg-slate-200 border flex items-center justify-center text-slate-600 font-bold">A</div>
                     </div>
                 </header>
 
                 <div className="p-6">
-                    {activeSection === 'overview' && (
-                        <div className="space-y-6 animate-fade-in">
-                            {/* Metrics */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {metrics.map((metric, i) => (
-                                    <div key={i} className="bg-white p-5 rounded border border-[#dcdcde] shadow-sm relative overflow-hidden group hover:border-[#2271b1] transition-colors">
-                                        <div className={`absolute top-0 right-0 w-16 h-16 transform translate-x-4 -translate-y-4 rounded-full opacity-10 ${metric.isPositive ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                                        <p className="text-sm text-[#646970] font-medium uppercase tracking-wide">{metric.label}</p>
-                                        <div className="mt-2 flex items-baseline gap-2">
-                                            <span className="text-2xl font-bold text-[#1d2327]">{metric.value}</span>
-                                            <span className={`text-xs font-bold ${metric.isPositive ? 'text-green-600' : 'text-red-600'}`}>{metric.change}</span>
+                    {loading ? (
+                         <div className="flex items-center justify-center h-64">
+                             <div className="w-10 h-10 border-4 border-slate-200 border-t-corp-blue rounded-full animate-spin"></div>
+                         </div>
+                    ) : (
+                        <>
+                            {activeSection === 'overview' && stats && (
+                                <div className="space-y-6 animate-fade-in">
+                                    {/* Stats Grid */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                        <StatCard title={t('dashboard.stats.totalChecks')} value={formatCurrency(stats.totalChecksAmount)} change={`${stats.totalChecksCount} Checks`} color="blue" icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>} />
+                                        <StatCard title={t('dashboard.stats.dueThisWeek')} value={formatCurrency(stats.checksDueThisWeekAmount)} change={`${stats.checksDueThisWeekCount} Urgent`} color="yellow" icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
+                                        <StatCard title={t('dashboard.stats.cashBalance')} value={formatCurrency(stats.cashBalance)} change="4 Accounts" color="green" isPositive={true} icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
+                                        <StatCard title={t('dashboard.stats.controlScore')} value={`${stats.internalControlScore}/100`} change="Good" color="purple" isPositive={true} icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                        {/* Main Chart Section */}
+                                        <div className="lg:col-span-2 bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+                                            <h3 className="text-lg font-bold text-slate-800 mb-4">Cash Flow Forecast (6 Months)</h3>
+                                            <CashFlowChart />
+                                        </div>
+                                        
+                                        {/* Alerts Panel */}
+                                        <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+                                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                                <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                                Urgent Alerts
+                                            </h3>
+                                            <AlertsList alerts={alerts} />
                                         </div>
                                     </div>
-                                ))}
-                            </div>
 
-                             {/* Interactive Charts Section */}
-                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <SalesChart title={t('dashboard.charts.salesTitle')} />
-                                <ProductDistChart title={t('dashboard.charts.productDist')} />
-                            </div>
-
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {/* Recent Orders Table */}
-                                <div className="bg-white rounded border border-[#dcdcde] shadow-sm overflow-hidden">
-                                    <div className="px-6 py-4 border-b border-[#dcdcde] flex justify-between items-center bg-[#f6f7f7]">
-                                        <h3 className="font-semibold text-[#1d2327] text-sm uppercase tracking-wide">{t('dashboard.tables.ordersTitle')}</h3>
-                                        <button className="text-[#2271b1] text-xs hover:text-[#135e96] font-medium border border-[#2271b1] px-2 py-1 rounded hover:bg-[#f0f6fc]">View All</button>
-                                    </div>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm text-left">
-                                            <thead className="bg-[#f6f7f7] text-[#646970]">
-                                                <tr>
-                                                    <th className="px-6 py-3 font-medium">{t('dashboard.tables.headers.orderId')}</th>
-                                                    <th className="px-6 py-3 font-medium">{t('dashboard.tables.headers.customer')}</th>
-                                                    <th className="px-6 py-3 font-medium">{t('dashboard.tables.headers.amount')}</th>
-                                                    <th className="px-6 py-3 font-medium text-right">{t('dashboard.tables.headers.status')}</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-[#dcdcde]">
-                                                {recentOrders.map((order, i) => (
-                                                    <tr key={i} className="hover:bg-[#f6f7f7] transition-colors">
-                                                        <td className="px-6 py-3 font-mono text-[#50575e]">{order.id}</td>
-                                                        <td className="px-6 py-3 font-medium text-[#2271b1] hover:underline cursor-pointer">{order.customer}</td>
-                                                        <td className="px-6 py-3 text-[#50575e]">{order.amount}</td>
-                                                        <td className="px-6 py-3 text-right">
-                                                            <span className={`px-2 py-1 rounded text-xs font-bold ${order.statusColor}`}>{order.status}</span>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                                
-                                {/* Live Prices List */}
-                                <div className="bg-white rounded border border-[#dcdcde] shadow-sm overflow-hidden">
-                                    <div className="px-6 py-4 border-b border-[#dcdcde] bg-[#f6f7f7]">
-                                        <h3 className="font-semibold text-[#1d2327] text-sm uppercase tracking-wide">{t('dashboard.tables.pricesTitle')}</h3>
-                                    </div>
-                                    <div className="divide-y divide-[#dcdcde]">
-                                        {livePrices.map((item, i) => (
-                                            <div key={i} className="px-6 py-3 flex items-center justify-between hover:bg-[#f6f7f7] transition-colors">
-                                                <div>
-                                                    <p className="font-bold text-[#1d2327] text-sm">{item.product}</p>
-                                                    <p className="text-xs text-[#646970]">{item.time}</p>
-                                                </div>
-                                                <div className="text-right">
-                                                    <p className="font-mono font-bold text-[#1d2327]">{item.price}</p>
-                                                    <p className={`text-xs font-bold ${item.change.includes('↑') ? 'text-green-600' : item.change.includes('↓') ? 'text-red-600' : 'text-[#646970]'}`}>
-                                                        {item.change}
-                                                    </p>
+                                    {/* Bottom Widgets */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+                                            <h3 className="font-bold text-slate-800 mb-4">Check Status Distribution</h3>
+                                            <CheckStatusChart 
+                                                cleared={stats.totalChecksCount - stats.checksDueThisWeekCount - 2} 
+                                                pending={stats.checksDueThisWeekCount} 
+                                                bounced={2} 
+                                            />
+                                        </div>
+                                        <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6 flex items-center justify-between">
+                                            <div>
+                                                <h3 className="font-bold text-slate-800 mb-2">Internal Control Assessment</h3>
+                                                <p className="text-sm text-slate-500 mb-4">Based on latest audit logs</p>
+                                                <div className="space-y-2 text-sm">
+                                                    <div className="flex justify-between w-48"><span className="text-slate-500">Risk Assessment:</span> <span className="text-green-600 font-bold">Good</span></div>
+                                                    <div className="flex justify-between w-48"><span className="text-slate-500">Monitoring:</span> <span className="text-yellow-600 font-bold">Adequate</span></div>
+                                                    <div className="flex justify-between w-48"><span className="text-slate-500">Activities:</span> <span className="text-green-600 font-bold">Strong</span></div>
                                                 </div>
                                             </div>
-                                        ))}
+                                            <InternalControlGauge score={stats.internalControlScore} />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    )}
+                            )}
 
-                    {activeSection === 'live' && <LiveDashboard />}
+                            {activeSection === 'financial' && (
+                                <div className="space-y-6 animate-fade-in">
+                                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+                                        <div className="flex justify-between items-center mb-6">
+                                            <h2 className="text-xl font-bold text-slate-800">Check Management</h2>
+                                            <button className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-bold hover:bg-blue-700">Register New Check</button>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-sm text-left">
+                                                <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-xs">
+                                                    <tr>
+                                                        <th className="px-4 py-3">Check Number</th>
+                                                        <th className="px-4 py-3">Due Date</th>
+                                                        <th className="px-4 py-3">Amount (IRR)</th>
+                                                        <th className="px-4 py-3">Drawer</th>
+                                                        <th className="px-4 py-3">Bank</th>
+                                                        <th className="px-4 py-3 text-right">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100">
+                                                    {checks.map(check => (
+                                                        <tr key={check.id} className="hover:bg-slate-50">
+                                                            <td className="px-4 py-3 font-mono">{check.number}</td>
+                                                            <td className="px-4 py-3">{check.dueDate}</td>
+                                                            <td className="px-4 py-3 font-bold">{check.amount.toLocaleString()}</td>
+                                                            <td className="px-4 py-3">{check.drawer}</td>
+                                                            <td className="px-4 py-3">{check.bank}</td>
+                                                            <td className="px-4 py-3 text-right">
+                                                                <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                                                    check.status === 'cleared' ? 'bg-green-100 text-green-700' :
+                                                                    check.status === 'bounced' ? 'bg-red-100 text-red-700' :
+                                                                    'bg-yellow-100 text-yellow-700'
+                                                                }`}>
+                                                                    {check.status}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
-                    {activeSection !== 'overview' && activeSection !== 'live' && (
-                        <div className="flex flex-col items-center justify-center py-20 text-[#a7aaad] bg-white rounded border border-[#dcdcde]">
-                            <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                            <p className="text-lg">Section under construction</p>
-                        </div>
+                            {activeSection === 'audit' && (
+                                <div className="space-y-6 animate-fade-in">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <StatCard title="Docs Reviewed" value="1,402" icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>} />
+                                        <StatCard title="Discrepancies" value="12" color="red" icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>} />
+                                        <StatCard title="Fraud Cases" value="3" color="red" icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>} />
+                                    </div>
+
+                                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+                                        <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                                            <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                                            AI Audit Logs
+                                        </h2>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-sm text-left">
+                                                <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-xs">
+                                                    <tr>
+                                                        <th className="px-4 py-3">Document</th>
+                                                        <th className="px-4 py-3">Type</th>
+                                                        <th className="px-4 py-3">Date</th>
+                                                        <th className="px-4 py-3">AI Risk Score</th>
+                                                        <th className="px-4 py-3 text-right">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100">
+                                                    {auditDocs.map(doc => (
+                                                        <tr key={doc.id} className="hover:bg-slate-50">
+                                                            <td className="px-4 py-3">
+                                                                <p className="font-bold text-slate-800">{doc.title}</p>
+                                                                <p className="text-xs text-slate-500">{doc.id}</p>
+                                                            </td>
+                                                            <td className="px-4 py-3">{doc.type}</td>
+                                                            <td className="px-4 py-3">{doc.date}</td>
+                                                            <td className="px-4 py-3">
+                                                                <div className="w-full bg-slate-200 rounded-full h-2 max-w-[100px]">
+                                                                    <div 
+                                                                        className={`h-2 rounded-full ${doc.riskScore > 70 ? 'bg-red-500' : doc.riskScore > 40 ? 'bg-yellow-500' : 'bg-green-500'}`} 
+                                                                        style={{ width: `${doc.riskScore}%` }}
+                                                                    ></div>
+                                                                </div>
+                                                                <span className="text-xs mt-1 block">{doc.riskScore}/100</span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right">
+                                                                <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                                                    doc.status === 'approved' ? 'bg-green-100 text-green-700' :
+                                                                    doc.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                                                    doc.status === 'flagged' ? 'bg-purple-100 text-purple-700' :
+                                                                    'bg-yellow-100 text-yellow-700'
+                                                                }`}>
+                                                                    {doc.status}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeSection === 'customers' && (
+                                <div className="space-y-6 animate-fade-in">
+                                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+                                        <h2 className="text-xl font-bold text-slate-800 mb-6">Customer Credit Profiles</h2>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-sm text-left">
+                                                <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-xs">
+                                                    <tr>
+                                                        <th className="px-4 py-3">Customer</th>
+                                                        <th className="px-4 py-3">Type</th>
+                                                        <th className="px-4 py-3">Credit Limit</th>
+                                                        <th className="px-4 py-3">Used</th>
+                                                        <th className="px-4 py-3">Score</th>
+                                                        <th className="px-4 py-3 text-right">Risk</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100">
+                                                    {customers.map(c => (
+                                                        <tr key={c.id} className="hover:bg-slate-50">
+                                                            <td className="px-4 py-3 font-bold text-slate-800">{c.name}</td>
+                                                            <td className="px-4 py-3 capitalize">{c.type}</td>
+                                                            <td className="px-4 py-3 font-mono">{formatCurrency(c.creditLimit)}</td>
+                                                            <td className="px-4 py-3 font-mono">{formatCurrency(c.usedCredit)}</td>
+                                                            <td className="px-4 py-3">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="font-bold">{c.creditScore}</span>
+                                                                    <div className="flex-1 bg-slate-200 h-1.5 rounded-full w-16">
+                                                                        <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: `${c.creditScore / 10}%` }}></div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right">
+                                                                <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${
+                                                                    c.riskLevel === 'low' ? 'bg-green-100 text-green-700' :
+                                                                    c.riskLevel === 'high' ? 'bg-red-100 text-red-700' :
+                                                                    'bg-yellow-100 text-yellow-700'
+                                                                }`}>
+                                                                    {c.riskLevel}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                             {/* Placeholder for other sections */}
+                            {(activeSection === 'reports' || activeSection === 'live') && (
+                                <div className="flex flex-col items-center justify-center py-20 text-[#a7aaad] bg-white rounded border border-[#dcdcde]">
+                                    <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                                    <p className="text-lg">Section ready for integration</p>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </main>

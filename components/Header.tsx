@@ -16,6 +16,7 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ currentPage, setPage, isAuthent
   const { language, setLanguage, t } = useLanguage();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -80,8 +81,21 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ currentPage, setPage, isAuthent
           {/* Logo */}
           <div className="flex items-center">
             <button onClick={() => setPage('home')} className="flex-shrink-0 flex items-center gap-2 group" aria-label="Go to Home">
-               <img src="https://i.sstatic.net/zhhxJn5n.png" alt="Steel Online 20" className="h-8 w-auto" width="32" height="32" />
-               <span className="text-xl font-bold text-slate-900 group-hover:text-corp-red transition-colors hidden sm:block md:hidden xl:block">Steel Online 20</span>
+               {!imgError ? (
+                   <img 
+                       src="https://i.sstatic.net/zhhxJn5n.png" 
+                       alt="Steel Online 20" 
+                       className="h-8 w-auto" 
+                       width="32" 
+                       height="32" 
+                       referrerPolicy="no-referrer"
+                       onError={() => setImgError(true)}
+                   />
+               ) : null}
+               {/* Show text if image fails or on large/mobile screens as per design, but always if image fails */}
+               <span className={`text-xl font-bold text-slate-900 group-hover:text-corp-red transition-colors ${imgError ? 'block' : 'hidden sm:block md:hidden xl:block'}`}>
+                   Steel Online 20
+               </span>
             </button>
           </div>
           
