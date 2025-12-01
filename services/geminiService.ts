@@ -172,23 +172,7 @@ export const getAIRecommendation = async (
     });
 
     if (!response.text) throw new Error("No response from AI");
-    
-    const result = JSON.parse(response.text);
-
-    // Sanitize recommendedTests to prevent React Error #31 (Objects are not valid as a React child)
-    // This happens if the AI returns an object (like specifications) instead of a string in the array.
-    if (result.recommendedTests && Array.isArray(result.recommendedTests)) {
-        result.recommendedTests = result.recommendedTests.map((item: any) => {
-            if (typeof item === 'string') return item;
-            if (typeof item === 'object' && item !== null) {
-                // Flatten object to string
-                return Object.entries(item).map(([k, v]) => `${k}: ${v}`).join(', ');
-            }
-            return String(item);
-        });
-    }
-
-    return result;
+    return JSON.parse(response.text);
 };
 
 export const getTestDetails = async (testNames: string[], language: Language): Promise<TestDetailsResult> => {

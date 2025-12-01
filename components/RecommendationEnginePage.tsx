@@ -77,45 +77,44 @@ const ResultDisplay: React.FC<{
         }
     };
 
-    const loadHtml2Pdf = () => {
-        return new Promise((resolve, reject) => {
-            // @ts-ignore
-            if (window.html2pdf) return resolve(window.html2pdf);
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-            script.onload = () => {
-                // @ts-ignore
-                resolve(window.html2pdf);
-            };
-            script.onerror = reject;
-            document.body.appendChild(script);
-        });
-    };
-
     const handleSavePdf = async () => {
         const element = document.getElementById('recommendation-report-content');
         if (!element) return;
         
-        try {
+        // Dynamic load of html2pdf
+        // @ts-ignore
+        if (typeof window.html2pdf === 'undefined') {
             addToast("Loading PDF generator...", "info");
-            await loadHtml2Pdf();
-            
-            const opt = {
-              margin: [10, 10, 10, 10], 
-              filename: 'Steel_Online_Quote.pdf',
-              image: { type: 'jpeg', quality: 0.98 },
-              html2canvas: { scale: 2, useCORS: true, backgroundColor: '#1e293b' }, 
-              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            addToast("Generating PDF...", "info");
-            // @ts-ignore
-            await window.html2pdf().set(opt).from(element).save();
-            addToast("PDF saved!", "success");
-        } catch (err: any) {
-            console.error(err);
-            addToast("Failed to generate PDF. Please try again.", "error");
+            try {
+                await new Promise<void>((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+                    script.onload = () => resolve();
+                    script.onerror = () => reject(new Error('Failed to load html2pdf'));
+                    document.body.appendChild(script);
+                });
+            } catch (e) {
+                addToast("Failed to load PDF library. Check your connection.", "error");
+                return;
+            }
         }
+
+        const opt = {
+          margin: [10, 10, 10, 10], 
+          filename: 'Steel_Online_Quote.pdf',
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#1e293b' }, 
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        addToast("Generating PDF...", "info");
+        // @ts-ignore
+        window.html2pdf().set(opt).from(element).save().then(() => {
+            addToast("PDF saved!", "success");
+        }).catch((err: any) => {
+            console.error(err);
+            addToast("Failed to save PDF.", "error");
+        });
     };
 
     const Section: React.FC<{ title: string; children: React.ReactNode, icon: React.ReactNode }> = ({ title, children, icon }) => (
