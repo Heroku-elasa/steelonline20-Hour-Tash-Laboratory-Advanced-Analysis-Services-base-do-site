@@ -2,7 +2,6 @@
 import React from 'react';
 import { Article, Page, useLanguage } from '../types';
 import { marked } from 'marked';
-import SEO from './SEO';
 
 interface ArticlePageProps {
     article: Article;
@@ -15,11 +14,6 @@ const ArticlePage: React.FC<ArticlePageProps> = ({ article, setPage }) => {
 
     return (
         <div className="bg-white animate-fade-in">
-            <SEO 
-                title={article.title[language]} 
-                description={article.excerpt[language]}
-                image={article.image}
-            />
             <div className="relative py-16 sm:py-24">
                 <div className="absolute inset-0">
                     <img className="w-full h-full object-cover" src={article.image} alt={article.title[language]} />

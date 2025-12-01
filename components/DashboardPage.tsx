@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage, Page } from '../types';
 
 interface DashboardPageProps {
-  setPage: (page: Page) => void;
+    setPage: (page: Page) => void;
 }
 
 // Mock Data for Charts
@@ -151,195 +151,6 @@ const ProductDistChart = ({ title }: { title: string }) => {
     );
 };
 
-const LiveDashboard = () => {
-    const { t } = useLanguage();
-    const [candles, setCandles] = useState<{time: number, open: number, close: number, high: number, low: number}[]>([]);
-    const [realtimeOrders, setRealtimeOrders] = useState<{product: string, quantity: string, city: string, time: string, status: string}[]>([]);
-    const [activeUsers, setActiveUsers] = useState(124);
-    const [tickerItems, setTickerItems] = useState([
-        { product: 'Rebar 14 Esf', price: 28500, change: 1.2 },
-        { product: 'IPE 180 Zob', price: 34200, change: -0.5 },
-        { product: 'Sheet 2mm', price: 38100, change: 0.8 },
-        { product: 'Rebar 16 Bonab', price: 27900, change: -1.5 },
-        { product: 'Profile 2x2', price: 42000, change: 0.0 },
-    ]);
-    const scrollRef = useRef<HTMLDivElement>(null);
-
-    // Simulate Real-time Data
-    useEffect(() => {
-        // Initial candles for Rebar Price
-        let lastPrice = 28500;
-        const initialCandles = [];
-        let now = Date.now();
-        for (let i = 0; i < 40; i++) {
-            const open = lastPrice;
-            const close = open + (Math.random() - 0.5) * 100;
-            const high = Math.max(open, close) + Math.random() * 30;
-            const low = Math.min(open, close) - Math.random() * 30;
-            initialCandles.push({ time: now - (40 - i) * 1000, open, close, high, low });
-            lastPrice = close;
-        }
-        setCandles(initialCandles);
-
-        // Simulation Interval
-        const interval = setInterval(() => {
-            // Update Candles
-            setCandles(prev => {
-                if (prev.length === 0) return prev;
-                const last = prev[prev.length - 1];
-                const open = last.close;
-                const change = (Math.random() - 0.5) * 50; 
-                const close = open + change;
-                const high = Math.max(open, close) + Math.random() * 10;
-                const low = Math.min(open, close) - Math.random() * 10;
-                const newCandle = { time: Date.now(), open, close, high, low };
-                return [...prev.slice(1), newCandle];
-            });
-
-            // Update Active Users
-            setActiveUsers(prev => prev + Math.floor(Math.random() * 3) - 1);
-
-            // Update Ticker
-            setTickerItems(prev => prev.map(item => ({
-                ...item,
-                price: Math.floor(item.price + (Math.random() - 0.5) * 50),
-                change: parseFloat((item.change + (Math.random() - 0.5) * 0.1).toFixed(2))
-            })));
-
-            // Simulate New Orders
-            if (Math.random() > 0.6) {
-                const products = ['Rebar 14', 'Rebar 16', 'IPE 140', 'IPE 180', 'Sheet 2mm', 'Sheet 10mm', 'Corner 5'];
-                const cities = ['Tehran', 'Isfahan', 'Mashhad', 'Tabriz', 'Shiraz', 'Ahvaz', 'Yazd'];
-                const statuses = ['Processing', 'Confirmed', 'Pending'];
-                const newOrder = {
-                    product: products[Math.floor(Math.random() * products.length)],
-                    quantity: (Math.floor(Math.random() * 25) + 1) + ' Tons',
-                    city: cities[Math.floor(Math.random() * cities.length)],
-                    time: new Date().toLocaleTimeString('en-US', { hour12: false }),
-                    status: statuses[Math.floor(Math.random() * statuses.length)]
-                };
-                setRealtimeOrders(prev => [newOrder, ...prev].slice(0, 10)); // Keep last 10
-            }
-        }, 1500);
-
-        return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = 0; 
-        }
-    }, [realtimeOrders]);
-
-    // Simple SVG Chart Config
-    const width = 600;
-    const height = 300;
-    
-    // Calculate max/min for scaling with safety check
-    const highs = candles.map(c => c.high);
-    const lows = candles.map(c => c.low);
-    const maxPrice = highs.length ? Math.max(...highs) : 1000;
-    const minPrice = lows.length ? Math.min(...lows) : 0;
-    const range = maxPrice - minPrice || 1;
-    
-    const getY = (price: number) => height - ((price - minPrice) / range) * height;
-
-    return (
-        <div className="space-y-6 animate-fade-in">
-            {/* Ticker */}
-            <div className="bg-slate-900 text-white p-3 rounded-lg overflow-hidden whitespace-nowrap flex gap-8 shadow-md">
-                 {tickerItems.map((item, i) => (
-                     <div key={i} className="flex items-center gap-2">
-                         <span className="font-bold text-slate-400">{item.product}</span>
-                         <span>{item.price.toLocaleString()}</span>
-                         <span className={item.change >= 0 ? 'text-green-400' : 'text-red-400'}>
-                             {item.change >= 0 ? '▲' : '▼'} {Math.abs(item.change)}%
-                         </span>
-                     </div>
-                 ))}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Chart */}
-                <div className="lg:col-span-2 bg-slate-800 rounded-xl p-4 border border-slate-700 shadow-lg">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-white font-bold flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                            {t('dashboard.live.risingwave')}
-                        </h3>
-                        <div className="flex gap-2 text-xs">
-                            <span className="bg-slate-700 text-slate-300 px-2 py-1 rounded cursor-pointer hover:bg-slate-600">1M</span>
-                            <span className="bg-slate-700 text-slate-300 px-2 py-1 rounded cursor-pointer hover:bg-slate-600">5M</span>
-                            <span className="bg-corp-blue text-white px-2 py-1 rounded">15M</span>
-                        </div>
-                    </div>
-                    <div className="h-64 w-full">
-                        <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-                            {candles.map((c, i) => {
-                                const x = (i / 40) * width; // 40 candles shown
-                                const candleW = (width / 40) * 0.6;
-                                const yHigh = getY(c.high);
-                                const yLow = getY(c.low);
-                                const yOpen = getY(c.open);
-                                const yClose = getY(c.close);
-                                const isGreen = c.close >= c.open;
-                                const color = isGreen ? '#10B981' : '#EF4444';
-                                
-                                return (
-                                    <g key={c.time}>
-                                        <line x1={x + candleW/2} y1={yLow} x2={x + candleW/2} y2={yHigh} stroke={color} strokeWidth="1" />
-                                        <rect 
-                                            x={x} 
-                                            y={Math.min(yOpen, yClose)} 
-                                            width={candleW} 
-                                            height={Math.max(1, Math.abs(yOpen - yClose))} 
-                                            fill={color} 
-                                        />
-                                    </g>
-                                );
-                            })}
-                        </svg>
-                    </div>
-                </div>
-
-                {/* Order Stream & Stats */}
-                <div className="space-y-4">
-                    <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 shadow-lg">
-                         <h3 className="text-white font-bold mb-4">{t('dashboard.live.systemStatus')}</h3>
-                         <div className="space-y-3">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-slate-400">Active Users</span>
-                                <span className="text-white font-mono">{activeUsers}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-slate-400">Order/Sec</span>
-                                <span className="text-green-400 font-mono">12.5</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-slate-400">Latency</span>
-                                <span className="text-green-400 font-mono">24ms</span>
-                            </div>
-                         </div>
-                    </div>
-                    <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 flex-1 overflow-hidden shadow-lg h-60">
-                         <h3 className="text-white font-bold mb-3">{t('dashboard.live.logs')}</h3>
-                         <div className="space-y-2 h-44 overflow-y-auto font-mono text-xs pr-1" ref={scrollRef}>
-                            {realtimeOrders.map((order, i) => (
-                                <div key={i} className="flex gap-2 text-slate-300 border-b border-slate-700/50 pb-1 animate-fade-in">
-                                    <span className="text-slate-500 opacity-70">{order.time}</span>
-                                    <span className="text-corp-blue-light">{order.product}</span>
-                                    <span className="text-slate-400">{order.quantity}</span>
-                                    <span className="ml-auto text-slate-500 opacity-70">{order.city}</span>
-                                </div>
-                            ))}
-                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
 const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
     const { t, dir } = useLanguage();
     const [activeSection, setActiveSection] = useState('overview');
@@ -376,152 +187,351 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
         { key: 'settings', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> },
     ];
 
-    return (
-        <div className="min-h-screen bg-slate-100 flex flex-col animate-fade-in font-sans" dir={dir}>
-            {/* Top Admin Bar (WordPress Style) */}
-            <div className="h-8 bg-[#1d2327] text-white flex items-center justify-between px-4 text-sm z-50 sticky top-0">
-                <div className="flex items-center gap-4">
-                     <span className="font-bold flex items-center gap-1">
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8z"/><path d="M12 6a1 1 0 0 0-1 1v4H8a1 1 0 0 0 0 2h3v4a1 1 0 0 0 2 0v-4h3a1 1 0 0 0 0-2h-3V7a1 1 0 0 0-1-1z"/></svg>
-                        SteelOnline
-                     </span>
-                     <button onClick={() => setPage('home')} className="flex items-center gap-1 hover:text-blue-400 transition-colors text-xs sm:text-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
-                        Visit Site
-                     </button>
-                     <div className="hidden sm:flex items-center gap-1 hover:text-blue-400 transition-colors cursor-pointer">
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                        <span className="text-xs">Updates</span>
-                        <span className="bg-orange-500 text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center">2</span>
-                     </div>
+    const LiveDashboard = () => {
+        const [candles, setCandles] = useState<{time: number, open: number, close: number, high: number, low: number}[]>([]);
+        const [realtimeOrders, setRealtimeOrders] = useState<{product: string, quantity: string, city: string, time: string, status: string}[]>([]);
+        const [activeUsers, setActiveUsers] = useState(124);
+        const [tickerItems, setTickerItems] = useState([
+            { product: 'Rebar 14 Esf', price: 28500, change: 1.2 },
+            { product: 'IPE 180 Zob', price: 34200, change: -0.5 },
+            { product: 'Sheet 2mm', price: 38100, change: 0.8 },
+            { product: 'Rebar 16 Bonab', price: 27900, change: -1.5 },
+            { product: 'Profile 2x2', price: 42000, change: 0.0 },
+        ]);
+        const scrollRef = useRef<HTMLDivElement>(null);
+
+        // Simulate Real-time Data
+        useEffect(() => {
+            // Initial candles for Rebar Price
+            let lastPrice = 28500;
+            const initialCandles = [];
+            let now = Date.now();
+            for (let i = 0; i < 40; i++) {
+                const open = lastPrice;
+                const close = open + (Math.random() - 0.5) * 100;
+                const high = Math.max(open, close) + Math.random() * 30;
+                const low = Math.min(open, close) - Math.random() * 30;
+                initialCandles.push({ time: now - (40 - i) * 1000, open, close, high, low });
+                lastPrice = close;
+            }
+            setCandles(initialCandles);
+
+            // Simulation Interval
+            const interval = setInterval(() => {
+                // Update Candles
+                setCandles(prev => {
+                    const last = prev[prev.length - 1];
+                    const open = last.close;
+                    const change = (Math.random() - 0.5) * 50; 
+                    const close = open + change;
+                    const high = Math.max(open, close) + Math.random() * 10;
+                    const low = Math.min(open, close) - Math.random() * 10;
+                    const newCandle = { time: Date.now(), open, close, high, low };
+                    return [...prev.slice(1), newCandle];
+                });
+
+                // Update Active Users
+                setActiveUsers(prev => prev + Math.floor(Math.random() * 3) - 1);
+
+                // Update Ticker
+                setTickerItems(prev => prev.map(item => ({
+                    ...item,
+                    price: Math.floor(item.price + (Math.random() - 0.5) * 50),
+                    change: parseFloat((item.change + (Math.random() - 0.5) * 0.1).toFixed(2))
+                })));
+
+                // Simulate New Orders
+                if (Math.random() > 0.6) {
+                    const products = ['Rebar 14', 'Rebar 16', 'IPE 140', 'IPE 180', 'Sheet 2mm', 'Sheet 10mm', 'Corner 5'];
+                    const cities = ['Tehran', 'Isfahan', 'Mashhad', 'Tabriz', 'Shiraz', 'Ahvaz', 'Yazd'];
+                    const statuses = ['Processing', 'Confirmed', 'Pending'];
+                    const newOrder = {
+                        product: products[Math.floor(Math.random() * products.length)],
+                        quantity: (Math.floor(Math.random() * 25) + 1) + ' Tons',
+                        city: cities[Math.floor(Math.random() * cities.length)],
+                        time: new Date().toLocaleTimeString('en-US', { hour12: false }),
+                        status: statuses[Math.floor(Math.random() * statuses.length)]
+                    };
+                    setRealtimeOrders(prev => [newOrder, ...prev].slice(0, 10)); // Keep last 10
+                }
+            }, 1500);
+
+            return () => clearInterval(interval);
+        }, []);
+
+        useEffect(() => {
+            if (scrollRef.current) {
+                scrollRef.current.scrollTop = 0; 
+            }
+        }, [realtimeOrders]);
+
+        // Simple SVG Chart Config
+        const width = 600;
+        const height = 300;
+        
+        // Calculate max/min for scaling with safety check
+        const highs = candles.map(c => c.high);
+        const lows = candles.map(c => c.low);
+        const maxPrice = highs.length ? Math.max(...highs) : 1000;
+        const minPrice = lows.length ? Math.min(...lows) : 0;
+        const range = maxPrice - minPrice || 1;
+        
+        const getY = (price: number) => height - ((price - minPrice) / range) * height;
+
+        return (
+            <div className="space-y-6 animate-fade-in">
+                {/* Ticker */}
+                <div className="bg-slate-900 text-white p-3 rounded-lg overflow-hidden whitespace-nowrap flex gap-8 shadow-md">
+                     {tickerItems.map((item, i) => (
+                         <div key={i} className="flex items-center gap-2">
+                             <span className="font-bold text-slate-400">{item.product}</span>
+                             <span>{item.price.toLocaleString()}</span>
+                             <span className={item.change >= 0 ? 'text-green-400' : 'text-red-400'}>
+                                 {item.change >= 0 ? '▲' : '▼'} {Math.abs(item.change)}%
+                             </span>
+                         </div>
+                     ))}
                 </div>
-                <div className="flex items-center gap-3">
-                     <span className="text-xs text-slate-400">Howdy, Admin</span>
-                     <img src="https://i.pravatar.cc/150?img=12" alt="Admin" className="w-5 h-5 rounded-full border border-slate-600" />
-                </div>
-            </div>
 
-            <div className="flex flex-1 overflow-hidden">
-                {/* Sidebar (WordPress Style) */}
-                <aside className="w-16 md:w-48 bg-[#23282d] text-slate-300 flex flex-col flex-shrink-0 transition-all duration-300 h-full relative">
-                    <nav className="flex-1 py-0 space-y-0">
-                        {menuItems.map(item => (
-                            <button
-                                key={item.key}
-                                onClick={() => setActiveSection(item.key)}
-                                className={`w-full flex items-center px-4 py-3 transition-colors border-l-4 ${activeSection === item.key ? 'bg-[#0073aa] text-white border-[#0073aa]' : 'border-transparent hover:bg-[#191e23] hover:text-blue-400 hover:border-[#0073aa]'}`}
-                            >
-                                <span className={`flex-shrink-0 ${activeSection === item.key ? 'text-white' : 'text-slate-400'}`}>{item.icon}</span>
-                                <span className="mx-3 hidden md:block text-sm font-medium">{t(`dashboard.menu.${item.key}`)}</span>
-                            </button>
-                        ))}
-                         <div className="my-2 border-t border-slate-700"></div>
-                         <button onClick={() => setPage('home')} className="w-full flex items-center px-4 py-3 transition-colors text-slate-400 hover:bg-[#191e23] hover:text-white border-l-4 border-transparent hover:border-[#0073aa]">
-                             <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                             <span className="mx-3 hidden md:block text-sm font-medium">Log Out</span>
-                        </button>
-                    </nav>
-                </aside>
-
-                {/* Main Content */}
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-[#f1f1f1]">
-                    <div className="p-4 sm:p-8">
-                        <header className="mb-6 flex justify-between items-center">
-                             <h1 className="text-2xl font-normal text-[#23282d]">{t(`dashboard.menu.${activeSection}`)}</h1>
-                             <button className="px-3 py-1 border border-[#0073aa] text-[#0073aa] text-sm hover:bg-[#0073aa] hover:text-white transition-colors">Screen Options</button>
-                        </header>
-
-                        {activeSection === 'overview' && (
-                            <div className="space-y-6 animate-fade-in">
-                                {/* Metrics Cards */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    {metrics.map((metric, i) => (
-                                        <div key={i} className="bg-white p-5 shadow-[0_1px_1px_rgba(0,0,0,0.04)] border border-slate-200 border-t-4 border-t-white hover:border-t-[#0073aa] transition-all">
-                                            <p className="text-sm text-slate-500 font-medium">{metric.label}</p>
-                                            <div className="mt-2 flex items-baseline gap-2">
-                                                <span className="text-2xl font-bold text-[#23282d]">{metric.value}</span>
-                                                <span className={`text-xs font-bold ${metric.isPositive ? 'text-green-600' : 'text-red-600'}`}>{metric.change}</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                 {/* Interactive Charts Section */}
-                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <SalesChart title={t('dashboard.charts.salesTitle')} />
-                                    <ProductDistChart title={t('dashboard.charts.productDist')} />
-                                </div>
-
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    {/* Recent Orders Table */}
-                                    <div className="bg-white shadow-[0_1px_1px_rgba(0,0,0,0.04)] border border-slate-200">
-                                        <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-center">
-                                            <h3 className="font-semibold text-slate-800">{t('dashboard.tables.ordersTitle')}</h3>
-                                            <button className="text-[#0073aa] text-sm hover:underline">View All</button>
-                                        </div>
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-sm text-left">
-                                                <thead className="bg-slate-50 text-slate-600">
-                                                    <tr>
-                                                        <th className="px-4 py-2 font-medium">{t('dashboard.tables.headers.orderId')}</th>
-                                                        <th className="px-4 py-2 font-medium">{t('dashboard.tables.headers.customer')}</th>
-                                                        <th className="px-4 py-2 font-medium">{t('dashboard.tables.headers.amount')}</th>
-                                                        <th className="px-4 py-2 font-medium text-right">{t('dashboard.tables.headers.status')}</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-slate-100">
-                                                    {recentOrders.map((order, i) => (
-                                                        <tr key={i} className="hover:bg-[#f9f9f9]">
-                                                            <td className="px-4 py-3 font-mono text-[#0073aa]">{order.id}</td>
-                                                            <td className="px-4 py-3 font-medium text-slate-800">{order.customer}</td>
-                                                            <td className="px-4 py-3 text-slate-600">{order.amount}</td>
-                                                            <td className="px-4 py-3 text-right">
-                                                                <span className={`px-2 py-1 text-xs font-bold ${order.statusColor}`}>{order.status}</span>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Chart */}
+                    <div className="lg:col-span-2 bg-slate-800 rounded-xl p-4 border border-slate-700 shadow-lg">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-white font-bold flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                {t('dashboard.live.risingwave')}
+                            </h3>
+                            <div className="flex gap-2 text-xs">
+                                <span className="bg-slate-700 text-slate-300 px-2 py-1 rounded cursor-pointer hover:bg-slate-600">1M</span>
+                                <span className="bg-slate-700 text-slate-300 px-2 py-1 rounded cursor-pointer hover:bg-slate-600">5M</span>
+                                <span className="bg-corp-blue text-white px-2 py-1 rounded">15M</span>
+                            </div>
+                        </div>
+                        <div className="h-64 w-full">
+                            <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+                                {candles.map((c, i) => {
+                                    const x = (i / 40) * width; // 40 candles shown
+                                    const candleW = (width / 40) * 0.6;
+                                    const yHigh = getY(c.high);
+                                    const yLow = getY(c.low);
+                                    const yOpen = getY(c.open);
+                                    const yClose = getY(c.close);
+                                    const isGreen = c.close >= c.open;
+                                    const color = isGreen ? '#10B981' : '#EF4444';
                                     
-                                    {/* Live Prices List */}
-                                    <div className="bg-white shadow-[0_1px_1px_rgba(0,0,0,0.04)] border border-slate-200">
-                                        <div className="px-4 py-3 border-b border-slate-100">
-                                            <h3 className="font-semibold text-slate-800">{t('dashboard.tables.pricesTitle')}</h3>
+                                    return (
+                                        <g key={c.time}>
+                                            <line x1={x + candleW/2} y1={yLow} x2={x + candleW/2} y2={yHigh} stroke={color} strokeWidth="1" />
+                                            <rect 
+                                                x={x} 
+                                                y={Math.min(yOpen, yClose)} 
+                                                width={candleW} 
+                                                height={Math.max(1, Math.abs(yOpen - yClose))} 
+                                                fill={color} 
+                                            />
+                                        </g>
+                                    );
+                                })}
+                            </svg>
+                        </div>
+                    </div>
+
+                    {/* Order Stream & Stats */}
+                    <div className="space-y-4">
+                        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 shadow-lg">
+                             <h3 className="text-white font-bold mb-4">{t('dashboard.live.systemStatus')}</h3>
+                             <div className="space-y-3">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-slate-400">Active Users</span>
+                                    <span className="text-white font-mono">{activeUsers}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-slate-400">Order/Sec</span>
+                                    <span className="text-green-400 font-mono">12.5</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-slate-400">Latency</span>
+                                    <span className="text-green-400 font-mono">24ms</span>
+                                </div>
+                             </div>
+                        </div>
+                        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 flex-1 overflow-hidden shadow-lg h-60">
+                             <h3 className="text-white font-bold mb-3">{t('dashboard.live.logs')}</h3>
+                             <div className="space-y-2 h-44 overflow-y-auto font-mono text-xs pr-1" ref={scrollRef}>
+                                {realtimeOrders.map((order, i) => (
+                                    <div key={i} className="flex gap-2 text-slate-300 border-b border-slate-700/50 pb-1 animate-fade-in">
+                                        <span className="text-slate-500 opacity-70">{order.time}</span>
+                                        <span className="text-corp-blue-light">{order.product}</span>
+                                        <span className="text-slate-400">{order.quantity}</span>
+                                        <span className="ml-auto text-slate-500 opacity-70">{order.city}</span>
+                                    </div>
+                                ))}
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div className="min-h-screen bg-[#f0f0f1] flex animate-fade-in" dir={dir}>
+            {/* Sidebar (WordPress Style: #1d2327) */}
+            <aside className="w-16 md:w-48 bg-[#1d2327] text-white flex flex-col flex-shrink-0 transition-all duration-300 relative z-20">
+                <div className="h-12 flex items-center justify-center border-b border-[#3c434a] bg-[#1d2327]">
+                     <span className="text-xl font-bold text-white hidden md:block">S.O.20</span>
+                     <span className="text-xl font-bold text-white md:hidden">S</span>
+                </div>
+                
+                {/* Visit Site Button - WordPress Style */}
+                <div className="border-b border-[#3c434a] mb-2">
+                    <button 
+                        onClick={() => setPage('home')}
+                        className="w-full flex items-center px-4 py-3 text-[#f0f0f1] hover:text-[#72aee6] hover:bg-[#2c3338] transition-colors group"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 group-hover:text-[#72aee6] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                        <span className="mx-3 hidden md:block text-sm font-medium">Visit Site</span>
+                    </button>
+                </div>
+
+                <nav className="flex-1 py-2 space-y-0.5">
+                    {menuItems.map(item => (
+                        <button
+                            key={item.key}
+                            onClick={() => setActiveSection(item.key)}
+                            className={`w-full flex items-center px-4 py-2.5 transition-colors relative group ${activeSection === item.key ? 'bg-[#2271b1] text-white' : 'text-[#f0f0f1] hover:bg-[#2c3338] hover:text-[#72aee6]'}`}
+                        >
+                            {/* Active Indicator Strip */}
+                            {activeSection === item.key && (
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#72aee6] md:hidden"></div>
+                            )}
+                            <div className={`${activeSection === item.key ? 'text-white' : 'text-[#a7aaad] group-hover:text-[#72aee6]'}`}>
+                                {item.icon}
+                            </div>
+                            <span className="mx-3 hidden md:block text-sm font-medium">{t(`dashboard.menu.${item.key}`)}</span>
+                            {/* Triangle indicator for active item (Desktop) */}
+                            {activeSection === item.key && (
+                                <div className="hidden md:block absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 w-3 h-3 bg-[#f0f0f1] rotate-45"></div>
+                            )}
+                        </button>
+                    ))}
+                </nav>
+                <div className="p-4 border-t border-[#3c434a]">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-500 border-2 border-[#3c434a]"></div>
+                        <div className="hidden md:block">
+                            <p className="text-sm font-bold text-[#f0f0f1]">Admin</p>
+                            <button onClick={() => setPage('home')} className="text-xs text-[#a7aaad] hover:text-[#72aee6] text-left">Log Out</button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            {/* Main Content */}
+            <main className="flex-1 overflow-x-hidden overflow-y-auto bg-[#f0f0f1]">
+                {/* Admin Top Bar */}
+                <header className="bg-white shadow-sm h-12 flex items-center justify-between px-6 sticky top-0 z-10 border-b border-[#dcdcde]">
+                    <h1 className="text-lg font-semibold text-[#1d2327]">{t(`dashboard.menu.${activeSection}`)}</h1>
+                    <div className="flex items-center gap-4">
+                        <button className="text-[#50575e] hover:text-[#2271b1] text-sm font-medium">Help</button>
+                        <button className="text-[#50575e] hover:text-[#2271b1] text-sm font-medium">Screen Options</button>
+                    </div>
+                </header>
+
+                <div className="p-6">
+                    {activeSection === 'overview' && (
+                        <div className="space-y-6 animate-fade-in">
+                            {/* Metrics */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                {metrics.map((metric, i) => (
+                                    <div key={i} className="bg-white p-5 rounded border border-[#dcdcde] shadow-sm relative overflow-hidden group hover:border-[#2271b1] transition-colors">
+                                        <div className={`absolute top-0 right-0 w-16 h-16 transform translate-x-4 -translate-y-4 rounded-full opacity-10 ${metric.isPositive ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                        <p className="text-sm text-[#646970] font-medium uppercase tracking-wide">{metric.label}</p>
+                                        <div className="mt-2 flex items-baseline gap-2">
+                                            <span className="text-2xl font-bold text-[#1d2327]">{metric.value}</span>
+                                            <span className={`text-xs font-bold ${metric.isPositive ? 'text-green-600' : 'text-red-600'}`}>{metric.change}</span>
                                         </div>
-                                        <div className="divide-y divide-slate-100">
-                                            {livePrices.map((item, i) => (
-                                                <div key={i} className="px-4 py-3 flex items-center justify-between hover:bg-[#f9f9f9]">
-                                                    <div>
-                                                        <p className="font-bold text-[#0073aa]">{item.product}</p>
-                                                        <p className="text-xs text-slate-400">{item.time}</p>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className="font-mono font-bold text-slate-700">{item.price}</p>
-                                                        <p className={`text-xs font-bold ${item.change.includes('↑') ? 'text-green-600' : item.change.includes('↓') ? 'text-red-600' : 'text-slate-400'}`}>
-                                                            {item.change}
-                                                        </p>
-                                                    </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                             {/* Interactive Charts Section */}
+                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <SalesChart title={t('dashboard.charts.salesTitle')} />
+                                <ProductDistChart title={t('dashboard.charts.productDist')} />
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Recent Orders Table */}
+                                <div className="bg-white rounded border border-[#dcdcde] shadow-sm overflow-hidden">
+                                    <div className="px-6 py-4 border-b border-[#dcdcde] flex justify-between items-center bg-[#f6f7f7]">
+                                        <h3 className="font-semibold text-[#1d2327] text-sm uppercase tracking-wide">{t('dashboard.tables.ordersTitle')}</h3>
+                                        <button className="text-[#2271b1] text-xs hover:text-[#135e96] font-medium border border-[#2271b1] px-2 py-1 rounded hover:bg-[#f0f6fc]">View All</button>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm text-left">
+                                            <thead className="bg-[#f6f7f7] text-[#646970]">
+                                                <tr>
+                                                    <th className="px-6 py-3 font-medium">{t('dashboard.tables.headers.orderId')}</th>
+                                                    <th className="px-6 py-3 font-medium">{t('dashboard.tables.headers.customer')}</th>
+                                                    <th className="px-6 py-3 font-medium">{t('dashboard.tables.headers.amount')}</th>
+                                                    <th className="px-6 py-3 font-medium text-right">{t('dashboard.tables.headers.status')}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-[#dcdcde]">
+                                                {recentOrders.map((order, i) => (
+                                                    <tr key={i} className="hover:bg-[#f6f7f7] transition-colors">
+                                                        <td className="px-6 py-3 font-mono text-[#50575e]">{order.id}</td>
+                                                        <td className="px-6 py-3 font-medium text-[#2271b1] hover:underline cursor-pointer">{order.customer}</td>
+                                                        <td className="px-6 py-3 text-[#50575e]">{order.amount}</td>
+                                                        <td className="px-6 py-3 text-right">
+                                                            <span className={`px-2 py-1 rounded text-xs font-bold ${order.statusColor}`}>{order.status}</span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                {/* Live Prices List */}
+                                <div className="bg-white rounded border border-[#dcdcde] shadow-sm overflow-hidden">
+                                    <div className="px-6 py-4 border-b border-[#dcdcde] bg-[#f6f7f7]">
+                                        <h3 className="font-semibold text-[#1d2327] text-sm uppercase tracking-wide">{t('dashboard.tables.pricesTitle')}</h3>
+                                    </div>
+                                    <div className="divide-y divide-[#dcdcde]">
+                                        {livePrices.map((item, i) => (
+                                            <div key={i} className="px-6 py-3 flex items-center justify-between hover:bg-[#f6f7f7] transition-colors">
+                                                <div>
+                                                    <p className="font-bold text-[#1d2327] text-sm">{item.product}</p>
+                                                    <p className="text-xs text-[#646970]">{item.time}</p>
                                                 </div>
-                                            ))}
-                                        </div>
+                                                <div className="text-right">
+                                                    <p className="font-mono font-bold text-[#1d2327]">{item.price}</p>
+                                                    <p className={`text-xs font-bold ${item.change.includes('↑') ? 'text-green-600' : item.change.includes('↓') ? 'text-red-600' : 'text-[#646970]'}`}>
+                                                        {item.change}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
-                        )}
+                        </div>
+                    )}
 
-                        {activeSection === 'live' && <LiveDashboard />}
+                    {activeSection === 'live' && <LiveDashboard />}
 
-                        {activeSection !== 'overview' && activeSection !== 'live' && (
-                            <div className="flex flex-col items-center justify-center py-20 text-slate-400 bg-white border border-dashed border-slate-300">
-                                <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                                <p className="text-lg">Section under construction</p>
-                            </div>
-                        )}
-                    </div>
-                </main>
-            </div>
+                    {activeSection !== 'overview' && activeSection !== 'live' && (
+                        <div className="flex flex-col items-center justify-center py-20 text-[#a7aaad] bg-white rounded border border-[#dcdcde]">
+                            <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                            <p className="text-lg">Section under construction</p>
+                        </div>
+                    )}
+                </div>
+            </main>
         </div>
     );
 };

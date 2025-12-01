@@ -3,42 +3,42 @@ import React, { useEffect } from 'react';
 import { useLanguage } from '../types';
 
 interface SEOProps {
-  title?: string;
-  description?: string;
-  image?: string;
+    title: string;
+    description: string;
+    keywords?: string;
+    image?: string;
 }
 
-const SEO: React.FC<SEOProps> = ({ title, description, image }) => {
-  const { language } = useLanguage();
-  
-  useEffect(() => {
-    // Basic Title
-    const siteTitle = 'استیل آنلاین ۲۰ | Steel Online 20';
-    document.title = title ? `${title} | ${siteTitle}` : siteTitle;
+const SEO: React.FC<SEOProps> = ({ title, description, keywords, image }) => {
+    const { language } = useLanguage();
 
-    // Update Meta Tags Helper
-    const updateMeta = (name: string, content: string | undefined, attr: 'name' | 'property' = 'name') => {
-      if (!content) return;
-      let element = document.querySelector(`meta[${attr}="${name}"]`);
-      if (!element) {
-        element = document.createElement('meta');
-        element.setAttribute(attr, name);
-        document.head.appendChild(element);
-      }
-      element.setAttribute('content', content);
-    };
+    useEffect(() => {
+        // Update Title
+        document.title = `${title} | Steel Online 20`;
 
-    updateMeta('description', description);
-    updateMeta('og:title', title || siteTitle, 'property');
-    updateMeta('og:description', description, 'property');
-    updateMeta('og:image', image, 'property');
-    updateMeta('twitter:title', title || siteTitle);
-    updateMeta('twitter:description', description);
-    updateMeta('twitter:image', image);
+        // Helper to update meta tags
+        const updateMeta = (name: string, content: string, attr: 'name' | 'property' = 'name') => {
+            let meta = document.querySelector(`meta[${attr}="${name}"]`);
+            if (!meta) {
+                meta = document.createElement('meta');
+                meta.setAttribute(attr, name);
+                document.head.appendChild(meta);
+            }
+            meta.setAttribute('content', content);
+        };
 
-  }, [title, description, image, language]);
+        updateMeta('description', description);
+        if (keywords) updateMeta('keywords', keywords);
+        
+        // Open Graph
+        updateMeta('og:title', title, 'property');
+        updateMeta('og:description', description, 'property');
+        if (image) updateMeta('og:image', image, 'property');
+        updateMeta('og:locale', language === 'fa' ? 'fa_IR' : language === 'ar' ? 'ar_SA' : 'en_US', 'property');
 
-  return null;
+    }, [title, description, keywords, image, language]);
+
+    return null;
 };
 
 export default SEO;

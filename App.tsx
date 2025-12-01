@@ -241,22 +241,31 @@ const App: React.FC = () => {
           let location: { lat: number; lon: number } | null = null;
           if (searchMethod === 'geo') {
               try {
-                  location = await new Promise((resolve) => {
+                  location = await new Promise((resolve, reject) => {
+                      if (!navigator.geolocation) {
+                          reject(new Error("Geolocation not supported"));
+                          return;
+                      }
                       navigator.geolocation.getCurrentPosition(
                           position => resolve({
                               lat: position.coords.latitude,
                               lon: position.coords.longitude
                           }),
-                          (error: GeolocationPositionError) => {
-                              console.error(`Geolocation error: Code ${error.code} - ${error.message}`);
-                              resolve(null);
+                          (error) => {
+                             reject(error);
                           },
                           { timeout: 10000 }
                       );
                   });
-              } catch (geoError) {
-                  console.error("Geolocation promise error:", geoError);
-                  addToast("Could not get your location.", "error");
+              } catch (geoError: any) {
+                  console.error("Geolocation error:", geoError);
+                  let msg = "Could not get your location.";
+                  if (geoError?.code === 1) msg = "Location permission denied.";
+                  if (geoError?.code === 2) msg = "Location unavailable. Please check GPS/Network.";
+                  if (geoError?.code === 3) msg = "Location request timed out.";
+                  addToast(msg, "error");
+                  setIsFindingProviders(false);
+                  return; // Stop the search if geo failed
               }
           }
           const results = await findLocalProviders(query, location, language, searchType);
