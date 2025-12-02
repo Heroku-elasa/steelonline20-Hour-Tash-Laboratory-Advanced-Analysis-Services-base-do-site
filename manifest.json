@@ -1,27 +1,21 @@
 
 {
-  "short_name": "Steel Online",
-  "name": "استیل آنلاین ۲۰ - خرید و فروش آهن",
-  "description": "مرجع تخصصی خرید و فروش آهن‌آلات با قیمت روز",
+  "short_name": "Steel20",
+  "name": "Steel Online 20",
   "icons": [
     {
       "src": "https://i.sstatic.net/zhhxJn5n.png",
       "type": "image/png",
-      "sizes": "192x192",
-      "purpose": "any maskable"
+      "sizes": "192x192"
     },
     {
       "src": "https://i.sstatic.net/zhhxJn5n.png",
       "type": "image/png",
-      "sizes": "512x512",
-      "purpose": "any maskable"
+      "sizes": "512x512"
     }
   ],
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
-  "orientation": "portrait",
   "theme_color": "#9D003D",
-  "background_color": "#ffffff",
-  "dir": "rtl",
-  "lang": "fa"
+  "background_color": "#f1f5f9"
 }

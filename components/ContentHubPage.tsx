@@ -208,7 +208,7 @@ const ContentHubPage: React.FC<ContentHubPageProps> = ({
                         </div>
                         <div className="min-h-[200px]">
                             {activeTab === 'trends' && (
-                                <div className="space-y-3">
+                                <div className="space-y-4">
                                     {isFetchingTrends && <p className="text-slate-500 text-sm">{t('contentHub.fetchingTrends')}</p>}
                                     {trendsError && <p className="text-red-500 text-sm">{trendsError}</p>}
                                     {trends && trends.length > 0 && trends.map((trend, i) => (
@@ -216,22 +216,28 @@ const ContentHubPage: React.FC<ContentHubPageProps> = ({
                                             setTopic(trend.contentIdea || trend.title);
                                             setActiveTab('text');
                                             addToast("Content idea loaded. You can edit it now.", "info");
-                                        }} className={`w-full p-3 rounded-md text-left transition-colors border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-md group`}>
-                                            <h4 className="font-bold text-slate-800 group-hover:text-corp-blue-dark">{trend.title}</h4>
-                                            <p className="text-xs text-slate-500 mt-1">{trend.summary}</p>
-                                            {trend.contentIdea && (
-                                                <div className="mt-2 pt-2 border-t border-slate-200">
-                                                    <span className="text-[10px] uppercase font-bold text-slate-400">Content Idea:</span>
-                                                    <p className="text-xs text-slate-700 font-medium">{trend.contentIdea}</p>
+                                        }} className={`w-full p-4 rounded-lg text-left transition-all border-l-4 border-l-corp-red border-y border-r border-slate-200 bg-white hover:shadow-md group relative overflow-hidden`}>
+                                            <div className="relative z-10">
+                                                <h4 className="font-bold text-slate-900 text-base">{trend.title}</h4>
+                                                <p className="text-sm text-slate-600 mt-1 leading-snug">{trend.summary}</p>
+                                                {trend.contentIdea && (
+                                                    <div className="mt-3 p-3 bg-corp-blue/5 rounded border border-corp-blue/10">
+                                                        <span className="text-[10px] uppercase font-bold text-corp-blue tracking-wider block mb-1">Content Idea:</span>
+                                                        <p className="text-sm text-slate-800 italic">"{trend.contentIdea}"</p>
+                                                    </div>
+                                                )}
+                                                <div className="mt-3 text-right">
+                                                    <span className="text-xs font-bold text-corp-blue-dark hover:underline inline-flex items-center gap-1">
+                                                        Click to edit & generate &rarr;
+                                                    </span>
                                                 </div>
-                                            )}
-                                            <span className="text-[10px] text-corp-blue mt-2 block opacity-0 group-hover:opacity-100 transition-opacity text-right">Click to edit & generate &rarr;</span>
+                                            </div>
                                         </button>
                                     ))}
                                 </div>
                             )}
                             {activeTab === 'text' && (
-                                <textarea value={topic} onChange={e => setTopic(e.target.value)} placeholder={t('contentHub.customTextPlaceholder')} rows={6} className="w-full bg-slate-100 border-slate-300 rounded-md p-3 focus:ring-corp-blue-dark focus:border-corp-blue-dark text-slate-800 text-sm" />
+                                <textarea value={topic} onChange={e => setTopic(e.target.value)} placeholder={t('contentHub.customTextPlaceholder')} rows={6} className="w-full bg-slate-50 border-slate-300 rounded-md p-3 focus:ring-corp-blue-dark focus:border-corp-blue-dark text-slate-800 text-sm" />
                             )}
                              {activeTab === 'search' && (
                                 <div className="space-y-3">
@@ -241,7 +247,7 @@ const ContentHubPage: React.FC<ContentHubPageProps> = ({
                                             <button
                                                 key={i}
                                                 onClick={() => setTopic(suggestion)}
-                                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${topic === suggestion ? 'bg-corp-blue-dark text-white' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}
+                                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${topic === suggestion ? 'bg-corp-blue-dark text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
                                             >
                                                 {suggestion}
                                             </button>
@@ -254,12 +260,12 @@ const ContentHubPage: React.FC<ContentHubPageProps> = ({
                      {/* Step 3: Generate */}
                      <div>
                          {topic && (
-                            <div className="p-3 mb-4 bg-slate-100 rounded-md border border-slate-200">
+                            <div className="p-3 mb-4 bg-slate-50 rounded-md border border-slate-200 border-l-4 border-l-corp-blue-dark">
                                 <p className="text-xs text-slate-500 uppercase font-bold">Selected Topic:</p>
                                 <p className="text-sm text-slate-800 font-semibold line-clamp-3">{topic}</p>
                             </div>
                          )}
-                         <button onClick={handleGenerateClick} disabled={isGenerateDisabled} className="w-full flex justify-center items-center gap-3 py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-corp-blue-dark hover:bg-corp-blue-dark/90 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors">
+                         <button onClick={handleGenerateClick} disabled={isGenerateDisabled} className="w-full flex justify-center items-center gap-3 py-3 px-4 border border-transparent rounded-md shadow-md text-base font-medium text-white bg-corp-blue-dark hover:bg-corp-blue-dark/90 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors">
                             {isGeneratingPost && <div className="w-5 h-5 border-2 border-dashed rounded-full animate-spin border-white"></div>}
                             <span>{isGeneratingPost ? t('contentHub.generatingPost') : t('contentHub.generateButton')}</span>
                          </button>
@@ -277,7 +283,7 @@ const ContentHubPage: React.FC<ContentHubPageProps> = ({
                     )}
                     
                     {(isGeneratingPost && !generatedPost) && (
-                         <div className="aspect-square bg-slate-100 rounded-md flex items-center justify-center overflow-hidden border border-slate-200">
+                         <div className="aspect-square bg-slate-50 rounded-md flex items-center justify-center overflow-hidden border border-slate-200">
                             <div className="flex flex-col items-center text-center text-slate-500 p-4">
                                 <div className="w-8 h-8 border-4 border-dashed rounded-full animate-spin border-corp-blue-dark"></div>
                                 <span className="text-sm mt-3">Generating content...</span>
@@ -288,7 +294,7 @@ const ContentHubPage: React.FC<ContentHubPageProps> = ({
                     {generatedPost && (
                         <div className="space-y-6 animate-fade-in">
                             {/* Image Display */}
-                            <div className="aspect-square bg-slate-100 rounded-md flex items-center justify-center overflow-hidden border border-slate-200">
+                            <div className="aspect-square bg-slate-50 rounded-md flex items-center justify-center overflow-hidden border border-slate-200">
                                 {generatedPost.imageUrl ? (
                                     <img src={generatedPost.imageUrl} alt="Generated for social media post" className="w-full h-full object-cover" />
                                 ) : (
@@ -304,13 +310,13 @@ const ContentHubPage: React.FC<ContentHubPageProps> = ({
                                 <textarea
                                     readOnly 
                                     value={generatedPost.text || ''}
-                                    className="w-full h-40 bg-slate-100 border-slate-300 rounded-md p-3 text-slate-800 text-sm resize-none"
+                                    className="w-full h-40 bg-slate-50 border-slate-300 rounded-md p-3 text-slate-800 text-sm resize-none focus:ring-1 focus:ring-corp-blue-dark"
                                 />
                                 <div className="flex flex-wrap gap-2">
-                                    <button onClick={() => handleCopy(generatedPost.text)} className="flex-1 px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-md transition-colors">
+                                    <button onClick={() => handleCopy(generatedPost.text)} className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition-colors border border-slate-200">
                                         {copySuccess ? t('contentHub.copySuccess') : t('contentHub.copyButton')}
                                     </button>
-                                    <button onClick={() => addToast(t('contentHub.connectAccountToPublish'), 'info')} className="flex-1 px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-md transition-colors">
+                                    <button onClick={() => addToast(t('contentHub.connectAccountToPublish'), 'info')} className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition-colors border border-slate-200">
                                         {t('contentHub.publishToPlatformButton').replace('{platform}', generatedPost.platform)}
                                     </button>
                                     <button onClick={handleAdaptForWebsite} disabled={isAdapting} className="flex-1 px-3 py-2 bg-corp-blue hover:bg-corp-blue-light text-white text-xs font-semibold rounded-md transition-colors disabled:bg-slate-400">

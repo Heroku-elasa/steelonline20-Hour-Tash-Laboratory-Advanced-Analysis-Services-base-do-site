@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { useLanguage, User } from '../types';
 
@@ -23,52 +24,31 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
   const [errors, setErrors] = useState({ email: '', password: '' });
 
   useEffect(() => {
-    if (isOpen) {
-        // Dynamic script loading for Google Sign-In
-        const loadGoogleScript = () => {
-             const existingScript = document.getElementById('google-client-script');
-             if (existingScript) {
-                 initializeGoogleClient();
-                 return;
-             }
-             const script = document.createElement('script');
-             script.src = "https://accounts.google.com/gsi/client";
-             script.id = 'google-client-script';
-             script.async = true;
-             script.onload = () => initializeGoogleClient();
-             document.body.appendChild(script);
-        };
+    if (isOpen && window.google?.accounts?.oauth2) {
+      // TODO: Replace with your actual Google Client ID
+      const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
 
-        const initializeGoogleClient = () => {
-             if (window.google?.accounts?.oauth2) {
-                // TODO: Replace with your actual Google Client ID
-                const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
-
-                tokenClient = window.google.accounts.oauth2.initTokenClient({
-                    client_id: GOOGLE_CLIENT_ID,
-                    scope: 'openid email profile',
-                    callback: (tokenResponse: any) => {
-                    if (tokenResponse && tokenResponse.access_token) {
-                        fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                        headers: { 'Authorization': `Bearer ${tokenResponse.access_token}` }
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                        const user: User = {
-                            name: data.name,
-                            email: data.email,
-                            picture: data.picture,
-                        };
-                        onLogin(user);
-                        })
-                        .catch(console.error);
-                    }
-                    },
-                });
-             }
-        };
-
-        loadGoogleScript();
+      tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'openid email profile',
+        callback: (tokenResponse: any) => {
+          if (tokenResponse && tokenResponse.access_token) {
+            fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+              headers: { 'Authorization': `Bearer ${tokenResponse.access_token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+              const user: User = {
+                name: data.name,
+                email: data.email,
+                picture: data.picture,
+              };
+              onLogin(user);
+            })
+            .catch(console.error);
+          }
+        },
+      });
     }
   }, [isOpen, onLogin]);
 

@@ -1,5 +1,8 @@
 
 
+
+
+
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
 
 // Basic Types
@@ -171,47 +174,57 @@ export interface CreditCheckResult {
     reason: string;
 }
 
-// --- Audit & Financial System Types ---
-export interface AuditStats {
-    totalChecksAmount: string;
+// Dashboard Types
+export interface DashboardStats {
+    totalChecksAmount: number;
     totalChecksCount: number;
-    dueThisWeekAmount: string;
-    dueThisWeekCount: number;
-    bouncedAmount: string;
-    cashBalance: string;
-    docsReviewed: number;
-    discrepancies: number;
+    checksDueThisWeekAmount: number;
+    checksDueThisWeekCount: number;
+    bouncedChecksAmount: number;
+    cashBalance: number;
+    documentsReviewed: number;
+    discrepanciesFound: number;
     fraudCases: number;
-    controlScore: number;
-}
-
-export interface FinancialCheck {
-    id: number;
-    checkNumber: string;
-    amount: string;
-    dueDate: string;
-    drawer: string;
-    bank: string;
-    status: 'pending' | 'cleared' | 'bounced' | 'deposited';
-    riskScore: number;
+    internalControlScore: number;
 }
 
 export interface AuditAlert {
     id: number;
-    type: 'warning' | 'error' | 'info' | 'critical';
-    message: string;
+    title: string;
+    type: 'check_due' | 'fraud_detected' | 'credit_limit' | 'discrepancy' | 'system';
+    severity: 'critical' | 'warning' | 'info';
     date: string;
     isRead: boolean;
 }
 
-export interface FraudCase {
+export interface CheckItem {
     id: number;
-    title: string;
+    number: string;
+    amount: number;
+    dueDate: string;
+    status: 'pending' | 'cleared' | 'bounced' | 'deposited';
+    drawer: string;
+    bank: string;
+}
+
+export interface AuditDocument {
+    id: string;
     type: string;
-    status: 'investigating' | 'confirmed' | 'resolved';
-    riskLevel: 'high' | 'medium' | 'low';
-    amount: string;
-    detectedAt: string;
+    title: string;
+    amount: number;
+    status: 'approved' | 'pending' | 'rejected' | 'flagged';
+    riskScore: number;
+    date: string;
+}
+
+export interface CustomerCredit {
+    id: number;
+    name: string;
+    type: 'company' | 'individual';
+    creditScore: number;
+    creditLimit: number;
+    usedCredit: number;
+    riskLevel: 'low' | 'medium' | 'high';
 }
 
 // Blog & Article Pages
@@ -247,13 +260,67 @@ const translations = {
     header: { home: 'Home', recommendationEngine: 'Smart Advisor', distributorFinder: 'Find Suppliers', aiChat: 'AI Consultant', contentHub: 'Market News', blog: 'Blog', ourTeam: 'Sales Team', partnerships: 'Credit Purchase', login: 'Login / Register', logout: 'Logout', tools: 'Tools', ironSnapp: 'IronSnapp', dashboard: 'Dashboard' },
     dashboard: {
         title: 'Admin Dashboard',
-        menu: { overview: 'Overview', products: 'Products', pricing: 'Pricing', orders: 'Orders', customers: 'Customers', reports: 'Reports', settings: 'Settings', live: 'Live Monitor', audit: 'Audit Suite' },
+        menu: { overview: 'Overview', financial: 'Financial & Checks', audit: 'Audit & Control', customers: 'Customers & Credit', reports: 'Reports', live: 'Live Monitor' },
         metrics: { orders: "Today's Orders", sales: "Today's Sales", newCustomers: "New Customers", visits: "Site Visits" },
-        charts: { salesTitle: 'Monthly Sales', productDist: 'Product Distribution' },
+        charts: { 
+            salesTitle: 'Monthly Sales', 
+            productDist: 'Product Distribution',
+            cashFlow: 'Cash Flow Forecast (6 Months)',
+            checkStatus: 'Check Status Distribution',
+            internalControl: 'Internal Control Assessment'
+        },
+        labels: {
+            view: 'View',
+            score: 'Score',
+            total: 'Total',
+            cleared: 'Cleared',
+            pending: 'Pending',
+            bounced: 'Bounced',
+            urgent: 'Urgent',
+            checks: 'Checks',
+            accounts: 'Accounts',
+            good: 'Good',
+            adequate: 'Adequate',
+            strong: 'Strong',
+            risk: 'Risk Assessment',
+            monitoring: 'Monitoring',
+            activities: 'Activities',
+            basedOn: 'Based on latest audit logs'
+        },
         tables: {
             ordersTitle: 'Recent Orders',
             pricesTitle: 'Live Product Prices',
-            headers: { orderId: 'Order ID', customer: 'Customer', product: 'Product', amount: 'Amount', status: 'Status', price: 'Price', change: 'Change', lastUpdate: 'Updated', stock: 'Stock', category: 'Category', actions: 'Actions', phone: 'Phone', company: 'Company', credit: 'Credit' }
+            headers: { 
+                orderId: 'Order ID', customer: 'Customer', product: 'Product', amount: 'Amount', status: 'Status', price: 'Price', change: 'Change', lastUpdate: 'Updated', stock: 'Stock', category: 'Category', actions: 'Actions', phone: 'Phone', company: 'Company', credit: 'Credit',
+                checkNumber: 'Check Number', dueDate: 'Due Date', drawer: 'Drawer', bank: 'Bank',
+                document: 'Document', type: 'Type', date: 'Date', aiRisk: 'AI Risk Score',
+                creditLimit: 'Credit Limit', used: 'Used', risk: 'Risk'
+            }
+        },
+        stats: {
+            totalChecks: 'Total Checks in Process',
+            dueThisWeek: 'Due This Week',
+            bouncedChecks: 'Bounced Checks',
+            cashBalance: 'Cash Balance',
+            documentsReviewed: 'Docs Reviewed Today',
+            discrepancies: 'Discrepancies Found',
+            fraudCases: 'Fraud Cases',
+            controlScore: 'Internal Control Score'
+        },
+        audit: {
+             aiAnalysis: 'AI Analysis',
+             riskScore: 'Risk Score',
+             fraudDetection: 'Fraud Detection',
+             discrepancyList: 'Discrepancies',
+             auditLogs: 'AI Audit Logs',
+             urgentAlerts: 'Urgent Alerts'
+        },
+        financial: {
+            title: 'Check Management',
+            registerBtn: 'Register New Check'
+        },
+        customers: {
+            title: 'Customer Credit Profiles'
         },
         products: { add: 'Add Product', search: 'Search Products...' },
         activity: { title: 'Recent Activity' },
@@ -269,34 +336,6 @@ const translations = {
           logs: 'Live Order Stream',
           activeUsers: 'Active Users',
           trending: 'Trending Products',
-        }
-    },
-    audit: {
-        title: 'Teamyar Audit Suite',
-        subtitle: 'AI-Powered Financial Auditing & Control',
-        tabs: { overview: 'Overview', checks: 'Check Management', ai: 'AI & Fraud', reports: 'Reports' },
-        stats: {
-            totalChecks: 'Checks in Process',
-            dueThisWeek: 'Due This Week',
-            bounced: 'Bounced Checks',
-            cashBalance: 'Cash Balance',
-            docsReviewed: 'Docs Reviewed',
-            discrepancies: 'Discrepancies',
-            fraud: 'Fraud Cases',
-            score: 'Control Score'
-        },
-        checks: {
-            title: 'Check Management',
-            table: { number: 'Check No.', drawer: 'Drawer', amount: 'Amount', date: 'Due Date', bank: 'Bank', status: 'Status', risk: 'Risk' }
-        },
-        ai: {
-            title: 'AI Fraud Detection',
-            riskAnalysis: 'Risk Analysis',
-            anomalies: 'Anomalies Detected',
-            recommendations: 'Recommendations'
-        },
-        alerts: {
-            title: 'System Alerts'
         }
     },
     ironSnapp: {
@@ -375,13 +414,67 @@ const translations = {
     header: { home: 'خانه', recommendationEngine: 'مشاور خرید', distributorFinder: 'مراکز فروش', aiChat: 'هوش مصنوعی', contentHub: 'تحلیل بازار', blog: 'مجله آهن', ourTeam: 'تیم فروش', partnerships: 'خرید اعتباری', login: 'ورود / ثبت‌نام', logout: 'خروج', tools: 'ابزارها', ironSnapp: 'آهن‌اسنپ', dashboard: 'داشبورد مدیریت' },
     dashboard: {
         title: 'داشبورد مدیریت',
-        menu: { overview: 'نمای کلی', products: 'محصولات', pricing: 'قیمت‌گذاری', orders: 'سفارشات', customers: 'مشتریان', reports: 'گزارشات', settings: 'تنظیمات', live: 'مانیتور زنده', audit: 'حسابرس‌یار' },
+        menu: { overview: 'نمای کلی', financial: 'مالی و چک‌ها', audit: 'حسابرسی و کنترل', customers: 'مشتریان و اعتبار', reports: 'گزارشات', live: 'مانیتور زنده' },
         metrics: { orders: "سفارشات امروز", sales: "فروش امروز", newCustomers: "مشتریان جدید", visits: "بازدید سایت" },
-        charts: { salesTitle: 'نمودار فروش ماهانه', productDist: 'توزیع فروش محصولات' },
+        charts: { 
+            salesTitle: 'نمودار فروش ماهانه', 
+            productDist: 'توزیع فروش محصولات',
+            cashFlow: 'پیش‌بینی جریان نقدی (۶ ماهه)',
+            checkStatus: 'توزیع وضعیت چک‌ها',
+            internalControl: 'ارزیابی کنترل داخلی'
+        },
+        labels: {
+            view: 'مشاهده',
+            score: 'امتیاز',
+            total: 'کل',
+            cleared: 'پاس شده',
+            pending: 'در جریان',
+            bounced: 'برگشتی',
+            urgent: 'فوری',
+            checks: 'فقره چک',
+            accounts: 'حساب',
+            good: 'خوب',
+            adequate: 'متوسط',
+            strong: 'قوی',
+            risk: 'ارزیابی ریسک',
+            monitoring: 'نظارت',
+            activities: 'فعالیت‌ها',
+            basedOn: 'بر اساس آخرین لاگ‌های حسابرسی'
+        },
         tables: {
             ordersTitle: 'سفارشات اخیر',
             pricesTitle: 'قیمت لحظه‌ای محصولات',
-            headers: { orderId: 'شماره', customer: 'مشتری', product: 'محصول', amount: 'مبلغ', status: 'وضعیت', price: 'قیمت', change: 'تغییر', lastUpdate: 'بروزرسانی', stock: 'موجودی', category: 'دسته‌بندی', actions: 'عملیات', phone: 'تلفن', company: 'شرکت', credit: 'اعتبار' }
+            headers: { 
+                orderId: 'شماره', customer: 'مشتری', product: 'محصول', amount: 'مبلغ', status: 'وضعیت', price: 'قیمت', change: 'تغییر', lastUpdate: 'بروزرسانی', stock: 'موجودی', category: 'دسته‌بندی', actions: 'عملیات', phone: 'تلفن', company: 'شرکت', credit: 'اعتبار',
+                checkNumber: 'شماره چک', dueDate: 'سررسید', drawer: 'صادرکننده', bank: 'بانک',
+                document: 'سند', type: 'نوع', date: 'تاریخ', aiRisk: 'ریسک هوشمند',
+                creditLimit: 'سقف اعتبار', used: 'استفاده شده', risk: 'ریسک'
+            }
+        },
+        stats: {
+            totalChecks: 'کل چک‌های در جریان',
+            dueThisWeek: 'سررسید این هفته',
+            bouncedChecks: 'چک‌های برگشتی',
+            cashBalance: 'موجودی نقد',
+            documentsReviewed: 'اسناد بررسی شده',
+            discrepancies: 'مغایرت‌ها',
+            fraudCases: 'موارد تقلب',
+            controlScore: 'امتیاز کنترل داخلی'
+        },
+        audit: {
+             aiAnalysis: 'تحلیل هوشمند',
+             riskScore: 'امتیاز ریسک',
+             fraudDetection: 'تشخیص تقلب',
+             discrepancyList: 'لیست مغایرت‌ها',
+             auditLogs: 'لاگ‌های حسابرسی هوشمند',
+             urgentAlerts: 'هشدارهای فوری'
+        },
+        financial: {
+            title: 'مدیریت چک‌ها',
+            registerBtn: 'ثبت چک جدید'
+        },
+        customers: {
+            title: 'پروفایل اعتباری مشتریان'
         },
         products: { add: 'افزودن محصول', search: 'جستجوی محصول...' },
         activity: { title: 'فعالیت‌های اخیر' },
@@ -397,34 +490,6 @@ const translations = {
           logs: 'جریان زنده سفارشات',
           activeUsers: 'کاربران آنلاین',
           trending: 'محصولات داغ',
-        }
-    },
-    audit: {
-        title: 'حسابرس‌یار',
-        subtitle: 'سیستم هوشمند حسابرسی و مدیریت مالی',
-        tabs: { overview: 'نمای کلی', checks: 'مدیریت چک‌ها', ai: 'هوش مصنوعی و تقلب', reports: 'گزارشات' },
-        stats: {
-            totalChecks: 'کل چک‌های در جریان',
-            dueThisWeek: 'سررسید این هفته',
-            bounced: 'چک‌های برگشتی',
-            cashBalance: 'موجودی نقد',
-            docsReviewed: 'اسناد بررسی شده',
-            discrepancies: 'مغایرت‌های کشف شده',
-            fraud: 'موارد تقلب جدید',
-            score: 'امتیاز کنترل داخلی'
-        },
-        checks: {
-            title: 'مدیریت چک‌ها',
-            table: { number: 'شماره چک', drawer: 'صادرکننده', amount: 'مبلغ (ریال)', date: 'سررسید', bank: 'بانک', status: 'وضعیت', risk: 'ریسک' }
-        },
-        ai: {
-            title: 'پنل تشخیص تقلب هوشمند',
-            riskAnalysis: 'تحلیل ریسک',
-            anomalies: 'ناهنجاری‌های کشف شده',
-            recommendations: 'پیشنهادات سیستمی'
-        },
-        alerts: {
-            title: 'هشدارهای سیستم'
         }
     },
     ironSnapp: {
@@ -503,13 +568,67 @@ const translations = {
     header: { home: 'الرئيسية', recommendationEngine: 'المستشار الذكي', distributorFinder: 'الموردين', aiChat: 'استشارة ذكية', contentHub: 'تحليل السوق', blog: 'المدونة', ourTeam: 'فريق المبيعات', partnerships: 'شراء بالائتمان', login: 'دخول / تسجيل', logout: 'خروج', tools: 'أدوات', ironSnapp: 'آيرون سناب', dashboard: 'لوحة التحكم' },
     dashboard: {
         title: 'لوحة التحكم',
-        menu: { overview: 'نظرة عامة', products: 'المنتجات', pricing: 'التسعير', orders: 'الطلبات', customers: 'العملاء', reports: 'التقارير', settings: 'الإعدادات', live: 'مراقبة حية', audit: 'التدقيق' },
+        menu: { overview: 'نظرة عامة', financial: 'المالية والشيكات', audit: 'التدقيق والرقابة', customers: 'العملاء والائتمان', reports: 'التقارير', live: 'مراقبة حية' },
         metrics: { orders: "طلبات اليوم", sales: "مبيعات اليوم", newCustomers: "عملاء جدد", visits: "زيارات الموقع" },
-        charts: { salesTitle: 'المبيعات الشهرية', productDist: 'توزيع المنتجات' },
+        charts: { 
+            salesTitle: 'المبيعات الشهرية', 
+            productDist: 'توزيع المنتجات',
+            cashFlow: 'توقعات التدفق النقدي (6 أشهر)',
+            checkStatus: 'توزيع حالة الشيكات',
+            internalControl: 'تقييم الرقابة الداخلية'
+        },
+        labels: {
+            view: 'عرض',
+            score: 'النقاط',
+            total: 'المجموع',
+            cleared: 'تم الصرف',
+            pending: 'قيد الانتظار',
+            bounced: 'مرتجع',
+            urgent: 'عاجل',
+            checks: 'شيكات',
+            accounts: 'حسابات',
+            good: 'جيد',
+            adequate: 'متوسط',
+            strong: 'قوي',
+            risk: 'تقييم المخاطر',
+            monitoring: 'المراقبة',
+            activities: 'الأنشطة',
+            basedOn: 'بناءً على أحدث سجلات التدقيق'
+        },
         tables: {
             ordersTitle: 'أحدث الطلبات',
             pricesTitle: 'أسعار المنتجات المباشرة',
-            headers: { orderId: 'الرقم', customer: 'العميل', product: 'المنتج', amount: 'المبلغ', status: 'الحالة', price: 'السعر', change: 'التغيير', lastUpdate: 'التحديث', stock: 'المخزون', category: 'الفئة', actions: 'الإجراءات', phone: 'الهاتف', company: 'الشركة', credit: 'الائتمان' }
+            headers: { 
+                orderId: 'الرقم', customer: 'العميل', product: 'المنتج', amount: 'المبلغ', status: 'الحالة', price: 'السعر', change: 'التغيير', lastUpdate: 'التحديث', stock: 'المخزون', category: 'الفئة', actions: 'الإجراءات', phone: 'الهاتف', company: 'الشركة', credit: 'الائتمان',
+                checkNumber: 'رقم الشيك', dueDate: 'تاريخ الاستحقاق', drawer: 'الساحب', bank: 'البنك',
+                document: 'المستند', type: 'النوع', date: 'التاريخ', aiRisk: 'مخاطر AI',
+                creditLimit: 'حد الائتمان', used: 'المستخدم', risk: 'المخاطرة'
+            }
+        },
+        stats: {
+            totalChecks: 'إجمالي الشيكات',
+            dueThisWeek: 'مستحق هذا الأسبوع',
+            bouncedChecks: 'شيكات مرتجعة',
+            cashBalance: 'الرصيد النقدي',
+            documentsReviewed: 'المستندات التي تمت مراجعتها',
+            discrepancies: 'الفروقات',
+            fraudCases: 'حالات الاحتيال',
+            controlScore: 'درجة الرقابة الداخلية'
+        },
+        audit: {
+             aiAnalysis: 'تحليل الذكاء الاصطناعي',
+             riskScore: 'درجة المخاطرة',
+             fraudDetection: 'كشف الاحتيال',
+             discrepancyList: 'قائمة الفروقات',
+             auditLogs: 'سجلات تدقيق الذكاء الاصطناعي',
+             urgentAlerts: 'تنبيهات عاجلة'
+        },
+        financial: {
+            title: 'إدارة الشيكات',
+            registerBtn: 'تسجيل شيك جديد'
+        },
+        customers: {
+            title: 'ملفات ائتمان العملاء'
         },
         products: { add: 'إضافة منتج', search: 'بحث عن منتجات...' },
         activity: { title: 'النشاط الأخير' },
@@ -525,34 +644,6 @@ const translations = {
           logs: 'تدفق الطلبات المباشر',
           activeUsers: 'المستخدمون النشطون',
           trending: 'المنتجات الرائجة',
-        }
-    },
-    audit: {
-        title: 'نظام التدقيق',
-        subtitle: 'التدقيق المالي المدعوم بالذكاء الاصطناعي',
-        tabs: { overview: 'نظرة عامة', checks: 'إدارة الشيكات', ai: 'الذكاء الاصطناعي والاحتيال', reports: 'التقارير' },
-        stats: {
-            totalChecks: 'الشيكات قيد المعالجة',
-            dueThisWeek: 'المستحقة هذا الأسبوع',
-            bounced: 'الشيكات المرتجعة',
-            cashBalance: 'الرصيد النقدي',
-            docsReviewed: 'المستندات التي تمت مراجعتها',
-            discrepancies: 'التناقضات',
-            fraud: 'حالات الاحتيال',
-            score: 'درجة التحكم'
-        },
-        checks: {
-            title: 'إدارة الشيكات',
-            table: { number: 'رقم الشيك', drawer: 'الساحب', amount: 'المبلغ', date: 'تاريخ الاستحقاق', bank: 'البنك', status: 'الحالة', risk: 'المخاطرة' }
-        },
-        ai: {
-            title: 'كشف الاحتيال',
-            riskAnalysis: 'تحليل المخاطر',
-            anomalies: 'الحالات الشاذة',
-            recommendations: 'التوصيات'
-        },
-        alerts: {
-            title: 'تنبيهات النظام'
         }
     },
     ironSnapp: {
@@ -612,7 +703,7 @@ const translations = {
         title: 'مستشار الشراء الذكي', subtitle: 'أخبرنا عن مشروعك للحصول على أفضل التوصيات.', uploadImageTitle: 'تحميل مخطط/صورة', removeImage: 'إزالة', uploadButton: 'تحميل', cameraButton: 'تصوير', formTitle: 'تفاصيل المشروع', symptomsLabel: 'وصف المشروع', symptomsPlaceholder: 'مثلاً: بناء مبنى سكني 5 طوابق...', suggestionPromptsTitle: 'تحديد سريع:', suggestionPrompts: ['مبنى سكني', 'هنجر صناعي', 'جسر', 'سياج'], detailsTitle: 'المواصفات الفنية', autoFillCheckboxLabel: 'تعبئة تلقائية', sampleTypeLabel: 'فئة المنتج', sampleTypePlaceholder: 'مثلاً: حديد، جسور، صاج...', batchSizeOriginLabel: 'الكمية / الوجهة', batchSizeOriginPlaceholder: 'مثلاً: 25 طن، تبريز', specificConditions: 'التفاصيل الإنشائية', controlSampleInfo: 'الماركات المفضلة', sampleAge: 'موعد التسليم', sampleAgePlaceholder: 'مثلاً: الأسبوع القادم', previousTests: 'الميزانية', additives: 'خدمات إضافية', buttonText: 'احصل على توصية', generating: 'جارٍ التحليل...', resultTitle: 'توصية المواد', primaryAssessmentTitle: 'تحلیل المشروع', potentialConditionsTitle: 'اعتبارات فنية', recommendedProductsTitle: 'المنتجات المقترحة', managementAdviceTitle: 'نصائح الشراء', nextStepsTitle: 'الخطوات التالية', findDropoffLocation: 'عثور على مورد', getTreatmentPlan: 'تقدير السعر', gettingPlan: 'جارٍ الحساب...', detailedPlanTitle: 'عرض سعر تقديري', purpose: 'الاستخدام', methodology: 'المعيار', turnaroundTime: 'التوفر', estimatedCost: 'السعر التقديري', disclaimerTitle: 'تنويه', startNewAnalysis: 'طلب جديد', savePdf: 'تحميل العرض', symptomsSuggestions: ['مقاومة شد عالية', 'مقاومة صدأ', 'مقاوم للزلازل', 'اقتصادی'], animalTypeSuggestions: ['حديد تسليح', 'جسور', 'صاج', 'بروفيل', 'أنابيب', 'زوايا', 'قنوات']
     },
     contentHub: {
-        title: 'تحليلات السوق', subtitle: 'تحليل الاتجاهات وإنشاء تقارير.', platformSelectorTitle: '1. المنصة', topicTitle: '2. الموضوع', trendsTab: 'اتجاهات السوق', textTab: 'موضوع مخصص', searchTab: 'بحث', fetchingTrends: 'جلب البيانات...', customTextPlaceholder: 'موضوع التحليل (مثلاً: "تأثير الدولار على الحديد")...', selectSearchTopic: 'مواضيع شائعة:', userSearchSuggestions: ['توقعات أسعار الحديد', 'تعريفات التصدير', 'موسم البناء', 'تكاليف المواد الخام'], generatingPost: 'جارٍ الإنشاء...', generateButton: 'إنشاء تحليل', resultsTitle: 'المحتوى', placeholder: 'اختر موضوعًا.', copyButton: 'نسخ', copySuccess: 'تم النسخ!', connectAccountToPublish: 'ربط الحساب', publishToPlatformButton: 'نشر على {platform}', adaptForWebsiteButton: 'تحويل لمقال', adaptingForWebsite: 'جارٍ الكتابة...', websitePreviewTitle: 'معاينة المقال', publishToWebsiteButton: 'نشر', publishedSuccess: 'تم النشر!',
+        title: 'تحليلات السوق', subtitle: 'تحليل الاتجاهات وإنشاء تقارير.', platformSelectorTitle: '1. المنصة', topicTitle: '2. موضوع', trendsTab: 'اتجاهات السوق', textTab: 'موضوع مخصص', searchTab: 'بحث', fetchingTrends: 'جلب البيانات...', customTextPlaceholder: 'موضوع التحليل (مثلاً: "تأثير الدولار على الحديد")...', selectSearchTopic: 'مواضيع شائعة:', userSearchSuggestions: ['توقعات أسعار الحديد', 'تعريفات التصدير', 'موسم البناء', 'تكاليف المواد الخام'], generatingPost: 'جارٍ الإنشاء...', generateButton: 'إنشاء تحليل', resultsTitle: 'المحتوى', placeholder: 'اختر موضوعًا.', copyButton: 'نسخ', copySuccess: 'تم النسخ!', connectAccountToPublish: 'ربط الحساب', publishToPlatformButton: 'نشر على {platform}', adaptForWebsiteButton: 'تحويل لمقال', adaptingForWebsite: 'جارٍ الكتابة...', websitePreviewTitle: 'معاينة المقال', publishToWebsiteButton: 'نشر', publishedSuccess: 'تم النشر!',
         getStrategyButton: 'استراتژی محتوا', fetchingStrategy: 'تحلیل...', strategyTitle: 'استراتژی انتشار', bestTime: 'أفضل وقت', nextPost: 'الموضوع التالي',
         generateVideoButton: 'سيناريو فيديو', generatingVideo: 'كتابة...', timecode: 'وقت', visual: 'بصري', voiceover: 'صوت', emotion: 'نبرة',
         findVideoTools: 'أدوات الفيديو', findingTools: 'بحث...', toolName: 'أداة', toolCost: 'تكلفة', toolFarsi: 'فارسي', toolFeatures: 'ميزات', toolQuality: 'تقييم'

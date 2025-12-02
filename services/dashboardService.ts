@@ -1,5 +1,9 @@
 
-import { DashboardStats, AuditAlert, CheckItem, AuditDocument, CustomerCredit } from '../types';
+
+
+
+
+import { DashboardStats, AuditAlert, CheckItem, AuditDocument, CustomerCredit, Language } from '../types';
 
 // Mock Data Service simulating a backend for the Audit & Financial System
 
@@ -21,7 +25,16 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
     };
 };
 
-export const getAlerts = async (): Promise<AuditAlert[]> => {
+export const getAlerts = async (language: Language = 'en'): Promise<AuditAlert[]> => {
+    if (language === 'fa') {
+        return [
+            { id: 1, title: 'سررسید چک شماره ۱۲۹۸ فردا (۲.۵ میلیارد ریال)', type: 'check_due', severity: 'critical', date: 'امروز', isRead: false },
+            { id: 2, title: 'تراکنش مشکوک شناسایی شد: فاکتور ۹۹۲۱', type: 'fraud_detected', severity: 'critical', date: 'دیروز', isRead: false },
+            { id: 3, title: 'مشتری "استیل پارس" از سقف اعتبار عبور کرد', type: 'credit_limit', severity: 'warning', date: 'دیروز', isRead: false },
+            { id: 4, title: 'مغایرت در صورت مغایرت بانکی (ملت)', type: 'discrepancy', severity: 'warning', date: '۲ روز پیش', isRead: true },
+            { id: 5, title: 'پشتیبان‌گیری سیستم با موفقیت انجام شد', type: 'system', severity: 'info', date: '۳ روز پیش', isRead: true },
+        ];
+    }
     return [
         { id: 1, title: 'Check #1298 due tomorrow (2.5B IRR)', type: 'check_due', severity: 'critical', date: 'Today', isRead: false },
         { id: 2, title: 'Suspicious transaction detected: Invoice #9921', type: 'fraud_detected', severity: 'critical', date: 'Yesterday', isRead: false },
@@ -41,13 +54,21 @@ export const getChecks = async (): Promise<CheckItem[]> => {
     ];
 };
 
-export const getAuditDocuments = async (): Promise<AuditDocument[]> => {
+export const getAuditDocuments = async (language: Language = 'en'): Promise<AuditDocument[]> => {
+    // Just translating types for simplicity in mock
+    const types = {
+        Invoice: language === 'fa' ? 'فاکتور' : 'Invoice',
+        Check: language === 'fa' ? 'چک' : 'Check',
+        Contract: language === 'fa' ? 'قرارداد' : 'Contract',
+        Expense: language === 'fa' ? 'هزینه' : 'Expense'
+    };
+
     return [
-        { id: 'DOC-2024-001', type: 'Invoice', title: 'Purchase Inv #4421', amount: 450000000, status: 'approved', riskScore: 12, date: '1403/04/12' },
-        { id: 'DOC-2024-002', type: 'Check', title: 'Check Image #8821', amount: 2500000000, status: 'flagged', riskScore: 85, date: '1403/04/12' },
-        { id: 'DOC-2024-003', type: 'Contract', title: 'Sales Contract - Alavi', amount: 12000000000, status: 'pending', riskScore: 45, date: '1403/04/11' },
-        { id: 'DOC-2024-004', type: 'Expense', title: 'Logistics Report June', amount: 85000000, status: 'approved', riskScore: 5, date: '1403/04/10' },
-        { id: 'DOC-2024-005', type: 'Invoice', title: 'Sales Inv #9901', amount: 1250000000, status: 'rejected', riskScore: 92, date: '1403/04/09' },
+        { id: 'DOC-2024-001', type: types.Invoice, title: language === 'fa' ? 'فاکتور خرید #۴۴۲۱' : 'Purchase Inv #4421', amount: 450000000, status: 'approved', riskScore: 12, date: '1403/04/12' },
+        { id: 'DOC-2024-002', type: types.Check, title: language === 'fa' ? 'تصویر چک #۸۸۲۱' : 'Check Image #8821', amount: 2500000000, status: 'flagged', riskScore: 85, date: '1403/04/12' },
+        { id: 'DOC-2024-003', type: types.Contract, title: language === 'fa' ? 'قرارداد فروش - علوی' : 'Sales Contract - Alavi', amount: 12000000000, status: 'pending', riskScore: 45, date: '1403/04/11' },
+        { id: 'DOC-2024-004', type: types.Expense, title: language === 'fa' ? 'گزارش لجستیک خرداد' : 'Logistics Report June', amount: 85000000, status: 'approved', riskScore: 5, date: '1403/04/10' },
+        { id: 'DOC-2024-005', type: types.Invoice, title: language === 'fa' ? 'فاکتور فروش #۹۹۰۱' : 'Sales Inv #9901', amount: 1250000000, status: 'rejected', riskScore: 92, date: '1403/04/09' },
     ];
 };
 
