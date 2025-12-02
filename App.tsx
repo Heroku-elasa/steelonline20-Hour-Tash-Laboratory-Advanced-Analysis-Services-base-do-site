@@ -11,6 +11,7 @@ import SiteFooter from './components/Footer';
 import { Page, ProviderSearchResult, Message, SearchResultItem, useLanguage, TestSubmissionFormInputs, TestRecommendationResult, DailyTrend, GeneratedPost, TestDetailsResult, Article, ARTICLES, User } from './types';
 import { useToast } from './components/Toast';
 import { performSemanticSearch, findLocalProviders, getAIRecommendation, fetchDailyTrends, generateSocialPost, generatePostImage, getTestDetails, adaptPostForWebsite } from './services/geminiService';
+import { supabase } from './services/supabaseClient';
 
 // Lazy load other pages to reduce initial bundle size
 const PartnershipsPage = lazy(() => import('./components/PartnershipsPage'));
@@ -105,6 +106,37 @@ const App: React.FC = () => {
 
   const { addToast } = useToast();
   const { language, t } = useLanguage();
+
+  // Supabase Auth State Listener
+  useEffect(() => {
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser({
+          name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'User',
+          email: session.user.email || '',
+          picture: session.user.user_metadata.avatar_url
+        });
+      }
+    });
+
+    // Listen for changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          name: session.user.user_metadata.full_name || session.user.email?.split('@')[0] || 'User',
+          email: session.user.email || '',
+          picture: session.user.user_metadata.avatar_url
+        });
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
   
   const articlesForSearch = (ARTICLES || []).map(a => `Article: ${a.title[language]} ('article', id: ${a.id}). Content: ${a.excerpt[language]}. Category: ${a.category[language]}. Tags: ${(a.tags || []).map(t => t[language]).join(', ')}`).join('\n    ');
   const searchIndex = `
@@ -149,12 +181,14 @@ const App: React.FC = () => {
     return message;
   };
   
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     addToast("You have been logged out.", "info");
   };
 
   const handleLogin = (userData: User) => {
+    // This is primarily triggered by the modal, but the useEffect handles state update
     setUser(userData);
     setIsLoginModalOpen(false);
     addToast(`Welcome, ${userData.name}!`, "success");

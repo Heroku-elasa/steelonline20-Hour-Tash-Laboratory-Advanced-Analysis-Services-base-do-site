@@ -1,7 +1,7 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { useLanguage, User } from '../types';
+import { supabase } from '../services/supabaseClient';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -9,54 +9,26 @@ interface LoginModalProps {
   onLogin: (user: User) => void;
 }
 
-declare global {
-    interface Window {
-        google: any;
-    }
-}
-
-let tokenClient: any = null;
-
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => {
   const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [errors, setErrors] = useState({ email: '', password: '' });
 
+  // Reset state when modal opens/closes
   useEffect(() => {
-    if (isOpen && window.google?.accounts?.oauth2) {
-      // TODO: Replace with your actual Google Client ID
-      const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
-
-      tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: 'openid email profile',
-        callback: (tokenResponse: any) => {
-          if (tokenResponse && tokenResponse.access_token) {
-            fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-              headers: { 'Authorization': `Bearer ${tokenResponse.access_token}` }
-            })
-            .then(res => res.json())
-            .then(data => {
-              const user: User = {
-                name: data.name,
-                email: data.email,
-                picture: data.picture,
-              };
-              onLogin(user);
-            })
-            .catch(console.error);
-          }
-        },
-      });
+    if (isOpen) {
+        setEmail('');
+        setPassword('');
+        setFullName('');
+        setErrorMessage('');
+        setLoading(false);
     }
-  }, [isOpen, onLogin]);
-
-  const handleGoogleLogin = () => {
-    if (tokenClient) {
-      tokenClient.requestAccessToken();
-    }
-  };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -85,15 +57,70 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSupabaseAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) {
-      const mockUser: User = {
-          name: email.split('@')[0],
-          email: email,
-      };
-      onLogin(mockUser);
+    if (!validate()) return;
+
+    setLoading(true);
+    setErrorMessage('');
+
+    try {
+        if (isSignUp) {
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: fullName,
+                    },
+                },
+            });
+            if (error) throw error;
+            if (data.user) {
+                // For Supabase, auto-login might not happen if email confirmation is on. 
+                // But typically it returns a session if configured or prompts to check email.
+                // If session exists, we log them in.
+                if (data.session) {
+                     const user: User = {
+                        name: data.user.user_metadata.full_name || email.split('@')[0],
+                        email: data.user.email || email,
+                    };
+                    onLogin(user);
+                } else {
+                    setErrorMessage('Please check your email to confirm your registration.');
+                }
+            }
+        } else {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+            if (error) throw error;
+            if (data.user && data.session) {
+                const user: User = {
+                    name: data.user.user_metadata.full_name || email.split('@')[0],
+                    email: data.user.email || email,
+                    picture: data.user.user_metadata.avatar_url
+                };
+                onLogin(user);
+            }
+        }
+    } catch (error: any) {
+        setErrorMessage(error.message || 'Authentication failed');
+    } finally {
+        setLoading(false);
     }
+  };
+
+  const handleGoogleLogin = async () => {
+      try {
+          const { error } = await supabase.auth.signInWithOAuth({
+              provider: 'google',
+          });
+          if (error) throw error;
+      } catch (error: any) {
+          setErrorMessage(error.message);
+      }
   };
 
   const SocialButton: React.FC<{ icon: React.ReactNode; text: string; onClick: () => void; className?: string }> = ({ icon, text, onClick, className }) => (
@@ -114,7 +141,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
         onClick={e => e.stopPropagation()}
       >
         <header className="p-5 border-b border-slate-200 flex justify-between items-center">
-          <h2 id="login-modal-title" className="text-xl font-bold">{t('loginModal.title')}</h2>
+          <h2 id="login-modal-title" className="text-xl font-bold">{isSignUp ? 'Create Account' : t('loginModal.title')}</h2>
           <button type="button" onClick={onClose} className="p-2 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800" aria-label="Close">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
@@ -132,7 +159,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
                     <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C42.011 35.636 44 30.138 44 24c0-1.341-.138-2.65-.389-3.917z"></path>
                   </svg>
                 }
-                text="Sign in with Google"
+                text={isSignUp ? "Sign up with Google" : "Sign in with Google"}
                 className="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
               />
           </div>
@@ -142,7 +169,21 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
             <div className="flex-grow border-t border-slate-200"></div>
           </div>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSupabaseAuth} className="space-y-4">
+            {isSignUp && (
+                <div>
+                    <label htmlFor="fullName" className="sr-only">Full Name</label>
+                    <input 
+                        type="text" 
+                        id="fullName" 
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="Full Name" 
+                        className="w-full bg-slate-100 rounded-md p-3 focus:outline-none transition-colors border border-slate-300 focus:ring-2 focus:ring-corp-blue-dark"
+                        required 
+                    />
+                </div>
+            )}
             <div>
               <label htmlFor="email" className="sr-only">{t('loginModal.emailPlaceholder')}</label>
               <input 
@@ -175,10 +216,30 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
               />
               {errors.password && <p className="mt-2 text-sm text-red-500 animate-fade-in">{errors.password}</p>}
             </div>
-            <button type="submit" className="w-full py-3 bg-corp-blue-dark text-white font-semibold rounded-md hover:bg-corp-blue-dark/90 transition-colors">
-              {t('loginModal.loginButton')}
+            
+            {errorMessage && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-md">
+                    {errorMessage}
+                </div>
+            )}
+
+            <button type="submit" disabled={loading} className="w-full py-3 bg-corp-blue-dark text-white font-semibold rounded-md hover:bg-corp-blue-dark/90 transition-colors disabled:opacity-70 flex justify-center items-center">
+              {loading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              ) : (
+                  isSignUp ? 'Sign Up' : t('loginModal.loginButton')
+              )}
             </button>
           </form>
+
+          <div className="text-center text-sm text-slate-600">
+              <p>
+                  {isSignUp ? "Already have an account?" : "Don't have an account?"}
+                  <button onClick={() => setIsSignUp(!isSignUp)} className="ml-1 text-corp-blue-dark font-bold hover:underline focus:outline-none">
+                      {isSignUp ? 'Login' : 'Sign Up'}
+                  </button>
+              </p>
+          </div>
         </main>
       </div>
     </div>
