@@ -1,8 +1,4 @@
 
-
-
-
-
 import React from 'react';
 import { useLanguage, AuditAlert } from '../types';
 
@@ -94,12 +90,13 @@ export const AlertsList: React.FC<{ alerts: AuditAlert[] }> = ({ alerts }) => {
         critical: 'border-red-500 bg-red-50 text-red-700',
         warning: 'border-yellow-500 bg-yellow-50 text-yellow-700',
         info: 'border-blue-500 bg-blue-50 text-blue-700',
+        error: 'border-red-600 bg-red-100 text-red-800', // Added to handle legacy/zombie data using 'error'
     };
 
     return (
         <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
             {alerts.map(alert => (
-                <div key={alert.id} className={`p-3 rounded-r-md border-l-4 rtl:border-l-0 rtl:border-r-4 rtl:rounded-r-none rtl:rounded-l-md ${severityColors[alert.severity]} flex justify-between items-start gap-3 shadow-sm`}>
+                <div key={alert.id} className={`p-3 rounded-r-md border-l-4 rtl:border-l-0 rtl:border-r-4 rtl:rounded-r-none rtl:rounded-l-md ${severityColors[alert.severity] || severityColors.info} flex justify-between items-start gap-3 shadow-sm`}>
                     <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                             {alert.severity === 'critical' && <span className="animate-pulse w-2 h-2 rounded-full bg-red-500"></span>}

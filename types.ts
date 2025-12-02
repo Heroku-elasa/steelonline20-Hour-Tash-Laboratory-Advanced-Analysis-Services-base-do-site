@@ -1,8 +1,4 @@
 
-
-
-
-
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
 
 // Basic Types
@@ -188,11 +184,16 @@ export interface DashboardStats {
     internalControlScore: number;
 }
 
+// Compatibility Aliases for Legacy/Zombie Files
+export type AuditStats = DashboardStats;
+
 export interface AuditAlert {
     id: number;
     title: string;
-    type: 'check_due' | 'fraud_detected' | 'credit_limit' | 'discrepancy' | 'system';
-    severity: 'critical' | 'warning' | 'info';
+    message?: string; // Added for compatibility with legacy files
+    // Expanded type definition to support legacy mock data and prevent TS overlap errors
+    type: 'check_due' | 'fraud_detected' | 'credit_limit' | 'discrepancy' | 'system' | 'critical' | 'warning' | 'error' | 'info' | string;
+    severity: 'critical' | 'warning' | 'info' | 'error';
     date: string;
     isRead: boolean;
 }
@@ -206,6 +207,7 @@ export interface CheckItem {
     drawer: string;
     bank: string;
 }
+export type FinancialCheck = CheckItem; // Alias
 
 export interface AuditDocument {
     id: string;
@@ -215,6 +217,16 @@ export interface AuditDocument {
     status: 'approved' | 'pending' | 'rejected' | 'flagged';
     riskScore: number;
     date: string;
+}
+
+export interface FraudCase {
+    id: number;
+    title: string;
+    status: string;
+    amount: number;
+    date?: string;
+    detectedDate?: string;
+    description?: string;
 }
 
 export interface CustomerCredit {
@@ -706,7 +718,7 @@ const translations = {
         title: 'تحليلات السوق', subtitle: 'تحليل الاتجاهات وإنشاء تقارير.', platformSelectorTitle: '1. المنصة', topicTitle: '2. موضوع', trendsTab: 'اتجاهات السوق', textTab: 'موضوع مخصص', searchTab: 'بحث', fetchingTrends: 'جلب البيانات...', customTextPlaceholder: 'موضوع التحليل (مثلاً: "تأثير الدولار على الحديد")...', selectSearchTopic: 'مواضيع شائعة:', userSearchSuggestions: ['توقعات أسعار الحديد', 'تعريفات التصدير', 'موسم البناء', 'تكاليف المواد الخام'], generatingPost: 'جارٍ الإنشاء...', generateButton: 'إنشاء تحليل', resultsTitle: 'المحتوى', placeholder: 'اختر موضوعًا.', copyButton: 'نسخ', copySuccess: 'تم النسخ!', connectAccountToPublish: 'ربط الحساب', publishToPlatformButton: 'نشر على {platform}', adaptForWebsiteButton: 'تحويل لمقال', adaptingForWebsite: 'جارٍ الكتابة...', websitePreviewTitle: 'معاينة المقال', publishToWebsiteButton: 'نشر', publishedSuccess: 'تم النشر!',
         getStrategyButton: 'استراتژی محتوا', fetchingStrategy: 'تحلیل...', strategyTitle: 'استراتژی انتشار', bestTime: 'أفضل وقت', nextPost: 'الموضوع التالي',
         generateVideoButton: 'سيناريو فيديو', generatingVideo: 'كتابة...', timecode: 'وقت', visual: 'بصري', voiceover: 'صوت', emotion: 'نبرة',
-        findVideoTools: 'أدوات الفيديو', findingTools: 'بحث...', toolName: 'أداة', toolCost: 'تكلفة', toolFarsi: 'فارسي', toolFeatures: 'ميزات', toolQuality: 'تقييم'
+        findVideoTools: 'أدوات الفيديو', findingTools: 'بحث...', toolName: 'أداة', toolCost: 'تكلفة', toolFarsi: 'فارسی', toolFeatures: 'ميزات', toolQuality: 'تقييم'
     },
     partnerships: { title: 'شراء بالائتمان', subtitle: 'خيارات دفع مرنة (شيك، اعتماد).', name: 'الاسم الكامل', company: 'اسم الشركة', email: 'البريد', message: 'التفاصيل', submit: 'طلب' },
     blogPage: { title: 'مجله الصلب', subtitle: 'أخبار، تحليلات، ومقالات تعليمية.', readMore: 'اقرأ المزيد' },
