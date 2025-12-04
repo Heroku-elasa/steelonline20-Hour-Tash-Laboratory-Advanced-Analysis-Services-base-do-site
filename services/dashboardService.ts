@@ -51,6 +51,42 @@ export const checkAndSeedDatabase = async () => {
     }
 };
 
+export const runDatabaseDiagnostics = async () => {
+    const logs = [];
+    logs.push({ step: 'Init', status: 'info', message: 'Starting diagnostics...' });
+    
+    try {
+        // 1. Check Connection & Select
+        const { data, error: selectError } = await supabase.from('financial_checks').select('count', { count: 'exact', head: true });
+        if (selectError) {
+            logs.push({ step: 'Read Check', status: 'error', message: `Read failed: ${selectError.message} (Code: ${selectError.code})` });
+            throw new Error('Read failed');
+        } else {
+            logs.push({ step: 'Read Check', status: 'success', message: 'Read successful. Table accessible.' });
+        }
+
+        // 2. Check Write
+        const { error: insertError } = await supabase.from('audit_alerts').insert({
+            title: 'Diagnostic Test',
+            type: 'system',
+            severity: 'info',
+            date: new Date().toISOString(),
+            is_read: true
+        });
+        
+        if (insertError) {
+             logs.push({ step: 'Write Check', status: 'error', message: `Write failed: ${insertError.message} (Code: ${insertError.code})` });
+             throw new Error('Write failed');
+        } else {
+             logs.push({ step: 'Write Check', status: 'success', message: 'Write successful. RLS policies likely correct.' });
+        }
+
+    } catch (e: any) {
+        logs.push({ step: 'Diagnostics Failed', status: 'error', message: 'Stopping diagnostics due to error.' });
+    }
+    return logs;
+};
+
 export const getDashboardStats = async (): Promise<DashboardStats> => {
     try {
         const { data: checks, error } = await supabase.from('financial_checks').select('amount, status');
@@ -170,4 +206,16 @@ export const saveSEOReport = async (url: string, result: any) => {
         metrics: result.metrics,
         recommendations: result.aiRecommendations
     });
+};
+
+export const getSEOReports = async () => {
+    const { data, error } = await supabase
+        .from('seo_reports')
+        .select('*')
+        .order('created_at', { ascending: false });
+    
+    if (error) {
+        throw error; // Let caller handle it for better alerts
+    }
+    return data;
 };

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLanguage, Page, DashboardStats, AuditAlert, CheckItem, AuditDocument, CustomerCredit } from '../types';
-import { getDashboardStats, getAlerts, getChecks, getAuditDocuments, getCustomers, checkAndSeedDatabase } from '../services/dashboardService';
+import { getDashboardStats, getAlerts, getChecks, getAuditDocuments, getCustomers, checkAndSeedDatabase, getSEOReports, runDatabaseDiagnostics } from '../services/dashboardService';
 import { StatCard, InternalControlGauge, AlertsList, CheckStatusChart, CashFlowChart } from './DashboardComponents';
 import { useToast } from './Toast';
 
@@ -20,8 +20,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
     const [checks, setChecks] = useState<CheckItem[]>([]);
     const [auditDocs, setAuditDocs] = useState<AuditDocument[]>([]);
     const [customers, setCustomers] = useState<CustomerCredit[]>([]);
+    const [seoReports, setSeoReports] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [dbStatus, setDbStatus] = useState<string>('checking');
+    
+    // Diagnostics State
+    const [diagLogs, setDiagLogs] = useState<any[]>([]);
+    const [runningDiag, setRunningDiag] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -37,18 +42,20 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
                 }
 
                 // Pass language to service to get localized data
-                const [statsData, alertsData, checksData, docsData, customersData] = await Promise.all([
+                const [statsData, alertsData, checksData, docsData, customersData, seoData] = await Promise.all([
                     getDashboardStats(),
                     getAlerts(language),
                     getChecks(),
                     getAuditDocuments(language),
-                    getCustomers()
+                    getCustomers(),
+                    getSEOReports().catch(() => [])
                 ]);
                 setStats(statsData);
                 setAlerts(alertsData);
                 setChecks(checksData);
                 setAuditDocs(docsData);
                 setCustomers(customersData);
+                setSeoReports(seoData || []);
             } catch (error) {
                 console.error("Failed to fetch dashboard data", error);
                 setDbStatus('error');
@@ -72,10 +79,20 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
             setAlerts(alertsData);
             const customersData = await getCustomers();
             setCustomers(customersData);
+            const seoData = await getSEOReports().catch(() => []);
+            setSeoReports(seoData || []);
         } else {
             setDbStatus('needs_setup');
             addToast("Sync failed. Check tables in Supabase.", "error");
         }
+    };
+    
+    const handleRunDiagnostics = async () => {
+        setRunningDiag(true);
+        setDiagLogs([]);
+        const logs = await runDatabaseDiagnostics();
+        setDiagLogs(logs);
+        setRunningDiag(false);
     };
 
     const menuItems = [
@@ -83,18 +100,27 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
         { key: 'financial', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
         { key: 'audit', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
         { key: 'customers', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> },
+        { key: 'reports', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> },
         { key: 'system', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" /></svg> }
     ];
 
-    const formatCurrency = (amount: number) => {
-        if (language === 'fa') {
-            return (amount / 1000000000).toLocaleString('fa-IR') + ' میلیارد ریال';
-        }
-        return (amount / 1000000000).toFixed(1) + 'B IRR';
+    const safeNumber = (val: number | string | undefined): number => {
+        if (typeof val === 'number') return val;
+        if (typeof val === 'string') return parseFloat(val.replace(/,/g, '')) || 0;
+        return 0;
     };
 
-    const formatNumber = (num: number) => {
-        return language === 'fa' ? num.toLocaleString('fa-IR') : num.toLocaleString();
+    const formatCurrency = (amount: number | string) => {
+        const num = safeNumber(amount);
+        if (language === 'fa') {
+            return (num / 1000000000).toLocaleString('fa-IR') + ' میلیارد ریال';
+        }
+        return (num / 1000000000).toFixed(1) + 'B IRR';
+    };
+
+    const formatNumber = (num: number | string) => {
+        const n = safeNumber(num);
+        return language === 'fa' ? n.toLocaleString('fa-IR') : n.toLocaleString();
     };
 
     return (
@@ -219,8 +245,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
                                         <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
                                             <h3 className="font-bold text-slate-800 mb-4">{t('dashboard.charts.checkStatus')}</h3>
                                             <CheckStatusChart 
-                                                cleared={stats.totalChecksCount - stats.checksDueThisWeekCount - 2} 
-                                                pending={stats.checksDueThisWeekCount} 
+                                                cleared={safeNumber(stats.totalChecksCount) - safeNumber(stats.checksDueThisWeekCount) - 2} 
+                                                pending={safeNumber(stats.checksDueThisWeekCount)} 
                                                 bounced={2} 
                                             />
                                         </div>
@@ -234,7 +260,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
                                                     <div className="flex justify-between w-48"><span className="text-slate-500">{t('dashboard.labels.activities')}:</span> <span className="text-green-600 font-bold">{t('dashboard.labels.strong')}</span></div>
                                                 </div>
                                             </div>
-                                            <InternalControlGauge score={stats.internalControlScore} />
+                                            <InternalControlGauge score={safeNumber(stats.internalControlScore)} />
                                         </div>
                                     </div>
                                 </div>
@@ -395,6 +421,52 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
                                 </div>
                             )}
 
+                            {activeSection === 'reports' && (
+                                <div className="space-y-6 animate-fade-in">
+                                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
+                                        <h2 className="text-xl font-bold text-slate-800 mb-6">SEO & Performance Reports</h2>
+                                        <div className="overflow-x-auto">
+                                            {seoReports.length > 0 ? (
+                                            <table className="w-full text-sm text-left rtl:text-right">
+                                                <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-xs">
+                                                    <tr>
+                                                        <th className="px-4 py-3">ID</th>
+                                                        <th className="px-4 py-3">URL</th>
+                                                        <th className="px-4 py-3">Score</th>
+                                                        <th className="px-4 py-3">Date</th>
+                                                        <th className="px-4 py-3 text-right rtl:text-left">Metrics</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100">
+                                                    {seoReports.map(report => (
+                                                        <tr key={report.id} className="hover:bg-slate-50">
+                                                            <td className="px-4 py-3 text-slate-500">#{report.id}</td>
+                                                            <td className="px-4 py-3 text-blue-600 font-medium truncate max-w-xs">{report.url}</td>
+                                                            <td className="px-4 py-3">
+                                                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                                                    report.score >= 90 ? 'bg-green-100 text-green-800' :
+                                                                    report.score >= 70 ? 'bg-yellow-100 text-yellow-800' :
+                                                                    'bg-red-100 text-red-800'
+                                                                }`}>
+                                                                    {report.score}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-slate-600">{new Date(report.created_at).toLocaleString()}</td>
+                                                            <td className="px-4 py-3 text-right rtl:text-left text-xs text-slate-500">
+                                                                {report.metrics ? Object.keys(report.metrics).length + ' Metrics' : 'N/A'}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                            ) : (
+                                                <div className="text-center py-12 text-slate-500">No reports found. Use the SEO Checker tool to generate one.</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {activeSection === 'system' && (
                                 <div className="space-y-6 animate-fade-in bg-white p-6 rounded-lg border border-slate-200">
                                     <h2 className="text-xl font-bold text-slate-800 mb-4">Database Connection & Setup</h2>
@@ -406,16 +478,43 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
                                         </div>
                                         <p className="text-sm">{dbStatus === 'connected' ? 'The application is successfully connected to your database.' : 'Could not find the required tables. Please copy the SQL below and run it in your Supabase SQL Editor.'}</p>
                                     </div>
+                                    
+                                    {/* Diagnostics Panel */}
+                                    <div className="border border-slate-200 rounded-lg overflow-hidden">
+                                        <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                                            <h3 className="font-bold text-slate-700 text-sm">Connection Diagnostics</h3>
+                                            <button 
+                                                onClick={handleRunDiagnostics} 
+                                                disabled={runningDiag}
+                                                className="px-3 py-1.5 bg-slate-800 text-white text-xs font-bold rounded hover:bg-slate-700 transition-colors disabled:opacity-50"
+                                            >
+                                                {runningDiag ? 'Running...' : 'Run Diagnostics'}
+                                            </button>
+                                        </div>
+                                        <div className="p-4 bg-slate-900 min-h-[120px] max-h-60 overflow-y-auto font-mono text-xs">
+                                            {diagLogs.length === 0 ? (
+                                                <span className="text-slate-500">Ready to run diagnostics. Click the button above.</span>
+                                            ) : (
+                                                <ul className="space-y-1">
+                                                    {diagLogs.map((log, i) => (
+                                                        <li key={i} className="flex gap-2">
+                                                            <span className="text-slate-500">[{log.step}]</span>
+                                                            <span className={log.status === 'success' ? 'text-green-400' : log.status === 'error' ? 'text-red-400' : 'text-blue-300'}>
+                                                                {log.message}
+                                                            </span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </div>
+                                    </div>
 
                                     {dbStatus !== 'connected' && (
                                         <div className="space-y-4">
                                             <div className="flex justify-between items-end">
                                                 <label className="text-sm font-bold text-slate-700">Required Schema (Copy & Paste):</label>
-                                                <button onClick={() => { navigator.clipboard.writeText(`create table seo_reports ( id bigint generated by default as identity primary key, url text, score numeric, metrics jsonb, recommendations jsonb, created_at timestamp with time zone default timezone('utc'::text, now()) ); create table financial_checks ( id bigint generated by default as identity primary key, number text, amount numeric, due_date text, status text, drawer text, bank text, created_at timestamp with time zone default timezone('utc'::text, now()) ); create table audit_alerts ( id bigint generated by default as identity primary key, title text, type text, severity text, date text, is_read boolean, created_at timestamp with time zone default timezone('utc'::text, now()) ); create table customer_credits ( id bigint generated by default as identity primary key, name text, type text, credit_score numeric, credit_limit numeric, used_credit numeric, risk_level text, created_at timestamp with time zone default timezone('utc'::text, now()) );`); addToast("SQL Copied!", "success"); }} className="text-xs text-blue-600 hover:underline">Copy to Clipboard</button>
-                                            </div>
-                                            <div className="bg-slate-900 text-slate-300 p-4 rounded-md text-xs font-mono overflow-x-auto max-h-96">
-                                                <pre>{`
-create table seo_reports (
+                                                <button onClick={() => { navigator.clipboard.writeText(`-- SEO Reports Table
+create table if not exists seo_reports (
   id bigint generated by default as identity primary key,
   url text,
   score numeric,
@@ -423,8 +522,12 @@ create table seo_reports (
   recommendations jsonb,
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
+alter table seo_reports enable row level security;
+create policy "Public insert seo" on seo_reports for insert with check (true);
+create policy "Public select seo" on seo_reports for select using (true);
 
-create table financial_checks (
+-- Financial Checks Table
+create table if not exists financial_checks (
   id bigint generated by default as identity primary key,
   number text,
   amount numeric,
@@ -434,8 +537,12 @@ create table financial_checks (
   bank text,
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
+alter table financial_checks enable row level security;
+create policy "Public insert checks" on financial_checks for insert with check (true);
+create policy "Public select checks" on financial_checks for select using (true);
 
-create table audit_alerts (
+-- Audit Alerts Table
+create table if not exists audit_alerts (
   id bigint generated by default as identity primary key,
   title text,
   type text,
@@ -444,8 +551,12 @@ create table audit_alerts (
   is_read boolean,
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
+alter table audit_alerts enable row level security;
+create policy "Public insert alerts" on audit_alerts for insert with check (true);
+create policy "Public select alerts" on audit_alerts for select using (true);
 
-create table customer_credits (
+-- Customer Credits Table
+create table if not exists customer_credits (
   id bigint generated by default as identity primary key,
   name text,
   type text,
@@ -455,7 +566,67 @@ create table customer_credits (
   risk_level text,
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
-                                                `}</pre>
+alter table customer_credits enable row level security;
+create policy "Public insert credits" on customer_credits for insert with check (true);
+create policy "Public select credits" on customer_credits for select using (true);`); addToast("SQL Copied!", "success"); }} className="text-xs text-blue-600 hover:underline">Copy to Clipboard</button>
+                                            </div>
+                                            <div className="bg-slate-900 text-slate-300 p-4 rounded-md text-xs font-mono overflow-x-auto max-h-96">
+                                                <pre>{`-- SEO Reports Table
+create table if not exists seo_reports (
+  id bigint generated by default as identity primary key,
+  url text,
+  score numeric,
+  metrics jsonb,
+  recommendations jsonb,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+alter table seo_reports enable row level security;
+create policy "Public insert seo" on seo_reports for insert with check (true);
+create policy "Public select seo" on seo_reports for select using (true);
+
+-- Financial Checks Table
+create table if not exists financial_checks (
+  id bigint generated by default as identity primary key,
+  number text,
+  amount numeric,
+  due_date text,
+  status text,
+  drawer text,
+  bank text,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+alter table financial_checks enable row level security;
+create policy "Public insert checks" on financial_checks for insert with check (true);
+create policy "Public select checks" on financial_checks for select using (true);
+
+-- Audit Alerts Table
+create table if not exists audit_alerts (
+  id bigint generated by default as identity primary key,
+  title text,
+  type text,
+  severity text,
+  date text,
+  is_read boolean,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+alter table audit_alerts enable row level security;
+create policy "Public insert alerts" on audit_alerts for insert with check (true);
+create policy "Public select alerts" on audit_alerts for select using (true);
+
+-- Customer Credits Table
+create table if not exists customer_credits (
+  id bigint generated by default as identity primary key,
+  name text,
+  type text,
+  credit_score numeric,
+  credit_limit numeric,
+  used_credit numeric,
+  risk_level text,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+alter table customer_credits enable row level security;
+create policy "Public insert credits" on customer_credits for insert with check (true);
+create policy "Public select credits" on customer_credits for select using (true);`}</pre>
                                             </div>
                                             <p className="text-sm text-slate-600">After running the SQL in Supabase, click Sync below.</p>
                                         </div>

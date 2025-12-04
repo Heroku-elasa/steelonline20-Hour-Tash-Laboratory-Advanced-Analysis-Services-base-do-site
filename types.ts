@@ -189,16 +189,23 @@ export interface CreditCheckResult {
 
 // Dashboard Types
 export interface DashboardStats {
-    totalChecksAmount: number;
-    totalChecksCount: number;
-    checksDueThisWeekAmount: number;
-    checksDueThisWeekCount: number;
-    bouncedChecksAmount: number;
-    cashBalance: number;
-    documentsReviewed: number;
-    discrepanciesFound: number;
-    fraudCases: number;
-    internalControlScore: number;
+    totalChecksAmount: number | string;
+    totalChecksCount: number | string;
+    checksDueThisWeekAmount: number | string;
+    checksDueThisWeekCount: number | string;
+    bouncedChecksAmount: number | string;
+    cashBalance: number | string;
+    documentsReviewed: number | string;
+    discrepanciesFound: number | string;
+    fraudCases: number | string;
+    internalControlScore: number | string;
+
+    // Legacy / Mock Data Compatibility
+    total?: number | string;
+    dueThisWeekCount?: number | string;
+    dueThisWeekAmount?: number | string;
+    bouncedAmount?: number | string;
+    controlScore?: number | string;
 }
 
 // Compatibility Aliases for Legacy/Zombie Files
@@ -206,11 +213,11 @@ export type AuditStats = DashboardStats;
 
 export interface AuditAlert {
     id: number;
-    title: string;
+    title?: string; // Optional for legacy compatibility
     message?: string; // Added for compatibility with legacy files
     // Expanded type definition to support legacy mock data and prevent TS overlap errors
     type: 'check_due' | 'fraud_detected' | 'credit_limit' | 'discrepancy' | 'system' | 'critical' | 'warning' | 'error' | 'info' | string;
-    severity: 'critical' | 'warning' | 'info' | 'error';
+    severity?: 'critical' | 'warning' | 'info' | 'error'; // Optional for legacy compatibility
     date: string;
     isRead: boolean;
 }
@@ -223,6 +230,11 @@ export interface CheckItem {
     status: 'pending' | 'cleared' | 'bounced' | 'deposited';
     drawer: string;
     bank: string;
+    
+    // Legacy properties
+    checkNumber?: string;
+    riskScore?: number;
+    label?: string;
 }
 export type FinancialCheck = CheckItem; // Alias
 
@@ -244,6 +256,11 @@ export interface FraudCase {
     date?: string;
     detectedDate?: string;
     description?: string;
+
+    // Legacy properties
+    riskLevel?: string | number;
+    type?: string;
+    detectedAt?: string;
 }
 
 export interface CustomerCredit {

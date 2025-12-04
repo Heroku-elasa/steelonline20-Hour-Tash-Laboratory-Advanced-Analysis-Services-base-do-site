@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage, SEOAnalysisResult } from '../types';
 import { analyzeSEOStrategy } from '../services/geminiService';
-import { saveSEOReport } from '../services/dashboardService';
+import { saveSEOReport, getSEOReports } from '../services/dashboardService';
 import { useToast } from './Toast';
 
 const StatusBadge = ({ status, labels }: { status: string, labels: Record<string, string> }) => {
@@ -27,12 +27,16 @@ const SEOChecker: React.FC = () => {
     const { t, language, dir } = useLanguage();
     const { addToast } = useToast();
     const [isOpen, setIsOpen] = useState(false);
+    const [showHistory, setShowHistory] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [result, setResult] = useState<SEOAnalysisResult | null>(null);
+    const [history, setHistory] = useState<any[]>([]);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
     const performAnalysis = async () => {
         setIsAnalyzing(true);
         setResult(null);
+        setShowHistory(false);
 
         // 1. Scrape Current Page
         const title = document.title;
@@ -124,7 +128,8 @@ const SEOChecker: React.FC = () => {
                     addToast("Report saved to DB.", "success");
                 } else {
                     console.error("Save failed:", error);
-                    addToast("Could not save to DB. Check tables.", "error");
+                    // Improved error message
+                    addToast(`Save failed: ${error.message || JSON.stringify(error)}`, "error");
                 }
             });
 
@@ -146,6 +151,19 @@ const SEOChecker: React.FC = () => {
         }
     };
 
+    const fetchHistory = async () => {
+        setIsLoadingHistory(true);
+        setShowHistory(true);
+        try {
+            const data = await getSEOReports();
+            setHistory(data);
+        } catch (err: any) {
+            addToast("Failed to fetch history. Check Diagnostics.", "error");
+        } finally {
+            setIsLoadingHistory(false);
+        }
+    };
+
     const statusLabels = {
         pass: t('seoChecker.pass'),
         fail: t('seoChecker.fail'),
@@ -157,7 +175,7 @@ const SEOChecker: React.FC = () => {
             {/* Floating Button */}
             <div className={`fixed bottom-24 ${dir === 'rtl' ? 'left-6' : 'right-6'} z-40`}>
                 <button
-                    onClick={() => { setIsOpen(true); if (!result) performAnalysis(); }}
+                    onClick={() => { setIsOpen(true); if (!result && !showHistory) performAnalysis(); }}
                     className="w-14 h-14 bg-white border-2 border-slate-200 rounded-full flex items-center justify-center text-slate-600 shadow-lg hover:border-corp-teal hover:text-corp-teal transition-all group"
                     title={t('seoChecker.buttonLabel')}
                 >
@@ -180,87 +198,115 @@ const SEOChecker: React.FC = () => {
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-corp-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 {t('seoChecker.title')}
                             </h2>
-                            <button onClick={() => setIsOpen(false)} className="p-1 rounded-full hover:bg-slate-200 text-slate-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
+                            <div className="flex gap-2">
+                                <button onClick={() => { setShowHistory(false); if(!result) performAnalysis(); }} className={`px-3 py-1 text-xs font-bold rounded ${!showHistory ? 'bg-corp-teal text-white' : 'text-slate-600 hover:bg-slate-200'}`}>Current</button>
+                                <button onClick={fetchHistory} className={`px-3 py-1 text-xs font-bold rounded ${showHistory ? 'bg-corp-teal text-white' : 'text-slate-600 hover:bg-slate-200'}`}>History (DB)</button>
+                                <button onClick={() => setIsOpen(false)} className="p-1 rounded-full hover:bg-slate-200 text-slate-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
                         </div>
 
                         <div className="p-6 overflow-y-auto flex-1">
-                            {isAnalyzing ? (
-                                <div className="flex flex-col items-center justify-center py-12">
-                                    <div className="w-12 h-12 border-4 border-dashed rounded-full animate-spin border-corp-teal mb-4"></div>
-                                    <p className="text-slate-600 animate-pulse">{t('seoChecker.analyzing')}</p>
-                                </div>
-                            ) : result ? (
-                                <div className="space-y-8">
-                                    {/* Score */}
-                                    <div className="flex items-center justify-center">
-                                        <div className="relative w-32 h-32 flex items-center justify-center rounded-full border-8 border-slate-100">
-                                            <div className="absolute inset-0 rounded-full border-8 border-corp-teal border-t-transparent animate-spin" style={{ animationDuration: '3s' }}></div>
-                                            <div className="flex flex-col items-center">
-                                                <span className="text-4xl font-bold text-slate-800">{result.score}</span>
-                                                <span className="text-xs text-slate-500 uppercase font-bold">{t('seoChecker.score')}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Metrics Grid */}
-                                    <div>
-                                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-100 pb-1">{t('seoChecker.metricsTitle')}</h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            {Object.entries(result.metrics).map(([key, rawData]) => {
-                                                const data = rawData as any;
-                                                return (
-                                                <div key={key} className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex justify-between items-center">
+                            {showHistory ? (
+                                <div className="space-y-4">
+                                    {isLoadingHistory ? (
+                                        <div className="flex justify-center p-4"><div className="w-6 h-6 border-2 border-dashed rounded-full animate-spin border-corp-teal"></div></div>
+                                    ) : history.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {history.map((item, idx) => (
+                                                <div key={idx} className="border p-3 rounded-lg flex justify-between items-center hover:bg-slate-50">
                                                     <div>
-                                                        <p className="text-sm font-semibold text-slate-700 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
-                                                        {data.message && <p className="text-xs text-slate-500 mt-0.5">{data.message}</p>}
+                                                        <div className="font-bold text-sm text-slate-800">{item.url}</div>
+                                                        <div className="text-xs text-slate-500">{new Date(item.created_at).toLocaleString()}</div>
                                                     </div>
-                                                    <StatusBadge status={data.status} labels={statusLabels} />
+                                                    <div className="text-xl font-bold text-corp-teal">{item.score}</div>
                                                 </div>
-                                                );
-                                            })}
+                                            ))}
                                         </div>
-                                    </div>
-
-                                    {/* AI Recommendations */}
-                                    <div>
-                                        <h3 className="text-sm font-bold text-corp-teal uppercase tracking-wider mb-3 border-b border-slate-100 pb-1 flex items-center gap-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" /></svg>
-                                            {t('seoChecker.recommendationsTitle')}
-                                        </h3>
-                                        
-                                        <div className="space-y-4">
-                                            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-md">
-                                                <h4 className="font-bold text-blue-800 text-sm mb-2">{t('seoChecker.registerSites')}</h4>
-                                                <ul className="list-disc list-inside text-sm text-blue-700 space-y-1">
-                                                    {result.aiRecommendations.directories.map((site: string, i: number) => (
-                                                        <li key={i}>{site}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-
-                                            <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-md">
-                                                <h4 className="font-bold text-green-800 text-sm mb-2">{t('seoChecker.strategies')}</h4>
-                                                <ul className="list-disc list-inside text-sm text-green-700 space-y-1">
-                                                     {result.aiRecommendations.strategy.map((item: string, i: number) => (
-                                                        <li key={i}>{item}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-
-                                            <div className="bg-purple-50 border-l-4 border-purple-400 p-4 rounded-r-md">
-                                                <h4 className="font-bold text-purple-800 text-sm mb-2">{t('seoChecker.keywords')}</h4>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {result.aiRecommendations.keywords.map((kw: string, i: number) => (
-                                                        <span key={i} className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-semibold">{kw}</span>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    ) : (
+                                        <p className="text-center text-slate-500 py-4">No history found in database.</p>
+                                    )}
                                 </div>
-                            ) : null}
+                            ) : (
+                                <>
+                                {isAnalyzing ? (
+                                    <div className="flex flex-col items-center justify-center py-12">
+                                        <div className="w-12 h-12 border-4 border-dashed rounded-full animate-spin border-corp-teal mb-4"></div>
+                                        <p className="text-slate-600 animate-pulse">{t('seoChecker.analyzing')}</p>
+                                    </div>
+                                ) : result ? (
+                                    <div className="space-y-8">
+                                        {/* Score */}
+                                        <div className="flex items-center justify-center">
+                                            <div className="relative w-32 h-32 flex items-center justify-center rounded-full border-8 border-slate-100">
+                                                <div className="absolute inset-0 rounded-full border-8 border-corp-teal border-t-transparent animate-spin" style={{ animationDuration: '3s' }}></div>
+                                                <div className="flex flex-col items-center">
+                                                    <span className="text-4xl font-bold text-slate-800">{result.score}</span>
+                                                    <span className="text-xs text-slate-500 uppercase font-bold">{t('seoChecker.score')}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Metrics Grid */}
+                                        <div>
+                                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-100 pb-1">{t('seoChecker.metricsTitle')}</h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                {Object.entries(result.metrics).map(([key, rawData]) => {
+                                                    const data = rawData as any;
+                                                    return (
+                                                    <div key={key} className="bg-slate-50 p-3 rounded-lg border border-slate-100 flex justify-between items-center">
+                                                        <div>
+                                                            <p className="text-sm font-semibold text-slate-700 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                                                            {data.message && <p className="text-xs text-slate-500 mt-0.5">{data.message}</p>}
+                                                        </div>
+                                                        <StatusBadge status={data.status} labels={statusLabels} />
+                                                    </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {/* AI Recommendations */}
+                                        <div>
+                                            <h3 className="text-sm font-bold text-corp-teal uppercase tracking-wider mb-3 border-b border-slate-100 pb-1 flex items-center gap-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" /></svg>
+                                                {t('seoChecker.recommendationsTitle')}
+                                            </h3>
+                                            
+                                            <div className="space-y-4">
+                                                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-md">
+                                                    <h4 className="font-bold text-blue-800 text-sm mb-2">{t('seoChecker.registerSites')}</h4>
+                                                    <ul className="list-disc list-inside text-sm text-blue-700 space-y-1">
+                                                        {result.aiRecommendations.directories.map((site: string, i: number) => (
+                                                            <li key={i}>{site}</li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+
+                                                <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded-r-md">
+                                                    <h4 className="font-bold text-green-800 text-sm mb-2">{t('seoChecker.strategies')}</h4>
+                                                    <ul className="list-disc list-inside text-sm text-green-700 space-y-1">
+                                                         {result.aiRecommendations.strategy.map((item: string, i: number) => (
+                                                            <li key={i}>{item}</li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+
+                                                <div className="bg-purple-50 border-l-4 border-purple-400 p-4 rounded-r-md">
+                                                    <h4 className="font-bold text-purple-800 text-sm mb-2">{t('seoChecker.keywords')}</h4>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {result.aiRecommendations.keywords.map((kw: string, i: number) => (
+                                                            <span key={i} className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-semibold">{kw}</span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : null}
+                                </>
+                            )}
                         </div>
                         
                         <div className="p-4 bg-slate-50 border-t border-slate-200 text-center">
