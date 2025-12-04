@@ -28,13 +28,9 @@ const MOCK_CUSTOMERS: any[] = [
 // Helper to seed data if empty
 export const checkAndSeedDatabase = async () => {
     try {
-        // Check if table exists by trying to select 1 row
         const { error: checkError, count } = await supabase.from('financial_checks').select('*', { count: 'exact', head: true });
         
-        if (checkError) {
-            // If error is 404 or Relation does not exist, we need to create tables
-            throw checkError;
-        }
+        if (checkError) throw checkError;
 
         if (count === 0) {
             console.log("Seeding Database...");
@@ -105,11 +101,17 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
                 checksDueThisWeekAmount: totalAmount * 0.2, // Estimate
                 checksDueThisWeekCount: pendingCount,
                 bouncedChecksAmount: bouncedAmount,
-                cashBalance: 12800000000, // Hardcoded for demo
+                cashBalance: 12800000000, 
                 documentsReviewed: 1402,
                 discrepanciesFound: 12,
                 fraudCases: 3,
-                internalControlScore: 78
+                internalControlScore: 78,
+                // Legacy fields
+                dueThisWeekCount: pendingCount,
+                dueThisWeekAmount: totalAmount * 0.2,
+                bouncedAmount: bouncedAmount,
+                controlScore: 78,
+                docsReviewed: 1402
             };
         }
     } catch (e) {
@@ -126,7 +128,12 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
         documentsReviewed: 0,
         discrepanciesFound: 0,
         fraudCases: 0,
-        internalControlScore: 0
+        internalControlScore: 0,
+        dueThisWeekCount: 0,
+        dueThisWeekAmount: 0,
+        bouncedAmount: 0,
+        controlScore: 0,
+        docsReviewed: 0
     };
 };
 
@@ -161,12 +168,14 @@ export const getChecks = async (): Promise<CheckItem[]> => {
         dueDate: c.due_date,
         status: c.status,
         drawer: c.drawer,
-        bank: c.bank
+        bank: c.bank,
+        // Populate legacy fields
+        checkNumber: c.number,
+        riskScore: Math.floor(Math.random() * 100) // Mock risk score for legacy components
     }));
 };
 
 export const getAuditDocuments = async (language: Language = 'en'): Promise<AuditDocument[]> => {
-    // Mock for now as we don't have a docs table yet
     const types = {
         Invoice: language === 'fa' ? 'فاکتور' : 'Invoice',
         Check: language === 'fa' ? 'چک' : 'Check',
@@ -215,7 +224,7 @@ export const getSEOReports = async () => {
         .order('created_at', { ascending: false });
     
     if (error) {
-        throw error; // Let caller handle it for better alerts
+        throw error; 
     }
     return data;
 };

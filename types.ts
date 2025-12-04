@@ -189,23 +189,22 @@ export interface CreditCheckResult {
 
 // Dashboard Types
 export interface DashboardStats {
-    totalChecksAmount: number | string;
-    totalChecksCount: number | string;
-    checksDueThisWeekAmount: number | string;
-    checksDueThisWeekCount: number | string;
-    bouncedChecksAmount: number | string;
-    cashBalance: number | string;
-    documentsReviewed: number | string;
-    discrepanciesFound: number | string;
-    fraudCases: number | string;
-    internalControlScore: number | string;
-
-    // Legacy / Mock Data Compatibility
-    total?: number | string;
-    dueThisWeekCount?: number | string;
-    dueThisWeekAmount?: number | string;
-    bouncedAmount?: number | string;
-    controlScore?: number | string;
+    totalChecksAmount: number;
+    totalChecksCount: number;
+    checksDueThisWeekAmount: number;
+    checksDueThisWeekCount: number;
+    bouncedChecksAmount: number;
+    cashBalance: number;
+    documentsReviewed: number;
+    discrepanciesFound: number;
+    fraudCases: number;
+    internalControlScore: number;
+    // Legacy fields for Audit Components compatibility
+    dueThisWeekCount: number;
+    dueThisWeekAmount: number;
+    bouncedAmount: number;
+    controlScore: number;
+    docsReviewed: number;
 }
 
 // Compatibility Aliases for Legacy/Zombie Files
@@ -213,11 +212,10 @@ export type AuditStats = DashboardStats;
 
 export interface AuditAlert {
     id: number;
-    title?: string; // Optional for legacy compatibility
-    message?: string; // Added for compatibility with legacy files
-    // Expanded type definition to support legacy mock data and prevent TS overlap errors
+    title?: string;
+    message?: string;
     type: 'check_due' | 'fraud_detected' | 'credit_limit' | 'discrepancy' | 'system' | 'critical' | 'warning' | 'error' | 'info' | string;
-    severity?: 'critical' | 'warning' | 'info' | 'error'; // Optional for legacy compatibility
+    severity: 'critical' | 'warning' | 'info' | 'error';
     date: string;
     isRead: boolean;
 }
@@ -230,11 +228,9 @@ export interface CheckItem {
     status: 'pending' | 'cleared' | 'bounced' | 'deposited';
     drawer: string;
     bank: string;
-    
-    // Legacy properties
-    checkNumber?: string;
-    riskScore?: number;
-    label?: string;
+    // Legacy support
+    checkNumber: string;
+    riskScore: number;
 }
 export type FinancialCheck = CheckItem; // Alias
 
@@ -256,11 +252,10 @@ export interface FraudCase {
     date?: string;
     detectedDate?: string;
     description?: string;
-
-    // Legacy properties
-    riskLevel?: string | number;
-    type?: string;
-    detectedAt?: string;
+    // Legacy support
+    riskLevel: number;
+    type: string;
+    detectedAt: number;
 }
 
 export interface CustomerCredit {
@@ -292,6 +287,78 @@ export interface Article {
     tags: LocalizedString[];
 }
 
+export const ARTICLES: Article[] = [
+    {
+        id: 1,
+        title: {
+            en: "Steel Market Volatility in late 2023",
+            fa: "نوسانات بازار فولاد در اواخر سال ۱۴۰۲",
+            ar: "تقلبات سوق الصلب في أواخر عام 2023"
+        },
+        excerpt: {
+            en: "Analyzing the factors contributing to the recent price instability in the domestic rebar market.",
+            fa: "تحلیل عواملی که به بی‌ثباتی اخیر قیمت در بازار داخلی میلگرد دامن زده‌اند.",
+            ar: "تحليل العوامل التي تساهم في عدم استقرار الأسعار الأخير في السوق المحلي لحديد التسليح."
+        },
+        content: {
+            en: "The recent weeks have seen significant fluctuations in the price of steel products...",
+            fa: "هفته‌های اخیر شاهد نوسانات قابل توجهی در قیمت محصولات فولادی بوده‌ایم...",
+            ar: "شهدت الأسابيع الأخيرة تقلبات كبيرة في أسعار منتجات الصلب..."
+        },
+        image: "https://images.unsplash.com/photo-1535921827488-874fa7069796?auto=format&fit=crop&w=800&q=80",
+        date: { en: "Nov 15, 2023", fa: "۲۴ آبان ۱۴۰۲", ar: "15 نوفمبر 2023" },
+        author: "Mohammad Rezaei",
+        category: { en: "Market Analysis", fa: "تحلیل بازار", ar: "تحليل السوق" },
+        tags: [{ en: "Rebar", fa: "میلگرد", ar: "حديد التسليح" }, { en: "Prices", fa: "قیمت‌ها", ar: "أسعار" }]
+    },
+    {
+        id: 2,
+        title: {
+            en: "Guide to Checking Steel Authenticity",
+            fa: "راهنمای تشخیص اصالت آهن‌آلات",
+            ar: "دليل التحقق من صحة الصلب"
+        },
+        excerpt: {
+            en: "How to distinguish between authentic factory products and counterfeit steel.",
+            fa: "چگونه محصولات کارخانه اصل را از فولاد تقلبی تشخیص دهیم.",
+            ar: "كيفية التمييز بين منتجات المصنع الأصلية والصلب المقلد."
+        },
+        content: {
+            en: "Counterfeit steel poses a significant risk to construction safety...",
+            fa: "فولاد تقلبی خطر قابل توجهی برای ایمنی ساخت و ساز ایجاد می‌کند...",
+            ar: "يشكل الصلب المقلد خطراً كبيراً على سلامة البناء..."
+        },
+        image: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=800&q=80",
+        date: { en: "Dec 02, 2023", fa: "۱۱ آذر ۱۴۰۲", ar: "02 ديسمبر 2023" },
+        author: "Eng. Sara Kamali",
+        category: { en: "Technical Guide", fa: "راهنمای فنی", ar: "دليل تقني" },
+        tags: [{ en: "Quality Control", fa: "کنترل کیفیت", ar: "مراقبة الجودة" }]
+    },
+    {
+        id: 3,
+        title: {
+            en: "The Rise of Alloy Steels in Construction",
+            fa: "افزایش استفاده از فولادهای آلیاژی در ساخت و ساز",
+            ar: "ارتفاع استخدام سبائك الصلب في البناء"
+        },
+        excerpt: {
+            en: "Why builders are switching to ST52 and other high-strength alloys.",
+            fa: "چرا سازندگان به سمت ST52 و سایر آلیاژهای با استحکام بالا می‌روند.",
+            ar: "لماذا يتحول البناؤون إلى ST52 وسبائك أخرى عالية القوة."
+        },
+        content: {
+            en: "High-strength low-alloy (HSLA) steels are gaining popularity...",
+            fa: "فولادهای کم آلیاژ با استحکام بالا (HSLA) در حال محبوب شدن هستند...",
+            ar: "تكتسب الفولاذ عالي القوة منخفض السبائك (HSLA) شعبية..."
+        },
+        image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
+        date: { en: "Jan 10, 2024", fa: "۲۰ دی ۱۴۰۲", ar: "10 يناير 2024" },
+        author: "Dr. A. Kiani",
+        category: { en: "Technology", fa: "تکنولوژی", ar: "تكنولوجيا" },
+        tags: [{ en: "Alloy Steel", fa: "فولاد آلیاژی", ar: "سبائك الصلب" }]
+    }
+];
+
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
@@ -301,562 +368,158 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-const translations = {
+const translations: any = {
   en: {
-    header: { home: 'Home', recommendationEngine: 'Smart Advisor', distributorFinder: 'Find Suppliers', aiChat: 'AI Consultant', contentHub: 'Market News', blog: 'Blog', ourTeam: 'Sales Team', partnerships: 'Credit Purchase', login: 'Login / Register', logout: 'Logout', tools: 'Tools', ironSnapp: 'IronSnapp', dashboard: 'Dashboard' },
-    seoChecker: {
-        buttonLabel: 'SEO Health',
-        title: 'SEO Health Check',
-        analyzing: 'Analyzing Page...',
-        score: 'SEO Score',
-        metricsTitle: 'On-Page Metrics',
-        recommendationsTitle: 'AI Recommendations',
-        registerSites: 'Register on these platforms:',
-        strategies: 'Improvement Strategy:',
-        keywords: 'Target Keywords:',
-        pass: 'Good',
-        fail: 'Needs Fix',
-        warn: 'Warning'
+    header: { home: 'Home', ironSnapp: 'IronSnapp', recommendationEngine: 'Smart Advisor', distributorFinder: 'Find Suppliers', tools: 'Tools', contentHub: 'Content Hub', blog: 'Blog', ourTeam: 'Our Team', partnerships: 'Partnerships', dashboard: 'Dashboard', logout: 'Logout', login: 'Login' },
+    ourTeam: {
+      title: 'Our Expert Team',
+      subtitle: 'Meet the professionals behind Steel Online 20',
+      doctors: [
+        { name: 'Dr. Ali Alavi', specialty: 'Metallurgist', bio: 'Expert in steel alloys with 15 years experience.', licenseNumber: 'MT-4022' },
+        { name: 'Eng. Reza Karimi', specialty: 'Structural Engineer', bio: 'Specialist in large-scale steel structures.', licenseNumber: 'SE-1099' },
+        { name: 'Ms. Sara Omid', specialty: 'Supply Chain Manager', bio: 'Ensures timely delivery of all steel products.', licenseNumber: 'SC-3321' }
+      ],
+      tableHeaders: { license: 'License' }
     },
-    dashboard: {
-        title: 'Admin Dashboard',
-        menu: { overview: 'Overview', financial: 'Financial & Checks', audit: 'Audit & Control', customers: 'Customers & Credit', reports: 'Reports', live: 'Live Monitor' },
-        metrics: { orders: "Today's Orders", sales: "Today's Sales", newCustomers: "New Customers", visits: "Site Visits" },
-        charts: { 
-            salesTitle: 'Monthly Sales', 
-            productDist: 'Product Distribution',
-            cashFlow: 'Cash Flow Forecast (6 Months)',
-            checkStatus: 'Check Status Distribution',
-            internalControl: 'Internal Control Assessment'
-        },
-        labels: {
-            view: 'View',
-            score: 'Score',
-            total: 'Total',
-            cleared: 'Cleared',
-            pending: 'Pending',
-            bounced: 'Bounced',
-            urgent: 'Urgent',
-            checks: 'Checks',
-            accounts: 'Accounts',
-            good: 'Good',
-            adequate: 'Adequate',
-            strong: 'Strong',
-            risk: 'Risk Assessment',
-            monitoring: 'Monitoring',
-            activities: 'Activities',
-            basedOn: 'Based on latest audit logs'
-        },
-        tables: {
-            ordersTitle: 'Recent Orders',
-            pricesTitle: 'Live Product Prices',
-            headers: { 
-                orderId: 'Order ID', customer: 'Customer', product: 'Product', amount: 'Amount', status: 'Status', price: 'Price', change: 'Change', lastUpdate: 'Updated', stock: 'Stock', category: 'Category', actions: 'Actions', phone: 'Phone', company: 'Company', credit: 'Credit',
-                checkNumber: 'Check Number', dueDate: 'Due Date', drawer: 'Drawer', bank: 'Bank',
-                document: 'Document', type: 'Type', date: 'Date', aiRisk: 'AI Risk Score',
-                creditLimit: 'Credit Limit', used: 'Used', risk: 'Risk'
-            }
-        },
-        stats: {
-            totalChecks: 'Total Checks in Process',
-            dueThisWeek: 'Due This Week',
-            bouncedChecks: 'Bounced Checks',
-            cashBalance: 'Cash Balance',
-            documentsReviewed: 'Docs Reviewed Today',
-            discrepancies: 'Discrepancies Found',
-            fraudCases: 'Fraud Cases',
-            controlScore: 'Internal Control Score'
-        },
-        audit: {
-             aiAnalysis: 'AI Analysis',
-             riskScore: 'Risk Score',
-             fraudDetection: 'Fraud Detection',
-             discrepancyList: 'Discrepancies',
-             auditLogs: 'AI Audit Logs',
-             urgentAlerts: 'Urgent Alerts'
-        },
-        financial: {
-            title: 'Check Management',
-            registerBtn: 'Register New Check'
-        },
-        customers: {
-            title: 'Customer Credit Profiles'
-        },
-        products: { add: 'Add Product', search: 'Search Products...' },
-        activity: { title: 'Recent Activity' },
-        notifications: { title: 'Notifications' },
-        live: {
-          title: 'Live Market Monitor',
-          subtitle: 'Real-time Steel Market Data & Orders Stream',
-          systemStatus: 'System Status',
-          kafka: 'Orders Stream',
-          risingwave: 'Price Engine',
-          grafana: 'Analytics',
-          features: 'Live Features',
-          logs: 'Live Order Stream',
-          activeUsers: 'Active Users',
-          trending: 'Trending Products',
-        }
+    products: {
+      food_feed: { title: 'Construction Steel', description: 'Rebar, Beams, Mesh' },
+      microbiology: { title: 'Industrial Steel', description: 'Sheets, Profiles' },
+      environmental: { title: 'Alloy Steel', description: 'Specialty alloys for industry' }
     },
-    ironSnapp: {
-        title: 'IronSnapp Marketplace',
-        subtitle: 'Connect directly with sellers. Best prices, check payments, and smart matching.',
-        form: {
-            title: 'Request Quote',
-            productLabel: 'Product Name',
-            productPlaceholder: 'e.g., Rebar 16 Esfahan',
-            qtyLabel: 'Quantity (Tons)',
-            locationLabel: 'Delivery City',
-            paymentLabel: 'Payment Method',
-            paymentCash: 'Cash',
-            paymentCheck: 'Check',
-            paymentCredit: 'Credit',
-            monthsLabel: 'Check Duration (Months)',
-            submit: 'Find Best Offers'
-        },
-        results: {
-            title: 'Best Matches',
-            score: 'Match Score',
-            distance: 'Distance',
-            price: 'Total Price',
-            delivery: 'Delivery',
-            buy: 'Buy Now',
-            creditCheck: 'Credit Check Required'
-        },
-        credit: {
-            checking: 'Analyzing Credit Score...',
-            approved: 'Credit Approved',
-            rejected: 'Credit Rejected',
-            reason: 'Reason',
-            score: 'Score'
-        }
-    },
-    products: { food_feed: { title: 'Rebar & Mesh', description: 'High quality ribbed and plain rebar, wire mesh, and thermal rebar.' }, microbiology: { title: 'Beams (Tir-Ahan)', description: 'IPE, IPB, and INP beams from top brands.' }, environmental: { title: 'Sheets & Plate', description: 'Hot rolled (Black), Cold rolled (Oiled), Galvanized, and Color sheets.' } },
-    ourTeam: { title: 'Meet Our Experts', subtitle: 'Our specialized sales team is here to guide you.', tableHeaders: { license: 'Ext.' }, doctors: [ { name: 'Eng. Reza Alavi', specialty: 'Rebar Specialist', bio: 'Expert in construction rebar grades.', licenseNumber: '101' }, { name: 'Mrs. Sara Tehrani', specialty: 'Sheet & Plate Manager', bio: 'Specialist in industrial sheets.', licenseNumber: '102' }, { name: 'Eng. Kaveh Rad', specialty: 'Beam & Profile Lead', bio: 'Technical advisor for heavy structures.', licenseNumber: '103' } ] },
+    quotaErrorModal: { title: 'Quota Exceeded', body: 'You have exceeded your API quota.', cta: 'Upgrade', close: 'Close' },
+    searchModal: { placeholder: 'Search...', suggestionsTitle: 'Suggestions', suggestionQueries: ['Rebar Price', 'IPE 180', 'Shipping Calculator'], resultsTitle: 'Results', noResults: 'No results found.' },
+    loginModal: { title: 'Login', or: 'OR', emailPlaceholder: 'Email', passwordPlaceholder: 'Password', loginButton: 'Login' },
     home: {
-        hero: { mainTitle: 'Steel Online 20: Daily Prices & Trusted Supply', aboutButton: 'Our Services' },
-        infoBar: { call: { title: 'Sales Line', value: '+98 21 2204 1655' }, email: { title: 'Email', value: 'sales@steelonline20.com' }, location: { title: 'HQ', value: 'Jordan, Tehran' } },
-        featuredBlocks: { block1: { title: 'Daily Prices', desc: 'Instant market prices.' }, block2: { title: 'Official Invoice', desc: 'Tax-compliant invoices.' }, block3: { title: 'Quality Guarantee', line1: 'Written Guarantee', line2: 'Certified Origin', line3: 'Fast Delivery' }, button: 'Check Prices' },
-        whyUs: { title: 'Why Steel Online 20?', subtitle: 'Transparency, Speed, and Reliability.', item1: { title: 'Best Price Guarantee', desc: 'Written guarantee of lowest price.' }, item2: { title: 'Fast Logistics', desc: 'Shipping to all cities.' }, item3: { title: 'Credit Purchase', desc: 'Installments, Checks, LC.' }, item4: { title: 'Quality Assurance', desc: 'QC verified products.' } },
-        blog: { title: 'Market Insights', subtitle: 'Latest steel industry news.' },
-        partners: { title: 'Top Brands' },
-        newsletter: { title: 'Market Watch', subtitle: 'Get daily price alerts.', placeholder: 'Enter your email', button: 'Subscribe' },
-        footer: { col1: { title: 'Contact Us' }, col2: { title: 'Products' }, col3: { title: 'Services' }, col4: { title: 'Contact', email: 'Email', message: 'Inquiry', button: 'Send' } }
+      hero: { mainTitle: 'Iran\'s Leading Steel Marketplace', aboutButton: 'About Us' },
+      newsletter: { title: 'Newsletter', subtitle: 'Stay updated', placeholder: 'Your email', button: 'Subscribe' },
+      footer: { col1: { title: 'Contact' }, col2: { title: 'Products' }, col3: { title: 'Services' }, col4: { title: 'Message', email: 'Email', message: 'Message', button: 'Send' } },
+      infoBar: { call: { title: 'Call Us', value: '021-22041655' }, email: { title: 'Email', value: 'sales@steelonline20.com' }, location: { title: 'Location', value: 'Tehran, Iran' } },
+      whyUs: { title: 'Why Us?', subtitle: 'We are the best', item1: { title: 'Best Price', desc: 'Guaranteed' }, item2: { title: 'Fast Delivery', desc: 'Nationwide' }, item3: { title: 'Quality', desc: 'Certified' }, item4: { title: 'Support', desc: '24/7' } },
+      featuredBlocks: { block1: { title: 'Market Insights', desc: 'Daily news', button: 'View' }, block2: { title: 'Partnerships', desc: 'Join us', button: 'Join' }, block3: { title: 'Alerts', line1: 'Price up', line2: 'Supply down', line3: 'New regulations' } },
+      blog: { title: 'Blog', subtitle: 'Latest news' },
+      partners: { title: 'Our Partners' }
     },
-    footer: { contactInfo: 'No. 18, Taheri St, Jordan, Tehran', workingHours: 'Sat to Wed 8:30 to 17:00', copyright: '© 2024 Steel Online 20. All rights reserved.' },
-    hero: { title: 'Steel Online 20', cta: 'Smart Purchase' },
-    validation: { required: 'Required', email: 'Invalid email', passwordLength: 'Must be at least 6 characters', fillRequiredFields: 'Please fill all required fields' },
-    loginModal: { title: 'Login', emailPlaceholder: 'Email', passwordPlaceholder: 'Password', loginButton: 'Login', or: 'OR' },
-    quotaErrorModal: { title: 'System Busy', body: 'Please try again later.', cta: 'Contact Sales', close: 'Close' },
-    searchModal: { placeholder: 'Search products...', suggestionsTitle: 'Trending:', suggestionQueries: ['Rebar 14', 'IPE 18', 'Galvanized'], resultsTitle: 'Results', noResults: 'No results.' },
-    aiChat: { title: 'Steel Consultant', subtitle: 'Ask about prices & specs.', placeholder: 'e.g., Price of IPE 14?', suggestions: ['Rebar price?', 'ST37 vs ST52?', 'Shipping cost?'] },
-    distributorFinder: { title: 'Find Warehouses', subtitle: 'Locate depots.', searchTypeLabel: 'Looking for:', distributor: 'Iron Depot', veterinarian: 'Official Dealer', searchPlaceholder: 'City...', searchButton: 'Find', findNearMe: 'Near Me', searching: 'Locating...', resultsTitle: 'Nearby Suppliers', noResults: 'None found.', suggestionsTitle: 'Hubs', suggestionQueries: ['Tehran', 'Isfahan', 'Mashhad'] },
+    footer: { contactInfo: 'Jordan St, Tehran', workingHours: 'Sat-Wed 8:30-17:00', copyright: '© 2024 Steel Online 20' },
+    blogPage: { title: 'Blog', subtitle: 'Industry News', readMore: 'Read More' },
+    articlePage: { backToBlog: 'Back to Blog' },
+    partnerships: { title: 'Partnerships', subtitle: 'Work with us', name: 'Name', company: 'Company', email: 'Email', message: 'Message', submit: 'Submit' },
+    distributorFinder: { title: 'Find Suppliers', subtitle: 'Locate warehouses near you', suggestionsTitle: 'Suggestions', suggestionQueries: ['Tehran', 'Isfahan'], searchTypeLabel: 'Type', distributor: 'Warehouse', veterinarian: 'Dealer', searchPlaceholder: 'Search location...', searchButton: 'Search', findNearMe: 'Find Near Me', searching: 'Searching...', resultsTitle: 'Results', noResults: 'No suppliers found.' },
+    aiChat: { title: 'AI Consultant', subtitle: 'Ask about prices & specs', suggestions: ['Rebar Price?', 'IPE 14 Weight?'], placeholder: 'Type your question...' },
     recommendationEngine: {
-        title: 'Smart Steel Advisor', subtitle: 'Get AI-powered recommendations.', uploadImageTitle: 'Upload Plan', removeImage: 'Remove', uploadButton: 'Upload', cameraButton: 'Camera', formTitle: 'Project Details', symptomsLabel: 'Description', symptomsPlaceholder: 'e.g., 5-story building...', suggestionPromptsTitle: 'Quick Select:', suggestionPrompts: ['Residential', 'Industrial', 'Bridge'], detailsTitle: 'Specs', autoFillCheckboxLabel: 'Auto-fill', sampleTypeLabel: 'Category', sampleTypePlaceholder: 'e.g., Rebar...', batchSizeOriginLabel: 'Tonnage', batchSizeOriginPlaceholder: 'e.g., 25 Tons', specificConditions: 'Structure', controlSampleInfo: 'Brands', sampleAge: 'Delivery', sampleAgePlaceholder: 'e.g., ASAP', previousTests: 'Budget', additives: 'Services', buttonText: 'Get Advice', generating: 'Analyzing...', resultTitle: 'Recommendation', primaryAssessmentTitle: 'Analysis', potentialConditionsTitle: 'Considerations', recommendedProductsTitle: 'Products', managementAdviceTitle: 'Advice', nextStepsTitle: 'Next Steps', findDropoffLocation: 'Find Supplier', getTreatmentPlan: 'Get Quote', gettingPlan: 'Calculating...', detailedPlanTitle: 'Estimate', purpose: 'Usage', methodology: 'Standard', turnaroundTime: 'Availability', estimatedCost: 'Price', disclaimerTitle: 'Disclaimer', startNewAnalysis: 'New', savePdf: 'Download', symptomsSuggestions: ['High Strength', 'Anti-Corrosion'], animalTypeSuggestions: ['Rebar', 'Beam', 'Sheet']
+       title: 'Smart Advisor', subtitle: 'Get product recommendations', generating: 'Analyzing...', resultTitle: 'Recommendation', primaryAssessmentTitle: 'Assessment', potentialConditionsTitle: 'Considerations', recommendedProductsTitle: 'Recommended Products', managementAdviceTitle: 'Advice', nextStepsTitle: 'Next Steps', findDropoffLocation: 'Find Suppliers', gettingPlan: 'Getting Prices...', detailedPlanTitle: 'Price Estimation', purpose: 'Application', methodology: 'Standard', turnaroundTime: 'Availability', estimatedCost: 'Est. Price', disclaimerTitle: 'Disclaimer', savePdf: 'Save PDF', startNewAnalysis: 'New Analysis',
+       uploadImageTitle: 'Upload Plan (Optional)', removeImage: 'Remove', uploadButton: 'Upload Image', cameraButton: 'Camera',
+       formTitle: 'Project Details', symptomsLabel: 'Project Description', symptomsPlaceholder: 'Describe your project...', symptomsSuggestions: ['Residential Building', 'Industrial Shed'], suggestionPromptsTitle: 'Quick Prompts', suggestionPrompts: ['5-story building in humid area', 'Warehouse structure 500sqm'],
+       detailsTitle: 'Details', autoFillCheckboxLabel: 'Auto-fill', sampleTypeLabel: 'Category', sampleTypePlaceholder: 'e.g. Rebar', batchSizeOriginLabel: 'Tonnage / Origin', batchSizeOriginPlaceholder: 'e.g. 20 Tons / Esfahan', specificConditions: 'Structural Details', controlSampleInfo: 'Preferred Brands', sampleAge: 'Delivery Time', sampleAgePlaceholder: 'e.g. Immediate', previousTests: 'Budget', additives: 'Services', buttonText: 'Get Recommendation',
+       animalTypeSuggestions: ['Rebar', 'Beam', 'Sheet', 'Profile']
     },
     contentHub: {
-        title: 'Market Insights', subtitle: 'Trends & Reports.', platformSelectorTitle: 'Platform', topicTitle: 'Topic', trendsTab: 'Trends', textTab: 'Custom', searchTab: 'Search', fetchingTrends: 'Loading...', customTextPlaceholder: 'Topic...', selectSearchTopic: 'Popular:', userSearchSuggestions: ['Price Forecast', 'Exports'], generatingPost: 'Generating...', generateButton: 'Generate', resultsTitle: 'Result', placeholder: 'Select topic.', copyButton: 'Copy', copySuccess: 'Copied!', connectAccountToPublish: 'Connect', publishToPlatformButton: 'Post', adaptForWebsiteButton: 'Blog Post', adaptingForWebsite: 'Writing...', websitePreviewTitle: 'Preview', publishToWebsiteButton: 'Publish', publishedSuccess: 'Published!',
-        getStrategyButton: 'Strategy', fetchingStrategy: 'Analyzing...', strategyTitle: 'Strategy', bestTime: 'Time', nextPost: 'Next',
-        generateVideoButton: 'Video Script', generatingVideo: 'Writing...', timecode: 'Time', visual: 'Visual', voiceover: 'Audio', emotion: 'Tone',
-        findVideoTools: 'Video Tools', findingTools: 'Searching...', toolName: 'Tool', toolCost: 'Cost', toolFarsi: 'Farsi', toolFeatures: 'Features', toolQuality: 'Rating'
+        title: 'Content Hub', subtitle: 'Generate marketing content', platformSelectorTitle: 'Platform', topicTitle: 'Topic', trendsTab: 'Trends', textTab: 'Custom', searchTab: 'Search', fetchingTrends: 'Loading trends...', selectSearchTopic: 'Select topic', customTextPlaceholder: 'Enter topic...',
+        resultsTitle: 'Generated Content', placeholder: 'Select options to generate', generatingPost: 'Generating...', generateButton: 'Generate', copySuccess: 'Copied!', copyButton: 'Copy', connectAccountToPublish: 'Connect account to publish', publishToPlatformButton: 'Publish to {platform}', adaptingForWebsite: 'Adapting...', adaptForWebsiteButton: 'Adapt for Blog', websitePreviewTitle: 'Blog Preview', publishedSuccess: 'Published!', publishToWebsiteButton: 'Publish',
+        fetchingStrategy: 'Loading...', getStrategyButton: 'Get Strategy', strategyTitle: 'Strategy', bestTime: 'Best Time', nextPost: 'Next Post', generatingVideo: 'Generating...', generateVideoButton: 'Video Script', findingTools: 'Searching...', findVideoTools: 'Find Tools', toolName: 'Tool', toolCost: 'Cost', toolFarsi: 'Farsi', toolFeatures: 'Features', toolQuality: 'Quality', timecode: 'Time', visual: 'Visual', voiceover: 'Audio', emotion: 'Emotion',
+        userSearchSuggestions: ['Steel Price Trends', 'Construction Tips', 'Market Forecast']
     },
-    partnerships: { title: 'Credit Purchase', subtitle: 'Flexible payment options (Check, LC).', name: 'Name', company: 'Company', email: 'Email', message: 'Request', submit: 'Submit' },
-    blogPage: { title: 'Blog', subtitle: 'News & Articles.', readMore: 'Read More' },
-    articlePage: { backToBlog: 'Back' },
-    toolsPage: {
-        title: 'Steel Tools', subtitle: 'Calculators & Utilities',
-        weightCalc: { title: 'Weight Calculator', label: 'Product Name (e.g., IPE 18)', button: 'Calculate', result: 'Standard Weight' },
-        shippingCalc: { title: 'Shipping Estimator', label: 'Route (e.g., Isfahan to Tehran)', button: 'Estimate', result: 'Estimated Cost' },
-        creditInfo: { title: 'Credit Purchase', desc: 'Buy now, pay later with Checks or LC.' }
-    }
+    validation: { required: 'Required', email: 'Invalid email', passwordLength: 'Min 6 chars', fillRequiredFields: 'Please fill required fields' },
+    toolsPage: { title: 'Steel Tools', subtitle: 'Calculators & Info', weightCalc: { title: 'Weight Calculator', label: 'Product Name', button: 'Calculate' }, shippingCalc: { title: 'Shipping Estimator', label: 'Route', button: 'Estimate' }, creditInfo: { title: 'Credit Info', desc: 'Payment options' } },
+    ironSnapp: { subtitle: 'Buy steel directly', form: { title: 'Request Quote', productLabel: 'Product', productPlaceholder: 'e.g. Rebar', qtyLabel: 'Qty (Tons)', locationLabel: 'Location', paymentLabel: 'Payment', paymentCash: 'Cash', paymentCheck: 'Check', paymentCredit: 'Credit', monthsLabel: 'Months', submit: 'Request' }, credit: { checking: 'Checking credit...', approved: 'Credit Approved', rejected: 'Credit Rejected', score: 'Score', reason: 'Reason' }, results: { title: 'Offers', score: 'Match', price: 'Price', delivery: 'Delivery', buy: 'Buy' } },
+    dashboard: {
+        menu: { overview: 'Overview', financial: 'Financial', audit: 'Audit', customers: 'Customers', reports: 'Reports', system: 'System' },
+        stats: { totalChecks: 'Total Checks', dueThisWeek: 'Due This Week', cashBalance: 'Cash Balance', controlScore: 'Control Score', documentsReviewed: 'Docs Reviewed', discrepancies: 'Discrepancies', fraudCases: 'Fraud Cases' },
+        labels: { checks: 'Checks', urgent: 'Urgent', accounts: 'Accts', good: 'Good', adequate: 'Adequate', strong: 'Strong', risk: 'Risk', monitoring: 'Monitoring', activities: 'Activities', basedOn: 'Based on analysis', cleared: 'Cleared', bounced: 'Bounced', pending: 'Pending', total: 'Total', view: 'View', score: 'Score' },
+        charts: { cashFlow: 'Cash Flow', checkStatus: 'Check Status', internalControl: 'Internal Control' },
+        audit: { urgentAlerts: 'Urgent Alerts', auditLogs: 'Audit Logs' },
+        financial: { title: 'Financial Checks', registerBtn: 'Register Check' },
+        customers: { title: 'Customer Credit' },
+        tables: { headers: { checkNumber: 'Check #', dueDate: 'Due Date', amount: 'Amount', drawer: 'Drawer', bank: 'Bank', status: 'Status', document: 'Document', type: 'Type', date: 'Date', aiRisk: 'AI Risk', customer: 'Customer', creditLimit: 'Limit', used: 'Used', risk: 'Risk' } }
+    },
+    seoChecker: { pass: 'Pass', fail: 'Fail', warn: 'Warn', buttonLabel: 'SEO Check', title: 'SEO Analysis', analyzing: 'Analyzing...', score: 'SEO Score', metricsTitle: 'Metrics', recommendationsTitle: 'Recommendations', registerSites: 'Directories', strategies: 'Strategy', keywords: 'Keywords' }
   },
   fa: {
-    header: { home: 'خانه', recommendationEngine: 'مشاور خرید', distributorFinder: 'مراکز فروش', aiChat: 'هوش مصنوعی', contentHub: 'تحلیل بازار', blog: 'مجله آهن', ourTeam: 'تیم فروش', partnerships: 'خرید اعتباری', login: 'ورود / ثبت‌نام', logout: 'خروج', tools: 'ابزارها', ironSnapp: 'آهن‌اسنپ', dashboard: 'داشبورد مدیریت' },
-    seoChecker: {
-        buttonLabel: 'سلامت سئو',
-        title: 'چکاپ سلامت سئو',
-        analyzing: 'در حال آنالیز صفحه...',
-        score: 'امتیاز سئو',
-        metricsTitle: 'پارامترهای داخلی',
-        recommendationsTitle: 'پیشنهادات هوش مصنوعی',
-        registerSites: 'ثبت‌نام در این سایت‌ها:',
-        strategies: 'استراتژی بهبود:',
-        keywords: 'کلمات کلیدی هدف:',
-        pass: 'عالی',
-        fail: 'نیاز به اصلاح',
-        warn: 'هشدار'
+    header: { home: 'خانه', ironSnapp: 'آهن‌اسنپ', recommendationEngine: 'مشاور هوشمند', distributorFinder: 'یابنده تامین‌کننده', tools: 'ابزارها', contentHub: 'تولید محتوا', blog: 'وبلاگ', ourTeam: 'تیم ما', partnerships: 'همکاری', dashboard: 'داشبورد', logout: 'خروج', login: 'ورود' },
+    ourTeam: {
+      title: 'تیم متخصص ما',
+      subtitle: 'با حرفه‌ای‌های استیل آنلاین ۲۰ آشنا شوید',
+      doctors: [
+        { name: 'دکتر علی علوی', specialty: 'متالورژیست', bio: 'متخصص آلیاژهای فولادی با ۱۵ سال تجربه.', licenseNumber: 'MT-4022' },
+        { name: 'مهندس رضا کریمی', specialty: 'مهندس سازه', bio: 'متخصص سازه‌های فولادی بزرگ.', licenseNumber: 'SE-1099' },
+        { name: 'خانم سارا امید', specialty: 'مدیر زنجیره تامین', bio: 'تضمین تحویل به موقع تمام محصولات فولادی.', licenseNumber: 'SC-3321' }
+      ],
+      tableHeaders: { license: 'شماره نظام' }
     },
-    dashboard: {
-        title: 'داشبورد مدیریت',
-        menu: { overview: 'نمای کلی', financial: 'مالی و چک‌ها', audit: 'حسابرسی و کنترل', customers: 'مشتریان و اعتبار', reports: 'گزارشات', live: 'مانیتور زنده' },
-        metrics: { orders: "سفارشات امروز", sales: "فروش امروز", newCustomers: "مشتریان جدید", visits: "بازدید سایت" },
-        charts: { 
-            salesTitle: 'نمودار فروش ماهانه', 
-            productDist: 'توزیع فروش محصولات',
-            cashFlow: 'پیش‌بینی جریان نقدی (۶ ماهه)',
-            checkStatus: 'توزیع وضعیت چک‌ها',
-            internalControl: 'ارزیابی کنترل داخلی'
-        },
-        labels: {
-            view: 'مشاهده',
-            score: 'امتیاز',
-            total: 'کل',
-            cleared: 'پاس شده',
-            pending: 'در جریان',
-            bounced: 'برگشتی',
-            urgent: 'فوری',
-            checks: 'فقره چک',
-            accounts: 'حساب',
-            good: 'خوب',
-            adequate: 'متوسط',
-            strong: 'قوی',
-            risk: 'ارزیابی ریسک',
-            monitoring: 'نظارت',
-            activities: 'فعالیت‌ها',
-            basedOn: 'بر اساس آخرین لاگ‌های حسابرسی'
-        },
-        tables: {
-            ordersTitle: 'سفارشات اخیر',
-            pricesTitle: 'قیمت لحظه‌ای محصولات',
-            headers: { 
-                orderId: 'شماره', customer: 'مشتری', product: 'محصول', amount: 'مبلغ', status: 'وضعیت', price: 'قیمت', change: 'تغییر', lastUpdate: 'بروزرسانی', stock: 'موجودی', category: 'دسته‌بندی', actions: 'عملیات', phone: 'تلفن', company: 'شرکت', credit: 'اعتبار',
-                checkNumber: 'شماره چک', dueDate: 'سررسید', drawer: 'صادرکننده', bank: 'بانک',
-                document: 'سند', type: 'نوع', date: 'تاریخ', aiRisk: 'ریسک هوشمند',
-                creditLimit: 'سقف اعتبار', used: 'استفاده شده', risk: 'ریسک'
-            }
-        },
-        stats: {
-            totalChecks: 'کل چک‌های در جریان',
-            dueThisWeek: 'سررسید این هفته',
-            bouncedChecks: 'چک‌های برگشتی',
-            cashBalance: 'موجودی نقد',
-            documentsReviewed: 'اسناد بررسی شده',
-            discrepancies: 'مغایرت‌ها',
-            fraudCases: 'موارد تقلب',
-            controlScore: 'امتیاز کنترل داخلی'
-        },
-        audit: {
-             aiAnalysis: 'تحلیل هوشمند',
-             riskScore: 'امتیاز ریسک',
-             fraudDetection: 'تشخیص تقلب',
-             discrepancyList: 'لیست مغایرت‌ها',
-             auditLogs: 'لاگ‌های حسابرسی هوشمند',
-             urgentAlerts: 'هشدارهای فوری'
-        },
-        financial: {
-            title: 'مدیریت چک‌ها',
-            registerBtn: 'ثبت چک جدید'
-        },
-        customers: {
-            title: 'پروفایل اعتباری مشتریان'
-        },
-        products: { add: 'افزودن محصول', search: 'جستجوی محصول...' },
-        activity: { title: 'فعالیت‌های اخیر' },
-        notifications: { title: 'اعلان‌ها' },
-        live: {
-          title: 'مانیتور زنده بازار',
-          subtitle: 'مانیتورینگ لحظه‌ای داده‌های بازار فولاد و سفارشات',
-          systemStatus: 'وضعیت سیستم',
-          kafka: 'جریان سفارشات',
-          risingwave: 'موتور قیمت',
-          grafana: 'تحلیل‌گر',
-          features: 'شاخص‌های زنده',
-          logs: 'جریان زنده سفارشات',
-          activeUsers: 'کاربران آنلاین',
-          trending: 'محصولات داغ',
-        }
+    products: {
+      food_feed: { title: 'فولاد ساختمانی', description: 'میلگرد، تیرآهن، توری' },
+      microbiology: { title: 'فولاد صنعتی', description: 'ورق، پروفیل' },
+      environmental: { title: 'فولاد آلیاژی', description: 'آلیاژهای خاص صنعتی' }
     },
-    ironSnapp: {
-        title: 'بازار هوشمند آهن‌اسنپ',
-        subtitle: 'اتصال مستقیم به فروشندگان. بهترین قیمت، خرید چکی و مچینگ هوشمند.',
-        form: {
-            title: 'درخواست خرید',
-            productLabel: 'نام کالا',
-            productPlaceholder: 'مثلا: میلگرد ۱۶ ذوب آهن',
-            qtyLabel: 'مقدار (تن)',
-            locationLabel: 'شهر مقصد',
-            paymentLabel: 'نحوه پرداخت',
-            paymentCash: 'نقدی',
-            paymentCheck: 'چکی / اعتباری',
-            paymentCredit: 'اعتباری (LC)',
-            monthsLabel: 'مدت چک (ماه)',
-            submit: 'یافتن بهترین پیشنهاد'
-        },
-        results: {
-            title: 'پیشنهادات هوشمند',
-            score: 'امتیاز تطابق',
-            distance: 'فاصله',
-            price: 'قیمت کل',
-            delivery: 'تحویل',
-            buy: 'خرید نهایی',
-            creditCheck: 'نیاز به اعتبارسنجی'
-        },
-        credit: {
-            checking: 'در حال اعتبارسنجی...',
-            approved: 'اعتبار تایید شد',
-            rejected: 'اعتبار رد شد',
-            reason: 'دلیل',
-            score: 'امتیاز اعتباری'
-        }
-    },
-    products: { food_feed: { title: 'میلگرد و توری', description: 'انواع میلگرد آجدار و ساده، توری مش و میلگرد حرارتی با بهترین کیفیت.' }, microbiology: { title: 'تیرآهن و هاش', description: 'تیرآهن‌های IPE، IPB و لانه زنبوری از برندهای ذوب آهن و فایکو.' }, environmental: { title: 'انواع ورق', description: 'ورق سیاه (ST37, ST52)، روغنی، گالوانیزه و رنگی در ابعاد مختلف.' } },
-    ourTeam: { title: 'کارشناسان فروش', subtitle: 'تیم متخصص ما آماده ارائه مشاوره فنی و راهنمایی در خرید آهن‌آلات است.', tableHeaders: { license: 'داخلی' }, doctors: [ { name: 'مهندس رضا علوی', specialty: 'کارشناس میلگرد', bio: 'متخصص در آنالیز قیمت و استانداردهای میلگرد ساختمانی.', licenseNumber: '۱۰۱' }, { name: 'خانم سارا تهرانی', specialty: 'مدیر بخش ورق', bio: 'مشاور تخصصی در زمینه ورق‌های آلیاژی و صنعتی.', licenseNumber: '۱۰۲' }, { name: 'مهندس کاوه راد', specialty: 'سرپرست تیرآهن', bio: 'مشاور فنی پروژه‌های اسکلت فلزی و سازه‌های سنگین.', licenseNumber: '۱۰۳' } ] },
+    quotaErrorModal: { title: 'پایان سهمیه', body: 'سهمیه API شما تمام شده است.', cta: 'ارتقا', close: 'بستن' },
+    searchModal: { placeholder: 'جستجو...', suggestionsTitle: 'پیشنهادات', suggestionQueries: ['قیمت میلگرد', 'تیرآهن ۱۸', 'محاسبه هزینه حمل'], resultsTitle: 'نتایج', noResults: 'نتیجه‌ای یافت نشد.' },
+    loginModal: { title: 'ورود', or: 'یا', emailPlaceholder: 'ایمیل', passwordPlaceholder: 'رمز عبور', loginButton: 'ورود' },
     home: {
-        hero: { mainTitle: 'استیل آنلاین ۲۰: مرجع قیمت و خرید مطمئن', aboutButton: 'خدمات ما' },
-        infoBar: { call: { title: 'تلفن فروش', value: '۰۲۱-۲۲۰۴۱۶۵۵' }, email: { title: 'ایمیل', value: 'sales@steelonline20.com' }, location: { title: 'دفتر مرکزی', value: 'تهران، جردن' } },
-        featuredBlocks: { block1: { title: 'قیمت لحظه‌ای', desc: 'دسترسی آنی به قیمت روز تمامی مقاطع فولادی.' }, block2: { title: 'فاکتور رسمی', desc: 'ارائه فاکتور رسمی برای شرکت‌ها و پیمانکاران.' }, block3: { title: 'تضمین کیفیت و قیمت', line1: 'ضمانت کتبی قیمت', line2: 'تضمین کیفیت کالا', line3: 'ارسال سریع بار' }, button: 'مشاهده قیمت‌ها' },
-        whyUs: { title: 'چرا استیل آنلاین ۲۰؟', subtitle: 'شفافیت، سرعت و اطمینان در خرید.', item1: { title: 'تضمین قیمت', desc: 'ارائه ضمانت‌نامه کتبی برای کمترین قیمت بازار.' }, item2: { title: 'هزینه حمل بار', desc: 'محاسبه و ارسال بار به سراسر کشور با کمترین نرخ.' }, item3: { title: 'خرید اعتباری', desc: 'امکان خرید قسطی، چکی و ال سی.' }, item4: { title: 'تضمین کیفیت', desc: 'تضمین کتبی کیفیت در تمامی پیش‌فاکتورها.' } },
-        blog: { title: 'اخبار و مقالات', subtitle: 'تحلیل‌های روزانه بازار آهن و فولاد.' },
-        partners: { title: 'برندهای همکار' },
-        newsletter: { title: 'لیست علاقمندی‌ها', subtitle: 'رصد نوسانات قیمت محصولات محبوب شما.', placeholder: 'ایمیل خود را وارد کنید', button: 'عضویت' },
-        footer: { col1: { title: 'تماس با ما' }, col2: { title: 'محصولات' }, col3: { title: 'خدمات' }, col4: { title: 'تماس', email: 'ایمیل', message: 'پیام', button: 'ارسال' } }
+      hero: { mainTitle: 'بزرگترین بازار آنلاین آهن ایران', aboutButton: 'درباره ما' },
+      newsletter: { title: 'خبرنامه', subtitle: 'به‌روز باشید', placeholder: 'ایمیل شما', button: 'عضویت' },
+      footer: { col1: { title: 'تماس' }, col2: { title: 'محصولات' }, col3: { title: 'خدمات' }, col4: { title: 'پیام', email: 'ایمیل', message: 'پیام', button: 'ارسال' } },
+      infoBar: { call: { title: 'تماس با ما', value: '۰۲۱-۲۲۰۴۱۶۵۵' }, email: { title: 'ایمیل', value: 'sales@steelonline20.com' }, location: { title: 'آدرس', value: 'تهران، جردن' } },
+      whyUs: { title: 'چرا ما؟', subtitle: 'بهترین انتخاب شما', item1: { title: 'بهترین قیمت', desc: 'تضمین شده' }, item2: { title: 'تحویل سریع', desc: 'سراسر کشور' }, item3: { title: 'کیفیت', desc: 'استاندارد' }, item4: { title: 'پشتیبانی', desc: '۲۴/۷' } },
+      featuredBlocks: { block1: { title: 'تحلیل بازار', desc: 'اخبار روزانه', button: 'مشاهده' }, block2: { title: 'همکاری', desc: 'به ما بپیوندید', button: 'عضویت' }, block3: { title: 'هشدارها', line1: 'افزایش قیمت', line2: 'کاهش عرضه', line3: 'مقررات جدید' } },
+      blog: { title: 'وبلاگ', subtitle: 'آخرین اخبار صنعت' },
+      partners: { title: 'همکاران ما' }
     },
-    footer: { contactInfo: 'تهران، جردن، خیابان طاهری، پلاک ۱۸', workingHours: 'شنبه تا چهارشنبه ۸:۳۰ تا ۱۷:۰۰', copyright: '© ۱۴۰۳ استیل آنلاین ۲۰. تمامی حقوق محفوظ است.' },
-    hero: { title: 'استیل آنلاین ۲۰', cta: 'مشاوره خرید هوشمند' },
-    validation: { required: 'الزامی', email: 'ایمیل نامعتبر', passwordLength: 'حداقل ۶ کاراکتر', fillRequiredFields: 'لطفا موارد الزامی را پر کنید' },
-    loginModal: { title: 'ورود به حساب', emailPlaceholder: 'ایمیل / موبایل', passwordPlaceholder: 'رمز عبور', loginButton: 'ورود', or: 'یا' },
-    quotaErrorModal: { title: 'ترافیک بالا', body: 'سیستم در حال حاضر شلوغ است. لطفا دقایقی دیگر تلاش کنید.', cta: 'تماس با پشتیبانی', close: 'بستن' },
-    searchModal: { placeholder: 'جستجوی محصول (مثلا: تیرآهن ۱۴، میلگرد ۱۶)...', suggestionsTitle: 'جستجوهای پرطرفدار:', suggestionQueries: ['میلگرد ۱۴ اصفهان', 'تیرآهن ۱۸ ذوب', 'ورق گالوانیزه', 'پروفیل ساختمانی'], resultsTitle: 'محصولات یافت شده', noResults: 'محصولی یافت نشد.' },
-    aiChat: { title: 'دستیار هوشمند آهن', subtitle: 'سوالات خود را درباره قیمت، استانداردها و هزینه حمل بپرسید.', placeholder: 'مثلا: قیمت تیرآهن ۱۴ امروز چند است؟', suggestions: ['قیمت میلگرد ۱۶؟', 'تفاوت ورق ST37 و ST52؟', 'هزینه حمل تا مشهد؟'] },
-    distributorFinder: { title: 'مراکز بارگیری', subtitle: 'یافتن نزدیک‌ترین بنگاه‌ها و مبادی بارگیری آهن‌آلات.', searchTypeLabel: 'جستجو برای:', distributor: 'بنگاه آهن', veterinarian: 'نمایندگی رسمی', searchPlaceholder: 'نام شهر یا منطقه...', searchButton: 'جستجو', findNearMe: 'اطراف من', searching: 'در حال جستجو...', resultsTitle: 'تامین‌کنندگان نزدیک', noResults: 'تامین‌کننده‌ای یافت نشد.', suggestionsTitle: 'مبادی اصلی', suggestionQueries: ['تهران (شادآباد)', 'اصفهان', 'مشهد', 'اهواز'] },
+    footer: { contactInfo: 'تهران، جردن، خیابان طاهری', workingHours: 'شنبه تا چهارشنبه ۸:۳۰ تا ۱۷:۰۰', copyright: '© ۱۴۰۳ استیل آنلاین ۲۰' },
+    blogPage: { title: 'وبلاگ', subtitle: 'اخبار صنعت فولاد', readMore: 'بیشتر بخوانید' },
+    articlePage: { backToBlog: 'بازگشت به وبلاگ' },
+    partnerships: { title: 'همکاری', subtitle: 'با ما همکاری کنید', name: 'نام', company: 'شرکت', email: 'ایمیل', message: 'پیام', submit: 'ارسال' },
+    distributorFinder: { title: 'یابنده تامین‌کننده', subtitle: 'پیدا کردن نزدیک‌ترین انبار', suggestionsTitle: 'پیشنهادات', suggestionQueries: ['تهران', 'اصفهان', 'شادآباد'], searchTypeLabel: 'نوع', distributor: 'انبار', veterinarian: 'نمایندگی رسمی', searchPlaceholder: 'جستجوی موقعیت...', searchButton: 'جستجو', findNearMe: 'نزدیک من', searching: 'در حال جستجو...', resultsTitle: 'نتایج', noResults: 'تامین‌کننده‌ای یافت نشد.' },
+    aiChat: { title: 'مشاور هوشمند', subtitle: 'سوالات خود را بپرسید', suggestions: ['قیمت میلگرد؟', 'وزن تیرآهن ۱۴؟'], placeholder: 'سوال خود را بنویسید...' },
     recommendationEngine: {
-        title: 'مشاور هوشمند خرید', subtitle: 'مشخصات پروژه را وارد کنید تا بهترین مقاطع فولادی را پیشنهاد دهیم.', uploadImageTitle: 'آپلود نقشه/عکس (اختیاری)', removeImage: 'حذف', uploadButton: 'آپلود نقشه', cameraButton: 'عکس از محل', formTitle: 'مشخصات پروژه', symptomsLabel: 'شرح پروژه / نیاز اصلی', symptomsPlaceholder: 'مثلا: ساخت ساختمان ۵ طبقه مسکونی در شمال کشور...', suggestionPromptsTitle: 'انتخاب سریع:', suggestionPrompts: ['ساختمان مسکونی', 'سوله صنعتی', 'پل سازی', 'حصارکشی'], detailsTitle: 'جزئیات فنی', autoFillCheckboxLabel: 'تکمیل خودکار با هوش مصنوعی', sampleTypeLabel: 'دسته محصول', sampleTypePlaceholder: 'مثلا: میلگرد، تیرآهن، ورق...', batchSizeOriginLabel: 'تناژ / مقصد', batchSizeOriginPlaceholder: 'مثلا: ۲۵ تن، تبریز', specificConditions: 'جزئیات سازه', controlSampleInfo: 'برندهای ترجیحی', sampleAge: 'زمان تحویل', sampleAgePlaceholder: 'مثلا: هفته آینده', previousTests: 'بودجه/محدودیت', additives: 'خدمات (برشکاری و...)', buttonText: 'دریافت پیشنهاد', generating: 'در حال تحلیل پروژه...', resultTitle: 'پیشنهاد خرید', primaryAssessmentTitle: 'تحلیل پروژه', potentialConditionsTitle: 'ملاحظات فنی', recommendedProductsTitle: 'محصولات پیشنهادی', managementAdviceTitle: 'نکات خرید و لجستیک', nextStepsTitle: 'قدم‌های بعدی', findDropoffLocation: 'یافتن تامین‌کننده', getTreatmentPlan: 'استعلام قیمت دقیق', gettingPlan: 'محاسبه...', detailedPlanTitle: 'پیش‌فاکتور تخمینی', purpose: 'کاربرد', methodology: 'استاندارد', turnaroundTime: 'موجود', estimatedCost: 'قیمت تقریبی واحد', disclaimerTitle: 'سلب مسئولیت', startNewAnalysis: 'استعلام جدید', savePdf: 'دانلود پیش‌فاکتور', symptomsSuggestions: ['مقاومت کششی بالا', 'ضد زنگ', 'مقاوم در زلزله', 'اقتصادی'], animalTypeSuggestions: ['میلگرد', 'تیرآهن', 'ورق', 'پروفیل', 'لوله', 'نبشی', 'ناودانی']
+       title: 'مشاور هوشمند خرید', subtitle: 'دریافت پیشنهادات محصول', generating: 'در حال تحلیل...', resultTitle: 'پیشنهاد خرید', primaryAssessmentTitle: 'ارزیابی اولیه', potentialConditionsTitle: 'ملاحظات فنی', recommendedProductsTitle: 'محصولات پیشنهادی', managementAdviceTitle: 'توصیه‌های خرید', nextStepsTitle: 'مراحل بعدی', findDropoffLocation: 'یافتن تامین‌کننده', gettingPlan: 'استعلام قیمت...', detailedPlanTitle: 'برآورد قیمت و مشخصات', purpose: 'کاربرد', methodology: 'استاندارد', turnaroundTime: 'موجودی', estimatedCost: 'قیمت تقریبی', disclaimerTitle: 'سلب مسئولیت', savePdf: 'دانلود PDF', startNewAnalysis: 'تحلیل جدید',
+       uploadImageTitle: 'آپلود نقشه (اختیاری)', removeImage: 'حذف', uploadButton: 'آپلود تصویر', cameraButton: 'دوربین',
+       formTitle: 'مشخصات پروژه', symptomsLabel: 'شرح پروژه', symptomsPlaceholder: 'پروژه خود را شرح دهید...', symptomsSuggestions: ['ساختمان مسکونی', 'سوله صنعتی'], suggestionPromptsTitle: 'نمونه‌ها', suggestionPrompts: ['ساختمان ۵ طبقه در شمال', 'سوله ۵۰۰ متری'],
+       detailsTitle: 'جزئیات', autoFillCheckboxLabel: 'پر کردن خودکار', sampleTypeLabel: 'دسته‌بندی', sampleTypePlaceholder: 'مثلا میلگرد', batchSizeOriginLabel: 'تناژ / مبدا', batchSizeOriginPlaceholder: 'مثلا ۲۰ تن / اصفهان', specificConditions: 'جزئیات سازه', controlSampleInfo: 'برند ترجیحی', sampleAge: 'زمان تحویل', sampleAgePlaceholder: 'مثلا فوری', previousTests: 'بودجه', additives: 'خدمات جانبی', buttonText: 'دریافت مشاوره',
+       animalTypeSuggestions: ['میلگرد', 'تیرآهن', 'ورق', 'پروفیل']
     },
     contentHub: {
-        title: 'تحلیل بازار', subtitle: 'بررسی روندها و تولید محتوای تحلیلی.', platformSelectorTitle: '۱. پلتفرم', topicTitle: '۲. موضوع', trendsTab: 'روندهای بازار', textTab: 'موضوع دلخواه', searchTab: 'جستجو', fetchingTrends: 'در حال دریافت قیمت‌ها...', customTextPlaceholder: 'موضوع تحلیل (مثلا: "تاثیر دلار بر قیمت آهن")...', selectSearchTopic: 'موضوعات داغ:', userSearchSuggestions: ['پیش‌بینی قیمت آهن', 'تعرفه صادرات', 'فصل ساخت و ساز', 'قیمت مواد اولیه'], generatingPost: 'در حال تولید...', generateButton: 'تولید تحلیل', resultsTitle: 'محتوای تولید شده', placeholder: 'یک موضوع برای تحلیل انتخاب کنید.', copyButton: 'کپی', copySuccess: 'کپی شد!', connectAccountToPublish: 'اتصال حساب', publishToPlatformButton: 'انتشار در {platform}', adaptForWebsiteButton: 'تبدیل به مقاله', adaptingForWebsite: 'در حال نگارش...', websitePreviewTitle: 'پیش‌نمایش مقاله', publishToWebsiteButton: 'انتشار در سایت', publishedSuccess: 'منتشر شد!',
-        getStrategyButton: 'استراتژی محتوا', fetchingStrategy: 'تحلیل...', strategyTitle: 'استراتژی انتشار', bestTime: 'بهترین زمان', nextPost: 'موضوع بعدی',
-        generateVideoButton: 'سناریو ویدیو', generatingVideo: 'نوشتن سناریو...', timecode: 'زمان', visual: 'تصویر', voiceover: 'صدا', emotion: 'لحن',
-        findVideoTools: 'ابزارهای ویدیو', findingTools: 'جستجو...', toolName: 'ابزار', toolCost: 'هزینه', toolFarsi: 'فارسی', toolFeatures: 'امکانات', toolQuality: 'امتیاز'
+        title: 'تولید محتوا', subtitle: 'تولید محتوای بازاریابی با هوش مصنوعی', platformSelectorTitle: 'پلتفرم', topicTitle: 'موضوع', trendsTab: 'روندها', textTab: 'متن دلخواه', searchTab: 'جستجو', fetchingTrends: 'در حال دریافت روندها...', selectSearchTopic: 'انتخاب موضوع', customTextPlaceholder: 'موضوع را وارد کنید...',
+        resultsTitle: 'محتوای تولید شده', placeholder: 'گزینه‌ها را برای تولید انتخاب کنید', generatingPost: 'در حال تولید...', generateButton: 'تولید محتوا', copySuccess: 'کپی شد!', copyButton: 'کپی', connectAccountToPublish: 'اتصال حساب برای انتشار', publishToPlatformButton: 'انتشار در {platform}', adaptingForWebsite: 'در حال تبدیل...', adaptForWebsiteButton: 'تبدیل به مقاله وبلاگ', websitePreviewTitle: 'پیش‌نمایش وبلاگ', publishedSuccess: 'منتشر شد!', publishToWebsiteButton: 'انتشار',
+        fetchingStrategy: 'در حال دریافت...', getStrategyButton: 'دریافت استراتژی', strategyTitle: 'استراتژی انتشار', bestTime: 'بهترین زمان', nextPost: 'پست بعدی', generatingVideo: 'در حال تولید...', generateVideoButton: 'سناریو ویدیو', findingTools: 'جستجو...', findVideoTools: 'یافتن ابزارها', toolName: 'ابزار', toolCost: 'هزینه', toolFarsi: 'فارسی', toolFeatures: 'امکانات', toolQuality: 'کیفیت', timecode: 'زمان', visual: 'تصویر', voiceover: 'صدا', emotion: 'لحن',
+        userSearchSuggestions: ['روند قیمت فولاد', 'نکات ساخت و ساز', 'پیش‌بینی بازار']
     },
-    partnerships: { title: 'خرید اعتباری', subtitle: 'امکان خرید اقساطی، چکی و LC برای مشتریان.', name: 'نام کامل', company: 'نام شرکت', email: 'ایمیل', message: 'جزئیات درخواست', submit: 'ثبت درخواست اعتبار' },
-    blogPage: { title: 'مجله تخصصی آهن', subtitle: 'اخبار، تحلیل‌ها و مقالات آموزشی صنعت فولاد.', readMore: 'ادامه مطلب' },
-    articlePage: { backToBlog: 'بازگشت به اخبار' },
-    toolsPage: {
-        title: 'ابزارهای کاربردی', subtitle: 'محاسبات فنی و لجستیکی آهن‌آلات',
-        weightCalc: { title: 'جدول وزن آهن‌آلات', label: 'نام محصول (مثلا: تیرآهن ۱۸)', button: 'محاسبه وزن', result: 'وزن استاندارد' },
-        shippingCalc: { title: 'هزینه حمل بار', label: 'مسیر (مثلا: اصفهان به تهران)', button: 'استعلام هزینه', result: 'هزینه تقریبی' },
-        creditInfo: { title: 'شرایط اعتباری', desc: 'خرید مدت‌دار با چک صیادی و ضمانت‌نامه بانکی.' }
-    }
-  },
-  ar: {
-    header: { home: 'الرئيسية', recommendationEngine: 'المستشار الذكي', distributorFinder: 'الموردين', aiChat: 'استشارة ذكية', contentHub: 'تحليل السوق', blog: 'المدونة', ourTeam: 'فريق المبيعات', partnerships: 'شراء بالائتمان', login: 'دخول / تسجيل', logout: 'خروج', tools: 'أدوات', ironSnapp: 'آيرون سناب', dashboard: 'لوحة التحكم' },
-    seoChecker: {
-        buttonLabel: 'فحص SEO',
-        title: 'فحص صحة SEO',
-        analyzing: 'جارٍ تحليل الصفحة...',
-        score: 'نقاط SEO',
-        metricsTitle: 'مقاييس الصفحة',
-        recommendationsTitle: 'توصيات الذكاء الاصطناعي',
-        registerSites: 'سجل في هذه المنصات:',
-        strategies: 'استراتيجية التحسين:',
-        keywords: 'الكلمات المفتاحية:',
-        pass: 'جيد',
-        fail: 'يحتاج إصلاح',
-        warn: 'تحذير'
-    },
+    validation: { required: 'الزامی', email: 'ایمیل نامعتبر', passwordLength: 'حداقل ۶ کاراکتر', fillRequiredFields: 'لطفا فیلدهای الزامی را پر کنید' },
+    toolsPage: { title: 'ابزارهای فولادی', subtitle: 'ماشین‌حساب و اطلاعات', weightCalc: { title: 'محاسبه وزن', label: 'نام محصول', button: 'محاسبه' }, shippingCalc: { title: 'تخمین هزینه حمل', label: 'مسیر', button: 'تخمین' }, creditInfo: { title: 'اطلاعات اعتباری', desc: 'روش‌های پرداخت' } },
+    ironSnapp: { subtitle: 'خرید مستقیم فولاد', form: { title: 'استعلام قیمت', productLabel: 'محصول', productPlaceholder: 'مثلا میلگرد', qtyLabel: 'مقدار (تن)', locationLabel: 'محل تحویل', paymentLabel: 'نحوه پرداخت', paymentCash: 'نقدی', paymentCheck: 'چک', paymentCredit: 'اعتباری', monthsLabel: 'مدت (ماه)', submit: 'استعلام' }, credit: { checking: 'بررسی اعتبار...', approved: 'تایید اعتبار', rejected: 'رد اعتبار', score: 'امتیاز', reason: 'دلیل' }, results: { title: 'پیشنهادات', score: 'تطابق', price: 'قیمت', delivery: 'تحویل', buy: 'خرید' } },
     dashboard: {
-        title: 'لوحة التحكم',
-        menu: { overview: 'نظرة عامة', financial: 'المالية والشيكات', audit: 'التدقيق والرقابة', customers: 'العملاء والائتمان', reports: 'التقارير', live: 'مراقبة حية' },
-        metrics: { orders: "طلبات اليوم", sales: "مبيعات اليوم", newCustomers: "عملاء جدد", visits: "زيارات الموقع" },
-        charts: { 
-            salesTitle: 'المبيعات الشهرية', 
-            productDist: 'توزيع المنتجات',
-            cashFlow: 'توقعات التدفق النقدي (6 أشهر)',
-            checkStatus: 'توزيع حالة الشيكات',
-            internalControl: 'تقييم الرقابة الداخلية'
-        },
-        labels: {
-            view: 'عرض',
-            score: 'النقاط',
-            total: 'المجموع',
-            cleared: 'تم الصرف',
-            pending: 'قيد الانتظار',
-            bounced: 'مرتجع',
-            urgent: 'عاجل',
-            checks: 'شيكات',
-            accounts: 'حسابات',
-            good: 'جيد',
-            adequate: 'متوسط',
-            strong: 'قوي',
-            risk: 'تقييم المخاطر',
-            monitoring: 'المراقبة',
-            activities: 'الأنشطة',
-            basedOn: 'بناءً على أحدث سجلات التدقيق'
-        },
-        tables: {
-            ordersTitle: 'أحدث الطلبات',
-            pricesTitle: 'أسعار المنتجات المباشرة',
-            headers: { 
-                orderId: 'الرقم', customer: 'العميل', product: 'المنتج', amount: 'المبلغ', status: 'الحالة', price: 'السعر', change: 'التغيير', lastUpdate: 'التحديث', stock: 'المخزون', category: 'الفئة', actions: 'الإجراءات', phone: 'الهاتف', company: 'الشركة', credit: 'الائتمان',
-                checkNumber: 'رقم الشيك', dueDate: 'تاريخ الاستحقاق', drawer: 'الساحب', bank: 'البنك',
-                document: 'المستند', type: 'النوع', date: 'التاريخ', aiRisk: 'مخاطر AI',
-                creditLimit: 'حد الائتمان', used: 'المستخدم', risk: 'المخاطرة'
-            }
-        },
-        stats: {
-            totalChecks: 'إجمالي الشيكات',
-            dueThisWeek: 'مستحق هذا الأسبوع',
-            bouncedChecks: 'شيكات مرتجعة',
-            cashBalance: 'الرصيد النقدي',
-            documentsReviewed: 'المستندات التي تمت مراجعتها',
-            discrepancies: 'الفروقات',
-            fraudCases: 'حالات الاحتيال',
-            controlScore: 'درجة الرقابة الداخلية'
-        },
-        audit: {
-             aiAnalysis: 'تحليل الذكاء الاصطناعي',
-             riskScore: 'درجة المخاطرة',
-             fraudDetection: 'كشف الاحتيال',
-             discrepancyList: 'قائمة الفروقات',
-             auditLogs: 'سجلات تدقيق الذكاء الاصطناعي',
-             urgentAlerts: 'تنبيهات عاجلة'
-        },
-        financial: {
-            title: 'إدارة الشيكات',
-            registerBtn: 'تسجيل شيك جديد'
-        },
-        customers: {
-            title: 'ملفات ائتمان العملاء'
-        },
-        products: { add: 'إضافة منتج', search: 'بحث عن منتجات...' },
-        activity: { title: 'النشاط الأخير' },
-        notifications: { title: 'الإشعارات' },
-        live: {
-          title: 'مراقبة السوق الحية',
-          subtitle: 'بيانات سوق الصلب في الوقت الفعلي وتدفق الطلبات',
-          systemStatus: 'حالة النظام',
-          kafka: 'تدفق الطلبات',
-          risingwave: 'محرك الأسعار',
-          grafana: 'التحليلات',
-          features: 'الميزات الحية',
-          logs: 'تدفق الطلبات المباشر',
-          activeUsers: 'المستخدمون النشطون',
-          trending: 'المنتجات الرائجة',
-        }
+        menu: { overview: 'نمای کلی', financial: 'مالی', audit: 'حسابرسی', customers: 'مشتریان', reports: 'گزارش‌ها', system: 'سیستم' },
+        stats: { totalChecks: 'مجموع چک‌ها', dueThisWeek: 'سررسید هفته', cashBalance: 'موجود نقد', controlScore: 'امتیاز کنترل', documentsReviewed: 'اسناد بررسی شده', discrepancies: 'مغایرت‌ها', fraudCases: 'موارد تقلب' },
+        labels: { checks: 'چک', urgent: 'فوری', accounts: 'حساب', good: 'خوب', adequate: 'متوسط', strong: 'قوی', risk: 'ریسک', monitoring: 'نظارت', activities: 'فعالیت‌ها', basedOn: 'بر اساس تحلیل', cleared: 'پاس شده', bounced: 'برگشتی', pending: 'در جریان', total: 'کل', view: 'مشاهده', score: 'امتیاز' },
+        charts: { cashFlow: 'جریان نقد', checkStatus: 'وضعیت چک‌ها', internalControl: 'کنترل داخلی' },
+        audit: { urgentAlerts: 'هشدارهای فوری', auditLogs: 'لاگ حسابرسی' },
+        financial: { title: 'چک‌های مالی', registerBtn: 'ثبت چک' },
+        customers: { title: 'اعتبار مشتریان' },
+        tables: { headers: { checkNumber: 'شماره چک', dueDate: 'سررسید', amount: 'مبلغ', drawer: 'صادرکننده', bank: 'بانک', status: 'وضعیت', document: 'سند', type: 'نوع', date: 'تاریخ', aiRisk: 'ریسک هوش مصنوعی', customer: 'مشتری', creditLimit: 'سقف اعتبار', used: 'استفاده شده', risk: 'ریسک' } }
     },
-    ironSnapp: {
-        title: 'سوق آيرون سناب',
-        subtitle: 'تواصل مباشرة مع البائعين. أفضل الأسعار، الدفع بالشيكات، والمطابقة الذكية.',
-        form: {
-            title: 'طلب عرض سعر',
-            productLabel: 'اسم المنتج',
-            productPlaceholder: 'مثلاً: حديد تسليح 16 أصفهان',
-            qtyLabel: 'الكمية (طن)',
-            locationLabel: 'مدينة التسليم',
-            paymentLabel: 'طريقة الدفع',
-            paymentCash: 'نقدي',
-            paymentCheck: 'شيك / ائتمان',
-            paymentCredit: 'ائتمان (LC)',
-            monthsLabel: 'مدة الشيك (أشهر)',
-            submit: 'ابحث عن أفضل العروض'
-        },
-        results: {
-            title: 'أفضل المطابقات',
-            score: 'درجة التطابق',
-            distance: 'المسافة',
-            price: 'السعر الإجمالي',
-            delivery: 'التوصيل',
-            buy: 'شراء الآن',
-            creditCheck: 'مطلوب فحص الائتمان'
-        },
-        credit: {
-            checking: 'جارٍ تحليل الائتمان...',
-            approved: 'تمت الموافقة',
-            rejected: 'مرفوض',
-            reason: 'السبب',
-            score: 'النقاط'
-        }
-    },
-    products: { food_feed: { title: 'حديد التسليح', description: 'قضبان التسليح المضلعة والملساء وشبكات الصلب.' }, microbiology: { title: 'الجسور والكمرات', description: 'جسور IPE و IPB من أفضل المصانع.' }, environmental: { title: 'الصفائح والألواح', description: 'صفائح ساخنة (سوداء)، باردة (زيتية)، مجلفنة وملونة.' } },
-    ourTeam: { title: 'فريق المبيعات', subtitle: 'فريقنا المتخصص جاهز لتقديم الاستشارات الفنية.', tableHeaders: { license: 'تحويلة' }, doctors: [ { name: 'م. رضا علوی', specialty: 'أخصائي حديد التسليح', bio: 'خبير في تحليل الأسعار ومعايير البناء.', licenseNumber: '101' }, { name: 'السيدة سارة طهراني', specialty: 'مديرة قسم الصفائح', bio: 'متخصص في الصفائح الصناعية والمجلفنة.', licenseNumber: '102' }, { name: 'م. كاوة راد', specialty: 'مشرف الجسور', bio: 'مستشار فني للمشاريع الهيكلية الثقيلة.', licenseNumber: '103' } ] },
-    home: {
-        hero: { mainTitle: 'ستيل أونلاين 20: المصدر الموثوق للحديد', aboutButton: 'خدماتنا' },
-        infoBar: { call: { title: 'المبيعات', value: '+98 21 2204 1655' }, email: { title: 'البريد', value: 'sales@steelonline20.com' }, location: { title: 'المقر', value: 'طهران، جوردان' } },
-        featuredBlocks: { block1: { title: 'أسعار يومية', desc: 'وصول فوري لأسعار السوق.' }, block2: { title: 'فواتير رسمية', desc: 'فواتير معتمدة للشركات.' }, block3: { title: 'ضمان الجودة', line1: 'ضمان السعر', line2: 'شهادة الجودة', line3: 'توصيل سريع' }, button: 'تحقق من الأسعار' },
-        whyUs: { title: 'لماذا ستيل أونلاين 20؟', subtitle: 'الشفافية، السرعة، والموثوقية.', item1: { title: 'ضمان السعر', desc: 'ضمان كتابي لأقل سعر.' }, item2: { title: 'تكلفة الشحن', desc: 'حساب تكاليف النقل بدقة.' }, item3: { title: 'شراء بالائتمان', desc: 'الدفع بالشيكات والاعتمادات.' }, item4: { title: 'ضمان الجودة', desc: 'فحص الجودة قبل الشحن.' } },
-        blog: { title: 'تحليلات السوق', subtitle: 'أحدث أخبار صناعة الصلب.' },
-        partners: { title: 'شركاؤنا' },
-        newsletter: { title: 'قائمة الرغبات', subtitle: 'تابع أسعار منتجاتك المفضلة.', placeholder: 'أدخل بريدك الإلكتروني', button: 'اشترك' },
-        footer: { col1: { title: 'اتصل بنا' }, col2: { title: 'المنتجات' }, col3: { title: 'الخدمات' }, col4: { title: 'اتصل بنا', email: 'البريد', message: 'الرسالة', button: 'إرسال' } }
-    },
-    footer: { contactInfo: 'رقم 18، شارع طاهري، جوردان، أمانية، طهران، إيران', workingHours: 'السبت إلى الأربعاء 8:30 إلى 17:00', copyright: '© 2024 ستيل أونلاين 20. جميع الحقوق محفوظة.' },
-    hero: { title: 'ستيل أونلاين 20', cta: 'شراء ذكي' },
-    validation: { required: 'مطلوب', email: 'بريد غير صالح', passwordLength: '6 أحرف على الأقل', fillRequiredFields: 'يرجى ملء الحقول المطلوبة' },
-    loginModal: { title: 'تسجيل الدخول', emailPlaceholder: 'البريد / الهاتف', passwordPlaceholder: 'كلمة المرور', loginButton: 'دخول', or: 'أو' },
-    quotaErrorModal: { title: 'النظام مشغول', body: 'نواجه ضغطًا عاليًا حاليًا. يرجى المحاولة لاحقًا.', cta: 'اتصل بالمبيعات', close: 'إغلاق' },
-    searchModal: { placeholder: 'بحث عن منتجات (مثلاً: حديد 16)...', suggestionsTitle: 'الأكثر بحثًا:', suggestionQueries: ['حديد 14 أصفهان', 'جسور IPE 18', 'صاج مجلفن', 'بروفيل'], resultsTitle: 'المنتجات', noResults: 'لا توجد نتائج.' },
-    aiChat: { title: 'مستشار الحديد', subtitle: 'اسأل عن الأسعار، المعايير الفنية، أو تكاليف الشحن.', placeholder: 'مثلاً: كم سعر طن الحديد اليوم؟', suggestions: ['سعر حديد 16؟', 'الفرق بين ST37 و ST52؟', 'تكلفة الشحن لمشهد؟'] },
-    distributorFinder: { title: 'البحث عن المستودعات', subtitle: 'حدد موقع أقرب مستودعات الحديد ونقاط التحميل.', searchTypeLabel: 'أبحث عن:', distributor: 'مستودع حديد', veterinarian: 'وكيل رسمي', searchPlaceholder: 'المدينة أو المنطقة...', searchButton: 'بحث', findNearMe: 'بالقرب مني', searching: 'جارٍ البحث...', resultsTitle: 'الموردون القريبون', noResults: 'لا يوجد موردين.', suggestionsTitle: 'المراكز الرئيسية', suggestionQueries: ['طهران', 'أصفهان', 'مشهد', 'الأهواز'] },
-    recommendationEngine: {
-        title: 'مستشار الشراء الذكي', subtitle: 'أخبرنا عن مشروعك للحصول على أفضل التوصيات.', uploadImageTitle: 'تحميل مخطط/صورة', removeImage: 'إزالة', uploadButton: 'تحميل', cameraButton: 'تصوير', formTitle: 'تفاصيل المشروع', symptomsLabel: 'وصف المشروع', symptomsPlaceholder: 'مثلاً: بناء مبنى سكني 5 طوابق...', suggestionPromptsTitle: 'تحديد سريع:', suggestionPrompts: ['مبنى سكني', 'هنجر صناعي', 'جسر', 'سياج'], detailsTitle: 'المواصفات الفنية', autoFillCheckboxLabel: 'تعبئة تلقائية', sampleTypeLabel: 'فئة المنتج', sampleTypePlaceholder: 'مثلاً: حديد، جسور، صاج...', batchSizeOriginLabel: 'الكمية / الوجهة', batchSizeOriginPlaceholder: 'مثلاً: 25 طن، تبريز', specificConditions: 'التفاصيل الإنشائية', controlSampleInfo: 'الماركات المفضلة', sampleAge: 'موعد التسليم', sampleAgePlaceholder: 'مثلاً: الأسبوع القادم', previousTests: 'الميزانية', additives: 'خدمات إضافية', buttonText: 'احصل على توصية', generating: 'جارٍ التحليل...', resultTitle: 'توصية المواد', primaryAssessmentTitle: 'تحلیل المشروع', potentialConditionsTitle: 'اعتبارات فنية', recommendedProductsTitle: 'المنتجات المقترحة', managementAdviceTitle: 'نصائح الشراء', nextStepsTitle: 'الخطوات التالية', findDropoffLocation: 'عثور على مورد', getTreatmentPlan: 'تقدير السعر', gettingPlan: 'جارٍ الحساب...', detailedPlanTitle: 'عرض سعر تقديري', purpose: 'الاستخدام', methodology: 'المعيار', turnaroundTime: 'التوفر', estimatedCost: 'السعر التقديري', disclaimerTitle: 'تنويه', startNewAnalysis: 'طلب جديد', savePdf: 'تحميل العرض', symptomsSuggestions: ['مقاومة شد عالية', 'مقاومة صدأ', 'مقاوم للزلازل', 'اقتصادی'], animalTypeSuggestions: ['حديد تسليح', 'جسور', 'صاج', 'بروفيل', 'أنابيب', 'زوايا', 'قنوات']
-    },
-    contentHub: {
-        title: 'تحليلات السوق', subtitle: 'تحليل الاتجاهات وإنشاء تقارير.', platformSelectorTitle: '1. المنصة', topicTitle: '2. موضوع', trendsTab: 'اتجاهات السوق', textTab: 'موضوع مخصص', searchTab: 'بحث', fetchingTrends: 'جلب البيانات...', customTextPlaceholder: 'موضوع التحليل (مثلاً: "تأثير الدولار على الحديد")...', selectSearchTopic: 'مواضيع شائعة:', userSearchSuggestions: ['توقعات أسعار الحديد', 'تعريفات التصدير', 'موسم البناء', 'تكاليف المواد الخام'], generatingPost: 'جارٍ الإنشاء...', generateButton: 'إنشاء تحليل', resultsTitle: 'المحتوى', placeholder: 'اختر موضوعًا.', copyButton: 'نسخ', copySuccess: 'تم النسخ!', connectAccountToPublish: 'ربط الحساب', publishToPlatformButton: 'نشر على {platform}', adaptForWebsiteButton: 'تحويل لمقال', adaptingForWebsite: 'جارٍ الكتابة...', websitePreviewTitle: 'معاينة المقال', publishToWebsiteButton: 'نشر', publishedSuccess: 'تم النشر!',
-        getStrategyButton: 'استراتژی محتوا', fetchingStrategy: 'تحلیل...', strategyTitle: 'استراتژی انتشار', bestTime: 'أفضل وقت', nextPost: 'الموضوع التالي',
-        generateVideoButton: 'سيناريو فيديو', generatingVideo: 'كتابة...', timecode: 'وقت', visual: 'بصري', voiceover: 'صوت', emotion: 'نبرة',
-        findVideoTools: 'أدوات الفيديو', findingTools: 'بحث...', toolName: 'أداة', toolCost: 'تكلفة', toolFarsi: 'فارسی', toolFeatures: 'ميزات', toolQuality: 'تقييم'
-    },
-    partnerships: { title: 'شراء بالائتمان', subtitle: 'خيارات دفع مرنة (شيك، اعتماد).', name: 'الاسم الكامل', company: 'اسم الشركة', email: 'البريد', message: 'التفاصيل', submit: 'طلب' },
-    blogPage: { title: 'مجله الصلب', subtitle: 'أخبار، تحليلات، ومقالات تعليمية.', readMore: 'اقرأ المزيد' },
-    articlePage: { backToBlog: 'عودة للأخبار' },
-    toolsPage: {
-        title: 'أدوات الحديد', subtitle: 'حاسبات وأدوات مساعدة',
-        weightCalc: { title: 'حاسبة الوزن', label: 'اسم المنتج (مثلاً: جسر 18)', button: 'حساب', result: 'الوزن القياسي' },
-        shippingCalc: { title: 'حاسبة الشحن', label: 'المسار (مثلاً: أصفهان إلى طهران)', button: 'تقدير', result: 'التكلفة التقديرية' },
-        creditInfo: { title: 'شروط الائتمان', desc: 'شراء مؤجل بشيكات أو ضمان بنكي.' }
-    }
+    seoChecker: { pass: 'تایید', fail: 'رد', warn: 'هشدار', buttonLabel: 'بررسی سئو', title: 'تحلیل سئو', analyzing: 'در حال تحلیل...', score: 'امتیاز سئو', metricsTitle: 'متریک‌ها', recommendationsTitle: 'پیشنهادات', registerSites: 'دایرکتوری‌ها', strategies: 'استراتژی', keywords: 'کلمات کلیدی' }
   }
 };
-
-// Recreated ARTICLES array
-export const ARTICLES: Article[] = [
-    {
-        id: 1,
-        title: { en: "Global Steel Market Outlook 2024", fa: "چشم‌انداز بازار جهانی فولاد ۱۴۰۳", ar: "توقعات سوق الصلب العالمي 2024" },
-        excerpt: { en: "Analysis of market fluctuations.", fa: "تحلیل نوسانات بازار.", ar: "تحليل تقلبات السوق." },
-        content: { en: "Full content...", fa: "محتوای کامل...", ar: "المحتوى الكامل..." },
-        image: "https://i.sstatic.net/gwuhcFtI.png",
-        date: { en: "2024-05-20", fa: "۳۰ اردیبهشت ۱۴۰۳", ar: "20 مايو 2024" },
-        author: "Admin",
-        category: { en: "Market Analysis", fa: "تحلیل بازار", ar: "تحليل السوق" },
-        tags: [{ en: "Price", fa: "قیمت", ar: "سعر" }]
-    },
-    {
-        id: 2,
-        title: { en: "Sustainable Steel Production", fa: "تولید پایدار فولاد", ar: "إنتاج الصلب المستدام" },
-        excerpt: { en: "How green hydrogen is revolutionizing the steel industry.", fa: "چگونه هیدروژن سبز صنعت فولاد را متحول می‌کند.", ar: "كيف يغير الهيدروجين الأخضر صناعة الصلب." },
-        content: { en: "Green steel is the future...", fa: "فولاد سبز آینده است...", ar: "الصلب الأخضر هو المستقبل..." },
-        image: "https://i.sstatic.net/gwuhcFtI.png",
-        date: { en: "June 2, 2024", fa: "۱۲ خرداد ۱۴۰۳", ar: "2 يونيو 2024" },
-        author: "Tech Editor",
-        category: { en: "Technology", fa: "تکنولوژی", ar: "تكنولوجيا" },
-        tags: [{ en: "Green Steel", fa: "فولاد سبز", ar: "صلب أخضر" }]
-    },
-    {
-        id: 3,
-        title: { en: "Construction Trends in Middle East", fa: "روندهای ساخت و ساز در خاورمیانه", ar: "اتجاهات البناء في الشرق الأوسط" },
-        excerpt: { en: "A look at mega-projects driving steel demand.", fa: "نگاهی به ابرپروژه‌هایی که تقاضای فولاد را افزایش می‌دهند.", ar: "نظرة على المشاريع العملاقة التي تقود الطلب على الصلب." },
-        content: { en: "The region is booming...", fa: "منطقه در حال رونق است...", ar: "المنطقة تزدهر..." },
-        image: "https://i.sstatic.net/gwuhcFtI.png",
-        date: { en: "June 10, 2024", fa: "۲۰ خرداد ۱۴۰۳", ar: "10 يونيو 2024" },
-        author: "Regional Expert",
-        category: { en: "Construction", fa: "ساخت و ساز", ar: "بناء" },
-        tags: [{ en: "Projects", fa: "پروژه‌ها", ar: "مشاريع" }]
-    }
-];
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('fa');
 
   const t = useCallback((key: string) => {
     const keys = key.split('.');
-    let value: any = translations[language];
+    let value = translations[language];
     for (const k of keys) {
-      if (value && typeof value === 'object' && k in value) {
-        value = value[k as keyof typeof value];
-      } else {
-        return key;
-      }
+        if (value && value[k]) {
+            value = value[k];
+        } else {
+            // Fallback to English if missing in current language
+            let enValue = translations['en'];
+            for (const enK of keys) {
+                if (enValue && enValue[enK]) {
+                   enValue = enValue[enK];
+                } else {
+                   return key; // Return key if not found in EN either
+                }
+            }
+            return enValue || key;
+        }
     }
     return value;
   }, [language]);

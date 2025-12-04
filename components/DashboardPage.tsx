@@ -104,23 +104,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
         { key: 'system', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" /></svg> }
     ];
 
-    const safeNumber = (val: number | string | undefined): number => {
-        if (typeof val === 'number') return val;
-        if (typeof val === 'string') return parseFloat(val.replace(/,/g, '')) || 0;
-        return 0;
-    };
-
-    const formatCurrency = (amount: number | string) => {
-        const num = safeNumber(amount);
+    const formatCurrency = (amount: number) => {
         if (language === 'fa') {
-            return (num / 1000000000).toLocaleString('fa-IR') + ' میلیارد ریال';
+            return (amount / 1000000000).toLocaleString('fa-IR') + ' میلیارد ریال';
         }
-        return (num / 1000000000).toFixed(1) + 'B IRR';
+        return (amount / 1000000000).toFixed(1) + 'B IRR';
     };
 
-    const formatNumber = (num: number | string) => {
-        const n = safeNumber(num);
-        return language === 'fa' ? n.toLocaleString('fa-IR') : n.toLocaleString();
+    const formatNumber = (num: number) => {
+        return language === 'fa' ? num.toLocaleString('fa-IR') : num.toLocaleString();
     };
 
     return (
@@ -245,8 +237,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
                                         <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
                                             <h3 className="font-bold text-slate-800 mb-4">{t('dashboard.charts.checkStatus')}</h3>
                                             <CheckStatusChart 
-                                                cleared={safeNumber(stats.totalChecksCount) - safeNumber(stats.checksDueThisWeekCount) - 2} 
-                                                pending={safeNumber(stats.checksDueThisWeekCount)} 
+                                                cleared={stats.totalChecksCount - stats.checksDueThisWeekCount - 2} 
+                                                pending={stats.checksDueThisWeekCount} 
                                                 bounced={2} 
                                             />
                                         </div>
@@ -260,7 +252,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
                                                     <div className="flex justify-between w-48"><span className="text-slate-500">{t('dashboard.labels.activities')}:</span> <span className="text-green-600 font-bold">{t('dashboard.labels.strong')}</span></div>
                                                 </div>
                                             </div>
-                                            <InternalControlGauge score={safeNumber(stats.internalControlScore)} />
+                                            <InternalControlGauge score={stats.internalControlScore} />
                                         </div>
                                     </div>
                                 </div>
