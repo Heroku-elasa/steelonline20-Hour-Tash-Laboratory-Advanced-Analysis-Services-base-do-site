@@ -1,3 +1,4 @@
+
 import { CheckItem, AuditAlert, DashboardStats, FraudCase } from '../types';
 
 // MOCK DATA for legacy audit components
@@ -77,7 +78,7 @@ export const mockStats: DashboardStats = {
   internalControlScore: 88,
   // Legacy fields
   dueThisWeekCount: 12,
-  dueThisWeekAmount: 12000,
+  dueThisWeekAmount: 12000, // Ensure this is a number, not a string
   bouncedAmount: 3400,
   controlScore: 88,
   docsReviewed: 450

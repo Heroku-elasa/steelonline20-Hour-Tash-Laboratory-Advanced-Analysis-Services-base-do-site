@@ -1,5 +1,6 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
+import { fetchSiteTranslations } from './services/translationService';
 
 // Basic Types
 export type Language = 'en' | 'fa' | 'ar';
@@ -189,7 +190,6 @@ export interface CreditCheckResult {
 }
 
 // Dashboard Types
-// Using 'any' for fields accessed by legacy components to bypass strict TS checks (e.g. number vs string comparison)
 export interface DashboardStats {
     totalChecksAmount: any;
     totalChecksCount: any;
@@ -202,7 +202,7 @@ export interface DashboardStats {
     fraudCases: any;
     internalControlScore: any;
     
-    // Legacy fields
+    // Legacy fields required by AuditOverview.tsx
     dueThisWeekCount: any;
     dueThisWeekAmount: any;
     bouncedAmount: any;
@@ -217,7 +217,7 @@ export interface AuditAlert {
     id: any;
     title?: string;
     message?: string;
-    type: any;
+    type: string;
     severity: 'critical' | 'warning' | 'info' | 'error' | string;
     date: string;
     isRead: boolean;
@@ -226,13 +226,13 @@ export interface AuditAlert {
 export interface CheckItem {
     id: any;
     number: string;
-    amount: any;
+    amount: number;
     dueDate: string;
-    status: any;
+    status: 'pending' | 'cleared' | 'bounced' | 'deposited' | string;
     drawer: string;
     bank: string;
     
-    // Legacy support
+    // Legacy fields required by AuditChecks.tsx
     checkNumber: any;
     riskScore: any;
 }
@@ -251,15 +251,15 @@ export interface AuditDocument {
 export interface FraudCase {
     id: any;
     title: string;
-    status: any;
-    amount: any;
+    status: string;
+    amount: number;
     date?: string;
     detectedDate?: string;
     description?: string;
     
-    // Legacy support - Using 'any' to fix TS2367 (number/string overlap errors)
+    // Legacy fields required by AuditAIPanel.tsx
     riskLevel: any;
-    type: any;
+    type: string;
     detectedAt: any;
 }
 
@@ -373,8 +373,12 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-const translations: any = {
+const defaultTranslations: any = {
   en: {
+    hero: {
+      title: 'Iran\'s Premier Steel Marketplace',
+      cta: 'Get a Free Quote'
+    },
     header: { home: 'Home', ironSnapp: 'IronSnapp', recommendationEngine: 'Smart Advisor', distributorFinder: 'Find Suppliers', tools: 'Tools', contentHub: 'Content Hub', blog: 'Blog', ourTeam: 'Our Team', partnerships: 'Partnerships', dashboard: 'Dashboard', logout: 'Logout', login: 'Login' },
     ourTeam: {
       title: 'Our Expert Team',
@@ -400,7 +404,7 @@ const translations: any = {
       footer: { col1: { title: 'Contact' }, col2: { title: 'Products' }, col3: { title: 'Services' }, col4: { title: 'Message', email: 'Email', message: 'Message', button: 'Send' } },
       infoBar: { call: { title: 'Call Us', value: '021-22041655' }, email: { title: 'Email', value: 'sales@steelonline20.com' }, location: { title: 'Location', value: 'Tehran, Iran' } },
       whyUs: { title: 'Why Us?', subtitle: 'We are the best', item1: { title: 'Best Price', desc: 'Guaranteed' }, item2: { title: 'Fast Delivery', desc: 'Nationwide' }, item3: { title: 'Quality', desc: 'Certified' }, item4: { title: 'Support', desc: '24/7' } },
-      featuredBlocks: { block1: { title: 'Market Insights', desc: 'Daily news', button: 'View' }, block2: { title: 'Partnerships', desc: 'Join us', button: 'Join' }, block3: { title: 'Alerts', line1: 'Price up', line2: 'Supply down', line3: 'New regulations' } },
+      featuredBlocks: { block1: { title: 'Market Insights', desc: 'Daily news', button: 'View' }, block2: { title: 'Partnerships', desc: 'Join us', button: 'Join' }, block3: { title: 'Alerts', line1: 'Price up', line2: 'Supply down', line3: 'New regulations' }, button: 'View Details' },
       blog: { title: 'Blog', subtitle: 'Latest news' },
       partners: { title: 'Our Partners' }
     },
@@ -439,6 +443,10 @@ const translations: any = {
     seoChecker: { pass: 'Pass', fail: 'Fail', warn: 'Warn', buttonLabel: 'SEO Check', title: 'SEO Analysis', analyzing: 'Analyzing...', score: 'SEO Score', metricsTitle: 'Metrics', recommendationsTitle: 'Recommendations', registerSites: 'Directories', strategies: 'Strategy', keywords: 'Keywords' }
   },
   fa: {
+    hero: {
+      title: 'انبار آهن و میلگرد استیل آنلاین',
+      cta: 'دریافت قیمت روز'
+    },
     header: { home: 'خانه', ironSnapp: 'آهن‌اسنپ', recommendationEngine: 'مشاور هوشمند', distributorFinder: 'یابنده تامین‌کننده', tools: 'ابزارها', contentHub: 'تولید محتوا', blog: 'وبلاگ', ourTeam: 'تیم ما', partnerships: 'همکاری', dashboard: 'داشبورد', logout: 'خروج', login: 'ورود' },
     ourTeam: {
       title: 'تیم متخصص ما',
@@ -464,7 +472,7 @@ const translations: any = {
       footer: { col1: { title: 'تماس' }, col2: { title: 'محصولات' }, col3: { title: 'خدمات' }, col4: { title: 'پیام', email: 'ایمیل', message: 'پیام', button: 'ارسال' } },
       infoBar: { call: { title: 'تماس با ما', value: '۰۲۱-۲۲۰۴۱۶۵۵' }, email: { title: 'ایمیل', value: 'sales@steelonline20.com' }, location: { title: 'آدرس', value: 'تهران، جردن' } },
       whyUs: { title: 'چرا ما؟', subtitle: 'بهترین انتخاب شما', item1: { title: 'بهترین قیمت', desc: 'تضمین شده' }, item2: { title: 'تحویل سریع', desc: 'سراسر کشور' }, item3: { title: 'کیفیت', desc: 'استاندارد' }, item4: { title: 'پشتیبانی', desc: '۲۴/۷' } },
-      featuredBlocks: { block1: { title: 'تحلیل بازار', desc: 'اخبار روزانه', button: 'مشاهده' }, block2: { title: 'همکاری', desc: 'به ما بپیوندید', button: 'عضویت' }, block3: { title: 'هشدارها', line1: 'افزایش قیمت', line2: 'کاهش عرضه', line3: 'مقررات جدید' } },
+      featuredBlocks: { block1: { title: 'تحلیل بازار', desc: 'اخبار روزانه', button: 'مشاهده' }, block2: { title: 'همکاری', desc: 'به ما بپیوندید', button: 'عضویت' }, block3: { title: 'هشدارها', line1: 'افزایش قیمت', line2: 'کاهش عرضه', line3: 'مقررات جدید' }, button: 'مشاهده جزئیات' },
       blog: { title: 'وبلاگ', subtitle: 'آخرین اخبار صنعت' },
       partners: { title: 'همکاران ما' }
     },
@@ -506,16 +514,31 @@ const translations: any = {
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('fa');
+  const [dbTranslations, setDbTranslations] = useState<any[]>([]);
+
+  useEffect(() => {
+      // Fetch dynamic translations from Supabase using the dedicated service
+      fetchSiteTranslations().then(data => {
+          if (data) setDbTranslations(data);
+      });
+  }, []);
 
   const t = useCallback((key: string) => {
+    // 1. Check DB Overrides first (table: site_content -> key, lang, value)
+    if (dbTranslations.length > 0) {
+        const override = dbTranslations.find(item => item.key === key && item.lang === language);
+        if (override) return override.value;
+    }
+
+    // 2. Fallback to static JSON
     const keys = key.split('.');
-    let value = translations[language];
+    let value = defaultTranslations[language];
     for (const k of keys) {
         if (value && value[k]) {
             value = value[k];
         } else {
             // Fallback to English if missing in current language
-            let enValue = translations['en'];
+            let enValue = defaultTranslations['en'];
             for (const enK of keys) {
                 if (enValue && enValue[enK]) {
                    enValue = enValue[enK];
@@ -527,7 +550,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
         }
     }
     return value;
-  }, [language]);
+  }, [language, dbTranslations]);
 
   const dir = language === 'fa' || language === 'ar' ? 'rtl' : 'ltr';
 
