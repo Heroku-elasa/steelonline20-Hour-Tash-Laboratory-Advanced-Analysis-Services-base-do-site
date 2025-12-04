@@ -1,12 +1,9 @@
 
-
-
-
-
 import React, { useState, useEffect } from 'react';
 import { useLanguage, Page, DashboardStats, AuditAlert, CheckItem, AuditDocument, CustomerCredit } from '../types';
-import { getDashboardStats, getAlerts, getChecks, getAuditDocuments, getCustomers } from '../services/dashboardService';
+import { getDashboardStats, getAlerts, getChecks, getAuditDocuments, getCustomers, checkAndSeedDatabase } from '../services/dashboardService';
 import { StatCard, InternalControlGauge, AlertsList, CheckStatusChart, CashFlowChart } from './DashboardComponents';
+import { useToast } from './Toast';
 
 interface DashboardPageProps {
     setPage: (page: Page) => void;
@@ -14,6 +11,7 @@ interface DashboardPageProps {
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
     const { t, dir, language } = useLanguage();
+    const { addToast } = useToast();
     const [activeSection, setActiveSection] = useState('overview');
     
     // Data State
@@ -23,11 +21,21 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
     const [auditDocs, setAuditDocs] = useState<AuditDocument[]>([]);
     const [customers, setCustomers] = useState<CustomerCredit[]>([]);
     const [loading, setLoading] = useState(true);
+    const [dbStatus, setDbStatus] = useState<string>('checking');
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
+                // Try to seed/check DB first
+                const seedRes = await checkAndSeedDatabase();
+                if (seedRes.success) {
+                    setDbStatus('connected');
+                } else {
+                    setDbStatus('needs_setup');
+                    setActiveSection('system'); // Auto-navigate to system if not setup
+                }
+
                 // Pass language to service to get localized data
                 const [statsData, alertsData, checksData, docsData, customersData] = await Promise.all([
                     getDashboardStats(),
@@ -43,20 +51,39 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
                 setCustomers(customersData);
             } catch (error) {
                 console.error("Failed to fetch dashboard data", error);
+                setDbStatus('error');
             } finally {
                 setLoading(false);
             }
         };
         fetchData();
-    }, [language]); // Refetch when language changes
+    }, [language]);
+
+    const handleSync = async () => {
+        addToast("Attempting to sync with database...", "info");
+        const res = await checkAndSeedDatabase();
+        if (res.success) {
+            setDbStatus('connected');
+            addToast("Database synced successfully.", "success");
+            // Reload data
+            const checksData = await getChecks();
+            setChecks(checksData);
+            const alertsData = await getAlerts(language);
+            setAlerts(alertsData);
+            const customersData = await getCustomers();
+            setCustomers(customersData);
+        } else {
+            setDbStatus('needs_setup');
+            addToast("Sync failed. Check tables in Supabase.", "error");
+        }
+    };
 
     const menuItems = [
         { key: 'overview', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> },
         { key: 'financial', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
         { key: 'audit', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
         { key: 'customers', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> },
-        { key: 'reports', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> },
-        { key: 'live', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> },
+        { key: 'system', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" /></svg> }
     ];
 
     const formatCurrency = (amount: number) => {
@@ -95,7 +122,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
                                 <div className={`absolute top-0 bottom-0 w-1 bg-[#72aee6] md:hidden ${dir === 'rtl' ? 'right-0' : 'left-0'}`}></div>
                             )}
                             <div className={`${activeSection === item.key ? 'text-white' : 'text-[#a7aaad] group-hover:text-[#72aee6]'}`}>{item.icon}</div>
-                            <span className={`hidden md:block text-sm font-medium ${dir === 'rtl' ? 'mr-3' : 'ml-3'}`}>{t(`dashboard.menu.${item.key}`)}</span>
+                            <span className={`hidden md:block text-sm font-medium ${dir === 'rtl' ? 'mr-3' : 'ml-3'}`}>
+                                {item.key === 'system' ? 'System & DB' : t(`dashboard.menu.${item.key}`)}
+                            </span>
                             {activeSection === item.key && (
                                 <div className={`hidden md:block absolute top-1/2 transform -translate-y-1/2 w-3 h-3 bg-[#f0f0f1] rotate-45 ${dir === 'rtl' ? 'left-0 -translate-x-1/2' : 'right-0 translate-x-1/2'}`}></div>
                             )}
@@ -108,10 +137,20 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
             <main className="flex-1 overflow-x-hidden overflow-y-auto bg-[#f0f0f1]">
                 {/* Header */}
                 <header className="bg-white shadow-sm h-14 flex items-center justify-between px-6 sticky top-0 z-10 border-b border-[#dcdcde]">
-                    <h1 className="text-lg font-semibold text-[#1d2327]">{t(`dashboard.menu.${activeSection}`)}</h1>
+                    <h1 className="text-lg font-semibold text-[#1d2327]">
+                        {activeSection === 'system' ? 'System Status' : t(`dashboard.menu.${activeSection}`)}
+                    </h1>
                     <div className="flex items-center gap-4">
-                        <span className="text-xs text-slate-500 font-mono">v2.4.0 (Audit System Active)</span>
-                        <div className="w-8 h-8 rounded-full bg-slate-200 border flex items-center justify-center text-slate-600 font-bold">A</div>
+                        {dbStatus === 'connected' ? (
+                            <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full flex items-center gap-1">
+                                <span className="w-2 h-2 bg-green-600 rounded-full"></span> DB Connected
+                            </span>
+                        ) : (
+                            <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full flex items-center gap-1">
+                                <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span> DB Missing
+                            </span>
+                        )}
+                        <span className="text-xs text-slate-500 font-mono">v2.4.0</span>
                     </div>
                 </header>
 
@@ -356,11 +395,77 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setPage }) => {
                                 </div>
                             )}
 
-                             {/* Placeholder for other sections */}
-                            {(activeSection === 'reports' || activeSection === 'live') && (
-                                <div className="flex flex-col items-center justify-center py-20 text-[#a7aaad] bg-white rounded border border-[#dcdcde]">
-                                    <svg className="w-16 h-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                                    <p className="text-lg">Section ready for integration</p>
+                            {activeSection === 'system' && (
+                                <div className="space-y-6 animate-fade-in bg-white p-6 rounded-lg border border-slate-200">
+                                    <h2 className="text-xl font-bold text-slate-800 mb-4">Database Connection & Setup</h2>
+                                    
+                                    <div className={`p-4 rounded-md border ${dbStatus === 'connected' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className={`w-3 h-3 rounded-full ${dbStatus === 'connected' ? 'bg-green-600' : 'bg-red-600'}`}></span>
+                                            <h3 className="font-bold">{dbStatus === 'connected' ? 'Connected to Supabase' : 'Connection/Schema Issue'}</h3>
+                                        </div>
+                                        <p className="text-sm">{dbStatus === 'connected' ? 'The application is successfully connected to your database.' : 'Could not find the required tables. Please copy the SQL below and run it in your Supabase SQL Editor.'}</p>
+                                    </div>
+
+                                    {dbStatus !== 'connected' && (
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-end">
+                                                <label className="text-sm font-bold text-slate-700">Required Schema (Copy & Paste):</label>
+                                                <button onClick={() => { navigator.clipboard.writeText(`create table seo_reports ( id bigint generated by default as identity primary key, url text, score numeric, metrics jsonb, recommendations jsonb, created_at timestamp with time zone default timezone('utc'::text, now()) ); create table financial_checks ( id bigint generated by default as identity primary key, number text, amount numeric, due_date text, status text, drawer text, bank text, created_at timestamp with time zone default timezone('utc'::text, now()) ); create table audit_alerts ( id bigint generated by default as identity primary key, title text, type text, severity text, date text, is_read boolean, created_at timestamp with time zone default timezone('utc'::text, now()) ); create table customer_credits ( id bigint generated by default as identity primary key, name text, type text, credit_score numeric, credit_limit numeric, used_credit numeric, risk_level text, created_at timestamp with time zone default timezone('utc'::text, now()) );`); addToast("SQL Copied!", "success"); }} className="text-xs text-blue-600 hover:underline">Copy to Clipboard</button>
+                                            </div>
+                                            <div className="bg-slate-900 text-slate-300 p-4 rounded-md text-xs font-mono overflow-x-auto max-h-96">
+                                                <pre>{`
+create table seo_reports (
+  id bigint generated by default as identity primary key,
+  url text,
+  score numeric,
+  metrics jsonb,
+  recommendations jsonb,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+create table financial_checks (
+  id bigint generated by default as identity primary key,
+  number text,
+  amount numeric,
+  due_date text,
+  status text,
+  drawer text,
+  bank text,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+create table audit_alerts (
+  id bigint generated by default as identity primary key,
+  title text,
+  type text,
+  severity text,
+  date text,
+  is_read boolean,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+create table customer_credits (
+  id bigint generated by default as identity primary key,
+  name text,
+  type text,
+  credit_score numeric,
+  credit_limit numeric,
+  used_credit numeric,
+  risk_level text,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+                                                `}</pre>
+                                            </div>
+                                            <p className="text-sm text-slate-600">After running the SQL in Supabase, click Sync below.</p>
+                                        </div>
+                                    )}
+
+                                    <div className="pt-4 border-t border-slate-200">
+                                        <button onClick={handleSync} className="px-6 py-2 bg-blue-600 text-white rounded font-bold hover:bg-blue-700 transition-colors">
+                                            Check Connection & Sync Mock Data
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </>

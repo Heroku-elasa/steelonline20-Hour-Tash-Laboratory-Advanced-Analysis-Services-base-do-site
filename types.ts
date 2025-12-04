@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from 'react';
 
 // Basic Types
@@ -10,6 +9,24 @@ export interface User {
     name: string;
     email: string;
     picture?: string;
+}
+
+// SEO Types
+export interface SEOAnalysisResult {
+    score: number;
+    metrics: {
+        titleLength: { status: 'pass' | 'fail' | 'warn'; value: number; message: string };
+        descriptionLength: { status: 'pass' | 'fail' | 'warn'; value: number; message: string };
+        h1Count: { status: 'pass' | 'fail' | 'warn'; value: number; message: string };
+        imageAlt: { status: 'pass' | 'fail' | 'warn'; value: number; message: string };
+        schema: { status: 'pass' | 'fail'; message: string };
+        canonical: { status: 'pass' | 'fail'; message: string };
+    };
+    aiRecommendations: {
+        strategy: string[];
+        directories: string[];
+        keywords: string[];
+    };
 }
 
 // Message format for chat components
@@ -270,6 +287,20 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const translations = {
   en: {
     header: { home: 'Home', recommendationEngine: 'Smart Advisor', distributorFinder: 'Find Suppliers', aiChat: 'AI Consultant', contentHub: 'Market News', blog: 'Blog', ourTeam: 'Sales Team', partnerships: 'Credit Purchase', login: 'Login / Register', logout: 'Logout', tools: 'Tools', ironSnapp: 'IronSnapp', dashboard: 'Dashboard' },
+    seoChecker: {
+        buttonLabel: 'SEO Health',
+        title: 'SEO Health Check',
+        analyzing: 'Analyzing Page...',
+        score: 'SEO Score',
+        metricsTitle: 'On-Page Metrics',
+        recommendationsTitle: 'AI Recommendations',
+        registerSites: 'Register on these platforms:',
+        strategies: 'Improvement Strategy:',
+        keywords: 'Target Keywords:',
+        pass: 'Good',
+        fail: 'Needs Fix',
+        warn: 'Warning'
+    },
     dashboard: {
         title: 'Admin Dashboard',
         menu: { overview: 'Overview', financial: 'Financial & Checks', audit: 'Audit & Control', customers: 'Customers & Credit', reports: 'Reports', live: 'Live Monitor' },
@@ -424,6 +455,20 @@ const translations = {
   },
   fa: {
     header: { home: 'خانه', recommendationEngine: 'مشاور خرید', distributorFinder: 'مراکز فروش', aiChat: 'هوش مصنوعی', contentHub: 'تحلیل بازار', blog: 'مجله آهن', ourTeam: 'تیم فروش', partnerships: 'خرید اعتباری', login: 'ورود / ثبت‌نام', logout: 'خروج', tools: 'ابزارها', ironSnapp: 'آهن‌اسنپ', dashboard: 'داشبورد مدیریت' },
+    seoChecker: {
+        buttonLabel: 'سلامت سئو',
+        title: 'چکاپ سلامت سئو',
+        analyzing: 'در حال آنالیز صفحه...',
+        score: 'امتیاز سئو',
+        metricsTitle: 'پارامترهای داخلی',
+        recommendationsTitle: 'پیشنهادات هوش مصنوعی',
+        registerSites: 'ثبت‌نام در این سایت‌ها:',
+        strategies: 'استراتژی بهبود:',
+        keywords: 'کلمات کلیدی هدف:',
+        pass: 'عالی',
+        fail: 'نیاز به اصلاح',
+        warn: 'هشدار'
+    },
     dashboard: {
         title: 'داشبورد مدیریت',
         menu: { overview: 'نمای کلی', financial: 'مالی و چک‌ها', audit: 'حسابرسی و کنترل', customers: 'مشتریان و اعتبار', reports: 'گزارشات', live: 'مانیتور زنده' },
@@ -578,6 +623,20 @@ const translations = {
   },
   ar: {
     header: { home: 'الرئيسية', recommendationEngine: 'المستشار الذكي', distributorFinder: 'الموردين', aiChat: 'استشارة ذكية', contentHub: 'تحليل السوق', blog: 'المدونة', ourTeam: 'فريق المبيعات', partnerships: 'شراء بالائتمان', login: 'دخول / تسجيل', logout: 'خروج', tools: 'أدوات', ironSnapp: 'آيرون سناب', dashboard: 'لوحة التحكم' },
+    seoChecker: {
+        buttonLabel: 'فحص SEO',
+        title: 'فحص صحة SEO',
+        analyzing: 'جارٍ تحليل الصفحة...',
+        score: 'نقاط SEO',
+        metricsTitle: 'مقاييس الصفحة',
+        recommendationsTitle: 'توصيات الذكاء الاصطناعي',
+        registerSites: 'سجل في هذه المنصات:',
+        strategies: 'استراتيجية التحسين:',
+        keywords: 'الكلمات المفتاحية:',
+        pass: 'جيد',
+        fail: 'يحتاج إصلاح',
+        warn: 'تحذير'
+    },
     dashboard: {
         title: 'لوحة التحكم',
         menu: { overview: 'نظرة عامة', financial: 'المالية والشيكات', audit: 'التدقيق والرقابة', customers: 'العملاء والائتمان', reports: 'التقارير', live: 'مراقبة حية' },
@@ -732,6 +791,43 @@ const translations = {
   }
 };
 
+// Recreated ARTICLES array
+export const ARTICLES: Article[] = [
+    {
+        id: 1,
+        title: { en: "Global Steel Market Outlook 2024", fa: "چشم‌انداز بازار جهانی فولاد ۱۴۰۳", ar: "توقعات سوق الصلب العالمي 2024" },
+        excerpt: { en: "Analysis of market fluctuations.", fa: "تحلیل نوسانات بازار.", ar: "تحليل تقلبات السوق." },
+        content: { en: "Full content...", fa: "محتوای کامل...", ar: "المحتوى الكامل..." },
+        image: "https://i.sstatic.net/gwuhcFtI.png",
+        date: { en: "2024-05-20", fa: "۳۰ اردیبهشت ۱۴۰۳", ar: "20 مايو 2024" },
+        author: "Admin",
+        category: { en: "Market Analysis", fa: "تحلیل بازار", ar: "تحليل السوق" },
+        tags: [{ en: "Price", fa: "قیمت", ar: "سعر" }]
+    },
+    {
+        id: 2,
+        title: { en: "Sustainable Steel Production", fa: "تولید پایدار فولاد", ar: "إنتاج الصلب المستدام" },
+        excerpt: { en: "How green hydrogen is revolutionizing the steel industry.", fa: "چگونه هیدروژن سبز صنعت فولاد را متحول می‌کند.", ar: "كيف يغير الهيدروجين الأخضر صناعة الصلب." },
+        content: { en: "Green steel is the future...", fa: "فولاد سبز آینده است...", ar: "الصلب الأخضر هو المستقبل..." },
+        image: "https://i.sstatic.net/gwuhcFtI.png",
+        date: { en: "June 2, 2024", fa: "۱۲ خرداد ۱۴۰۳", ar: "2 يونيو 2024" },
+        author: "Tech Editor",
+        category: { en: "Technology", fa: "تکنولوژی", ar: "تكنولوجيا" },
+        tags: [{ en: "Green Steel", fa: "فولاد سبز", ar: "صلب أخضر" }]
+    },
+    {
+        id: 3,
+        title: { en: "Construction Trends in Middle East", fa: "روندهای ساخت و ساز در خاورمیانه", ar: "اتجاهات البناء في الشرق الأوسط" },
+        excerpt: { en: "A look at mega-projects driving steel demand.", fa: "نگاهی به ابرپروژه‌هایی که تقاضای فولاد را افزایش می‌دهند.", ar: "نظرة على المشاريع العملاقة التي تقود الطلب على الصلب." },
+        content: { en: "The region is booming...", fa: "منطقه در حال رونق است...", ar: "المنطقة تزدهر..." },
+        image: "https://i.sstatic.net/gwuhcFtI.png",
+        date: { en: "June 10, 2024", fa: "۲۰ خرداد ۱۴۰۳", ar: "10 يونيو 2024" },
+        author: "Regional Expert",
+        category: { en: "Construction", fa: "ساخت و ساز", ar: "بناء" },
+        tags: [{ en: "Projects", fa: "پروژه‌ها", ar: "مشاريع" }]
+    }
+];
+
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('fa');
 
@@ -739,8 +835,11 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     const keys = key.split('.');
     let value: any = translations[language];
     for (const k of keys) {
-      value = value?.[k];
-      if (!value) return key;
+      if (value && typeof value === 'object' && k in value) {
+        value = value[k as keyof typeof value];
+      } else {
+        return key;
+      }
     }
     return value;
   }, [language]);
@@ -748,9 +847,9 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   const dir = language === 'fa' || language === 'ar' ? 'rtl' : 'ltr';
 
   useEffect(() => {
-    document.documentElement.lang = language;
     document.documentElement.dir = dir;
-  }, [language, dir]);
+    document.documentElement.lang = language;
+  }, [dir, language]);
 
   return React.createElement(
     LanguageContext.Provider,
@@ -766,67 +865,3 @@ export const useLanguage = () => {
   }
   return context;
 };
-
-// Articles Data - Updated for Steel Industry
-export const ARTICLES: Article[] = [
-    {
-        id: 1,
-        title: { en: 'Rebar Price Forecast for Q3 2024', fa: 'پیش‌بینی قیمت میلگرد در تابستان ۱۴۰۳', ar: 'توقعات أسعار حديد التسليح للربع الثالث 2024' },
-        excerpt: { en: 'Analysis of global steel scrap prices and their impact on the domestic rebar market.', fa: 'تحلیل قیمت جهانی قراضه و تاثیر آن بر بازار داخلی میلگرد.', ar: 'تحليل أسعار الخردة العالمية وتأثيرها على سوق حديد التسليح المحلي.' },
-        date: { en: 'June 15, 2024', fa: '۲۵ خرداد ۱۴۰۳', ar: '١٥ يونيو ٢٠٢٤' },
-        image: 'https://ahanonline.com/resize/?file=https://contents.ahanonline.com/website/4b09d5c892666a11f9500f587d446aac.jpg&format=webp', // Using image from HTML
-        author: 'Eng. Reza Alavi',
-        category: { en: 'Market Analysis', fa: 'تحلیل بازار', ar: 'تحليل السوق' },
-        tags: [{en: 'Rebar', fa: 'میلگرد', ar: 'حديد تسليح'}, {en: 'Price', fa: 'قیمت', ar: 'سعر'}],
-        content: {
-            en: `
-### Market Overview
-The steel market is currently experiencing volatility due to fluctuations in energy costs and raw material supply chain disruptions.
-
-**Key Factors:**
-*   **Global Scrap Prices:** Rising costs in Turkey and CIS regions are pushing local prices up.
-*   **Demand:** Summer construction season is increasing demand for sizes 14 and 16.
-
-### Forecast
-We expect a mild increase in rebar prices over the next month, followed by stabilization.
-            `,
-            fa: `
-### بررسی بازار
-بازار فولاد در حال حاضر به دلیل نوسانات هزینه انرژی و اختلالات زنجیره تامین مواد اولیه، نوساناتی را تجربه می‌کند.
-
-**عوامل کلیدی:**
-*   **قیمت جهانی قراضه:** افزایش هزینه‌ها در ترکیه و منطقه CIS باعث افزایش قیمت‌های داخلی شده است.
-*   **تقاضا:** فصل ساخت و ساز تابستانی تقاضا برای سایزهای ۱۴ و ۱۶ را افزایش داده است.
-
-### پیش‌بینی
-ما انتظار افزایش ملایم قیمت میلگرد در ماه آینده و سپس ثبات را داریم.
-            `,
-            ar: `
-### نظرة عامة على السوق
-يشهد سوق الصلب حاليًا تقلبات بسبب تقلبات تكاليف الطاقة واضطرابات سلسلة توريد المواد الخام.
-
-**العوامل الرئيسية:**
-*   **أسعار الخردة العالمية:** ارتفاع التكاليف في تركيا ومنطقة رابطة الدول المستقلة يدفع الأسعار المحلية للارتفاع.
-*   **الطلب:** موسم البناء الصيفي يزيد الطلب على الأحجام 14 و 16.
-
-### التوقعات
-نتوقع زيادة طفيفة في أسعار حديد التسليح خلال الشهر المقبل، يليها استقرار.
-            `
-        }
-    },
-    {
-        id: 2,
-        title: { en: 'IPE vs IPB Beams: Choosing the Right One', fa: 'تفاوت تیرآهن IPE و IPB: انتخاب درست', ar: 'الفرق بين جسور IPE و IPB: الاختيار الصحيح' },
-        excerpt: { en: 'A technical guide on the differences between I-beams and H-beams for structural engineers.', fa: 'راهنمای فنی در مورد تفاوت‌های تیرآهن‌های I شکل و H شکل برای مهندسین سازه.', ar: 'دليل فني حول الاختلافات بين الجسور على شكل I و H للمهندسين الإنشائيين.' },
-        date: { en: 'June 10, 2024', fa: '۲۰ خرداد ۱۴۰۳', ar: '١٠ يونيو ٢٠٢٤' },
-        image: 'https://ahanonline.com/resize/?file=https://contents.ahanonline.com/site/57f1a453ec9b3c3a147794d1993a3f8c.png&format=webp', // Using image from HTML
-        author: 'Eng. Kaveh Rad',
-        category: { en: 'Technical', fa: 'فنی مهندسی', ar: 'فني' },
-        tags: [{en: 'Beam', fa: 'تیرآهن', ar: 'جسور'}, {en: 'Construction', fa: 'ساختمان', ar: 'بناء'}],
-        content: {
-            en: 'IPE beams are standard European beams with parallel flanges, while IPB (HEB) beams are wide-flange beams capable of bearing heavier loads.',
-            fa: 'تیرآهن‌های IPE تیرهای استاندارد اروپایی با بال‌های موازی هستند، در حالی که تیرآهن‌های IPB (HEB) تیرهای بال پهن هستند که قادر به تحمل بارهای سنگین‌تر می‌باشند.',
-            ar: 'جسور IPE هي جسور أوروبية قياسية ذات أجنحة متوازية، بينما جسور IPB (HEB) هي جسور ذات أجنحة عريضة قادرة على تحمل أحمال أثقل.'
-        }
-    }
-];

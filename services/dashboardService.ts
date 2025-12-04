@@ -1,61 +1,136 @@
 
-
-
-
-
+import { supabase } from './supabaseClient';
 import { DashboardStats, AuditAlert, CheckItem, AuditDocument, CustomerCredit, Language } from '../types';
 
-// Mock Data Service simulating a backend for the Audit & Financial System
+// Mock data to seed if DB is empty
+const MOCK_CHECKS: any[] = [
+    { number: '88219901', amount: 2500000000, due_date: '1403/04/15', status: 'pending', drawer: 'Tehran Sazeh Co.', bank: 'Mellat' },
+    { number: '77210022', amount: 1200000000, due_date: '1403/04/16', status: 'pending', drawer: 'Alavi Trading', bank: 'Saderat' },
+    { number: '66551122', amount: 450000000, due_date: '1403/04/18', status: 'pending', drawer: 'Pars Metal', bank: 'Sepah' },
+    { number: '11223344', amount: 3200000000, due_date: '1403/04/10', status: 'bounced', drawer: 'Omran Gostar', bank: 'Melli' },
+    { number: '99887766', amount: 5000000000, due_date: '1403/04/01', status: 'cleared', drawer: 'Zob Ahan Isfahan', bank: 'Tejarat' },
+];
+
+const MOCK_ALERTS: any[] = [
+    { title: 'Check #1298 due tomorrow (2.5B IRR)', type: 'check_due', severity: 'critical', date: 'Today', is_read: false },
+    { title: 'Suspicious transaction detected: Invoice #9921', type: 'fraud_detected', severity: 'critical', date: 'Yesterday', is_read: false },
+    { title: 'Customer "Steel Pars" exceeded credit limit', type: 'credit_limit', severity: 'warning', date: 'Yesterday', is_read: false },
+    { title: 'Discrepancy in Bank Reconciliation (Mellat)', type: 'discrepancy', severity: 'warning', date: '2 days ago', is_read: true },
+    { title: 'System backup completed successfully', type: 'system', severity: 'info', date: '3 days ago', is_read: true },
+];
+
+const MOCK_CUSTOMERS: any[] = [
+    { name: 'Tehran Sazeh Co.', type: 'company', credit_score: 750, credit_limit: 50000000000, used_credit: 12000000000, risk_level: 'low' },
+    { name: 'Omran Gostar', type: 'company', credit_score: 420, credit_limit: 10000000000, used_credit: 9500000000, risk_level: 'high' },
+    { name: 'Ali Rezaei', type: 'individual', credit_score: 680, credit_limit: 5000000000, used_credit: 2000000000, risk_level: 'medium' },
+];
+
+// Helper to seed data if empty
+export const checkAndSeedDatabase = async () => {
+    try {
+        // Check if table exists by trying to select 1 row
+        const { error: checkError, count } = await supabase.from('financial_checks').select('*', { count: 'exact', head: true });
+        
+        if (checkError) {
+            // If error is 404 or Relation does not exist, we need to create tables
+            throw checkError;
+        }
+
+        if (count === 0) {
+            console.log("Seeding Database...");
+            await supabase.from('financial_checks').insert(MOCK_CHECKS);
+            await supabase.from('audit_alerts').insert(MOCK_ALERTS);
+            await supabase.from('customer_credits').insert(MOCK_CUSTOMERS);
+            return { success: true, message: "Database seeded successfully." };
+        }
+        
+        return { success: true, message: "Database already populated." };
+    } catch (error: any) {
+        console.error("Database connection/seeding failed:", error);
+        return { success: false, error: error.message || "Unknown error" };
+    }
+};
 
 export const getDashboardStats = async (): Promise<DashboardStats> => {
-    // Simulating API latency
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
+    try {
+        const { data: checks, error } = await supabase.from('financial_checks').select('amount, status');
+        
+        if (error) throw error;
+
+        if (checks) {
+            const totalAmount = checks.reduce((sum, c) => sum + (c.amount || 0), 0);
+            const totalCount = checks.length;
+            const bouncedAmount = checks.filter(c => c.status === 'bounced').reduce((sum, c) => sum + (c.amount || 0), 0);
+            const pendingCount = checks.filter(c => c.status === 'pending').length;
+            
+            return {
+                totalChecksAmount: totalAmount,
+                totalChecksCount: totalCount,
+                checksDueThisWeekAmount: totalAmount * 0.2, // Estimate
+                checksDueThisWeekCount: pendingCount,
+                bouncedChecksAmount: bouncedAmount,
+                cashBalance: 12800000000, // Hardcoded for demo
+                documentsReviewed: 1402,
+                discrepanciesFound: 12,
+                fraudCases: 3,
+                internalControlScore: 78
+            };
+        }
+    } catch (e) {
+        console.warn("Using fallback stats due to DB error or empty DB");
+    }
+
     return {
-        totalChecksAmount: 45000000000, // 45B IRR
-        totalChecksCount: 34,
-        checksDueThisWeekAmount: 8500000000, // 8.5B IRR
-        checksDueThisWeekCount: 7,
-        bouncedChecksAmount: 2300000000, // 2.3B IRR
-        cashBalance: 12800000000, // 12.8B IRR
-        documentsReviewed: 1402,
-        discrepanciesFound: 12,
-        fraudCases: 3,
-        internalControlScore: 78
+        totalChecksAmount: 0,
+        totalChecksCount: 0,
+        checksDueThisWeekAmount: 0,
+        checksDueThisWeekCount: 0,
+        bouncedChecksAmount: 0,
+        cashBalance: 0,
+        documentsReviewed: 0,
+        discrepanciesFound: 0,
+        fraudCases: 0,
+        internalControlScore: 0
     };
 };
 
 export const getAlerts = async (language: Language = 'en'): Promise<AuditAlert[]> => {
-    if (language === 'fa') {
-        return [
-            { id: 1, title: 'سررسید چک شماره ۱۲۹۸ فردا (۲.۵ میلیارد ریال)', type: 'check_due', severity: 'critical', date: 'امروز', isRead: false },
-            { id: 2, title: 'تراکنش مشکوک شناسایی شد: فاکتور ۹۹۲۱', type: 'fraud_detected', severity: 'critical', date: 'دیروز', isRead: false },
-            { id: 3, title: 'مشتری "استیل پارس" از سقف اعتبار عبور کرد', type: 'credit_limit', severity: 'warning', date: 'دیروز', isRead: false },
-            { id: 4, title: 'مغایرت در صورت مغایرت بانکی (ملت)', type: 'discrepancy', severity: 'warning', date: '۲ روز پیش', isRead: true },
-            { id: 5, title: 'پشتیبان‌گیری سیستم با موفقیت انجام شد', type: 'system', severity: 'info', date: '۳ روز پیش', isRead: true },
-        ];
+    const { data, error } = await supabase.from('audit_alerts').select('*').order('created_at', { ascending: false });
+    
+    if (error || !data) {
+        return [];
     }
-    return [
-        { id: 1, title: 'Check #1298 due tomorrow (2.5B IRR)', type: 'check_due', severity: 'critical', date: 'Today', isRead: false },
-        { id: 2, title: 'Suspicious transaction detected: Invoice #9921', type: 'fraud_detected', severity: 'critical', date: 'Yesterday', isRead: false },
-        { id: 3, title: 'Customer "Steel Pars" exceeded credit limit', type: 'credit_limit', severity: 'warning', date: 'Yesterday', isRead: false },
-        { id: 4, title: 'Discrepancy in Bank Reconciliation (Mellat)', type: 'discrepancy', severity: 'warning', date: '2 days ago', isRead: true },
-        { id: 5, title: 'System backup completed successfully', type: 'system', severity: 'info', date: '3 days ago', isRead: true },
-    ];
+
+    return data.map(a => ({
+        id: a.id,
+        title: a.title,
+        type: a.type,
+        severity: a.severity,
+        date: a.date,
+        isRead: a.is_read
+    }));
 };
 
 export const getChecks = async (): Promise<CheckItem[]> => {
-    return [
-        { id: 101, number: '88219901', amount: 2500000000, dueDate: '1403/04/15', status: 'pending', drawer: 'Tehran Sazeh Co.', bank: 'Mellat' },
-        { id: 102, number: '77210022', amount: 1200000000, dueDate: '1403/04/16', status: 'pending', drawer: 'Alavi Trading', bank: 'Saderat' },
-        { id: 103, number: '66551122', amount: 450000000, dueDate: '1403/04/18', status: 'pending', drawer: 'Pars Metal', bank: 'Sepah' },
-        { id: 104, number: '11223344', amount: 3200000000, dueDate: '1403/04/10', status: 'bounced', drawer: 'Omran Gostar', bank: 'Melli' },
-        { id: 105, number: '99887766', amount: 5000000000, dueDate: '1403/04/01', status: 'cleared', drawer: 'Zob Ahan Isfahan', bank: 'Tejarat' },
-    ];
+    const { data, error } = await supabase.from('financial_checks').select('*').order('created_at', { ascending: false });
+
+    if (error || !data) {
+        return [];
+    }
+
+    return data.map(c => ({
+        id: c.id,
+        number: c.number,
+        amount: c.amount,
+        dueDate: c.due_date,
+        status: c.status,
+        drawer: c.drawer,
+        bank: c.bank
+    }));
 };
 
 export const getAuditDocuments = async (language: Language = 'en'): Promise<AuditDocument[]> => {
-    // Just translating types for simplicity in mock
+    // Mock for now as we don't have a docs table yet
     const types = {
         Invoice: language === 'fa' ? 'فاکتور' : 'Invoice',
         Check: language === 'fa' ? 'چک' : 'Check',
@@ -67,17 +142,32 @@ export const getAuditDocuments = async (language: Language = 'en'): Promise<Audi
         { id: 'DOC-2024-001', type: types.Invoice, title: language === 'fa' ? 'فاکتور خرید #۴۴۲۱' : 'Purchase Inv #4421', amount: 450000000, status: 'approved', riskScore: 12, date: '1403/04/12' },
         { id: 'DOC-2024-002', type: types.Check, title: language === 'fa' ? 'تصویر چک #۸۸۲۱' : 'Check Image #8821', amount: 2500000000, status: 'flagged', riskScore: 85, date: '1403/04/12' },
         { id: 'DOC-2024-003', type: types.Contract, title: language === 'fa' ? 'قرارداد فروش - علوی' : 'Sales Contract - Alavi', amount: 12000000000, status: 'pending', riskScore: 45, date: '1403/04/11' },
-        { id: 'DOC-2024-004', type: types.Expense, title: language === 'fa' ? 'گزارش لجستیک خرداد' : 'Logistics Report June', amount: 85000000, status: 'approved', riskScore: 5, date: '1403/04/10' },
-        { id: 'DOC-2024-005', type: types.Invoice, title: language === 'fa' ? 'فاکتور فروش #۹۹۰۱' : 'Sales Inv #9901', amount: 1250000000, status: 'rejected', riskScore: 92, date: '1403/04/09' },
     ];
 };
 
 export const getCustomers = async (): Promise<CustomerCredit[]> => {
-    return [
-        { id: 1, name: 'Tehran Sazeh Co.', type: 'company', creditScore: 750, creditLimit: 50000000000, usedCredit: 12000000000, riskLevel: 'low' },
-        { id: 2, name: 'Omran Gostar', type: 'company', creditScore: 420, creditLimit: 10000000000, usedCredit: 9500000000, riskLevel: 'high' },
-        { id: 3, name: 'Ali Rezaei', type: 'individual', creditScore: 680, creditLimit: 5000000000, usedCredit: 2000000000, riskLevel: 'medium' },
-        { id: 4, name: 'Pars Metal Group', type: 'company', creditScore: 810, creditLimit: 100000000000, usedCredit: 45000000000, riskLevel: 'low' },
-        { id: 5, name: 'Kaveh Construction', type: 'company', creditScore: 550, creditLimit: 20000000000, usedCredit: 18000000000, riskLevel: 'medium' },
-    ];
+    const { data, error } = await supabase.from('customer_credits').select('*');
+    
+    if (error || !data) {
+        return [];
+    }
+
+    return data.map(c => ({
+        id: c.id,
+        name: c.name,
+        type: c.type,
+        creditScore: c.credit_score,
+        creditLimit: c.credit_limit,
+        usedCredit: c.used_credit,
+        riskLevel: c.risk_level
+    }));
+};
+
+export const saveSEOReport = async (url: string, result: any) => {
+    return await supabase.from('seo_reports').insert({
+        url: url,
+        score: result.score,
+        metrics: result.metrics,
+        recommendations: result.aiRecommendations
+    });
 };

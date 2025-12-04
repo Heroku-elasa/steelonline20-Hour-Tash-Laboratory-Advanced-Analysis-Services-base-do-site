@@ -8,6 +8,7 @@ import LoginModal from './components/LoginModal';
 import SearchModal from './components/SearchModal';
 import FloatingChatbot from './components/FloatingChatbot';
 import SiteFooter from './components/Footer';
+import SEOChecker from './components/SEOChecker'; // Import Checker
 import { Page, ProviderSearchResult, Message, SearchResultItem, useLanguage, TestSubmissionFormInputs, TestRecommendationResult, DailyTrend, GeneratedPost, TestDetailsResult, Article, ARTICLES, User } from './types';
 import { useToast } from './components/Toast';
 import { performSemanticSearch, findLocalProviders, getAIRecommendation, fetchDailyTrends, generateSocialPost, generatePostImage, getTestDetails, adaptPostForWebsite } from './services/geminiService';
@@ -508,7 +509,7 @@ const App: React.FC = () => {
   const isAuthenticated = !!user;
 
   return (
-      <div className="bg-slate-50 text-slate-800 font-sans">
+      <div className="bg-slate-50 text-slate-800 font-sans relative">
         {currentPage !== 'dashboard' && (
             <SiteHeader
             currentPage={currentPage}
@@ -550,6 +551,8 @@ const App: React.FC = () => {
                 setPage={setPage}
             />
         )}
+        {/* Floating SEO Checker Button */}
+        {currentPage !== 'dashboard' && <SEOChecker />}
       </div>
   );
 };

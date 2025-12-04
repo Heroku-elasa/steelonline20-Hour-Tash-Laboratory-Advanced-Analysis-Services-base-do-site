@@ -16,28 +16,116 @@ import {
     MarketplaceRequest,
     MarketplaceOffer,
     CreditCheckResult,
+    SEOAnalysisResult,
 } from '../types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // Helper to robustly extract JSON from response text
 const extractJson = (text: string): string => {
+    // 1. Remove markdown code blocks
     let jsonString = text.replace(/```json|```/g, '').trim();
-    const startIndex = jsonString.indexOf('[');
-    const endIndex = jsonString.lastIndexOf(']') + 1;
-    if (startIndex !== -1 && endIndex !== -1) {
-        return jsonString.substring(startIndex, endIndex);
+
+    // 2. Find the first '{' or '['
+    const firstOpenBrace = jsonString.indexOf('{');
+    const firstOpenBracket = jsonString.indexOf('[');
+
+    // If neither is found, return original string (parsing will likely fail, but nothing to extract)
+    if (firstOpenBrace === -1 && firstOpenBracket === -1) {
+        return jsonString;
     }
-    const startObj = jsonString.indexOf('{');
-    const endObj = jsonString.lastIndexOf('}') + 1;
-    if (startObj !== -1 && endObj !== -1) {
-        return jsonString.substring(startObj, endObj);
+
+    // 3. Determine start index and mode (object vs array)
+    let startIndex = -1;
+    let mode: 'object' | 'array' = 'object';
+
+    if (firstOpenBrace !== -1 && (firstOpenBracket === -1 || firstOpenBrace < firstOpenBracket)) {
+        startIndex = firstOpenBrace;
+        mode = 'object';
+    } else {
+        startIndex = firstOpenBracket;
+        mode = 'array';
     }
-    return jsonString;
+
+    // 4. Stack-based extraction to find the matching closing character
+    let depth = 0;
+    for (let i = startIndex; i < jsonString.length; i++) {
+        const char = jsonString[i];
+        
+        if (mode === 'object') {
+            if (char === '{') depth++;
+            else if (char === '}') depth--;
+        } else {
+            if (char === '[') depth++;
+            else if (char === ']') depth--;
+        }
+
+        // Found the matching closing brace/bracket
+        if (depth === 0) {
+            return jsonString.substring(startIndex, i + 1);
+        }
+    }
+
+    // If logic fails (e.g. malformed JSON), return substring from start
+    return jsonString.substring(startIndex);
 };
 
+// ... existing schemas ...
+const seoAnalysisSchema = {
+    type: Type.OBJECT,
+    properties: {
+        strategy: { 
+            type: Type.ARRAY, 
+            items: { type: Type.STRING },
+            description: "List of 3 specific technical or content SEO strategies for this page." 
+        },
+        directories: { 
+            type: Type.ARRAY, 
+            items: { type: Type.STRING },
+            description: "List of 3 relevant local directories or platforms to register this site on (based on being an Iranian steel site)."
+        },
+        keywords: { 
+            type: Type.ARRAY, 
+            items: { type: Type.STRING },
+            description: "List of 5 target LSI keywords based on page content."
+        },
+    },
+};
 
-// Schemas for structured responses
+// New Function: Analyze SEO Strategy
+export const analyzeSEOStrategy = async (
+    pageData: { title: string; description: string; h1: string; contentSample: string },
+    language: Language
+): Promise<SEOAnalysisResult['aiRecommendations']> => {
+    const prompt = `
+        Act as a Senior SEO Specialist for the Industrial/Steel sector in Iran.
+        Analyze the following page metadata and content for "Steel Online 20":
+        - Title: ${pageData.title}
+        - Description: ${pageData.description}
+        - H1: ${pageData.h1}
+        - Content Snippet: ${pageData.contentSample.substring(0, 300)}...
+
+        Provide specific advice in ${language}.
+        1. "strategy": Give 3 specific improvements (e.g. "Add 'Price of Rebar' to title", "Improve H2 hierarchy").
+        2. "directories": Recommend 3 authoritative sites/directories where this business SHOULD register for backlinks (e.g. Ketab Avval, Wikipedia Persian, specialized steel forums).
+        3. "keywords": List 5 relevant LSI keywords to target.
+
+        Return JSON matching the schema.
+    `;
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: seoAnalysisSchema,
+        },
+    });
+
+    if (!response.text) throw new Error("No response from AI");
+    return JSON.parse(extractJson(response.text));
+};
+
 const testRecommendationSchema = {
     type: Type.OBJECT,
     properties: {
@@ -71,9 +159,6 @@ const testRecommendationSchema = {
         disclaimer: { type: Type.STRING, description: "A standard disclaimer stating this is an AI estimate and not a certified engineering plan." },
     },
 };
-
-// Removed testDetailsSchema usage with schema but kept object structure comment
-// Removed marketplaceOfferSchema usage with schema but kept object structure comment
 
 const searchResultSchema = {
     type: Type.ARRAY,
@@ -173,7 +258,7 @@ export const getAIRecommendation = async (
 
     if (!response.text) throw new Error("No response from AI");
     
-    const result = JSON.parse(response.text);
+    const result = JSON.parse(extractJson(response.text));
 
     // Sanitize recommendedTests to prevent React Error #31 (Objects are not valid as a React child)
     // This happens if the AI returns an object (like specifications) instead of a string in the array.
@@ -282,7 +367,7 @@ export const performSemanticSearch = async (query: string, searchIndex: string, 
     });
     
     if (!response.text) throw new Error("No response from AI");
-    const results = JSON.parse(response.text);
+    const results = JSON.parse(extractJson(response.text));
     results.sort((a: SearchResultItem, b: SearchResultItem) => b.relevanceScore - a.relevanceScore);
     return results;
 };
@@ -352,7 +437,7 @@ export const generateVideoConcept = async (topic: string, platform: string, lang
     });
 
     if (!response.text) throw new Error("No response from AI");
-    return JSON.parse(response.text);
+    return JSON.parse(extractJson(response.text));
 };
 
 export const getPublishingStrategy = async (topic: string, platform: string, language: Language): Promise<PublishingStrategy> => {
@@ -375,7 +460,7 @@ export const getPublishingStrategy = async (topic: string, platform: string, lan
     });
 
     if (!response.text) throw new Error("No response from AI");
-    return JSON.parse(response.text);
+    return JSON.parse(extractJson(response.text));
 };
 
 export const findBestVideoTools = async (language: Language): Promise<VideoTool[]> => {
@@ -569,5 +654,5 @@ export const checkCreditScore = async (amount: string, months: number, language:
     });
 
     if (!response.text) throw new Error("No response from AI");
-    return JSON.parse(response.text);
+    return JSON.parse(extractJson(response.text));
 };
