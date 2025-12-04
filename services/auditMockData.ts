@@ -1,4 +1,3 @@
-
 import { CheckItem, AuditAlert, DashboardStats, FraudCase } from '../types';
 
 // MOCK DATA for legacy audit components
