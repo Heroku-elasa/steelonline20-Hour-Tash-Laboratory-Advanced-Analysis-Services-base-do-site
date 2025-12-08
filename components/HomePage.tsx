@@ -74,7 +74,6 @@ const HomePage: React.FC<HomePageProps> = ({ setPage, articles, onSelectArticle 
                         className="w-full h-full object-cover object-center"
                         width="1920" 
                         height="1080"
-                        fetchPriority="high"
                         referrerPolicy="no-referrer"
                         onError={(e) => {
                             e.currentTarget.style.display = 'none';

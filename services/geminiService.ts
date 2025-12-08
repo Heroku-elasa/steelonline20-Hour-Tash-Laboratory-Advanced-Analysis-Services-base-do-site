@@ -124,7 +124,8 @@ export const analyzeSEOStrategy = async (
         Return ONLY valid JSON matching the schema.
     `;
 
-    const response = await ai.models.generateContent({
+    const client = checkAI();
+    const response = await client.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
         config: {

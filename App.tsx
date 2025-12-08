@@ -26,6 +26,7 @@ const ArticlePage = lazy(() => import('./components/ArticlePage'));
 const ToolsPage = lazy(() => import('./components/ToolsPage'));
 const IronSnappPage = lazy(() => import('./components/IronSnappPage'));
 const DashboardPage = lazy(() => import('./components/DashboardPage'));
+const UserDashboardPage = lazy(() => import('./components/UserDashboardPage'));
 const PricesPage = lazy(() => import('./components/PricesPage'));
 const MapFinderPage = lazy(() => import('./components/MapFinderPage'));
 
@@ -192,10 +193,15 @@ const App: React.FC = () => {
   };
 
   const handleLogin = (userData: User) => {
-    // This is primarily triggered by the modal, but the useEffect handles state update
     setUser(userData);
     setIsLoginModalOpen(false);
     addToast(`Welcome, ${userData.name}!`, "success");
+    
+    if (userData.role === 'admin') {
+      setPage('admin_dashboard');
+    } else {
+      setPage('user_dashboard');
+    }
   };
 
   const handleAiSendMessage = async (message: string) => {
@@ -507,7 +513,20 @@ const App: React.FC = () => {
             case 'tools':
               return <ToolsPage />;
             case 'dashboard':
+            case 'admin_dashboard':
+              if (!user || user.role !== 'admin') {
+                setIsLoginModalOpen(true);
+                setPage('home');
+                return <HomePage setPage={setPage} articles={ARTICLES} onSelectArticle={handleSelectArticle} />;
+              }
               return <DashboardPage setPage={setPage} />;
+            case 'user_dashboard':
+              if (!user) {
+                setIsLoginModalOpen(true);
+                setPage('home');
+                return <HomePage setPage={setPage} articles={ARTICLES} onSelectArticle={handleSelectArticle} />;
+              }
+              return <UserDashboardPage setPage={setPage} user={user} onLogout={handleLogout} />;
             default:
               return <HomePage setPage={setPage} articles={ARTICLES} onSelectArticle={handleSelectArticle} />;
           }
@@ -520,7 +539,7 @@ const App: React.FC = () => {
 
   return (
       <div className="bg-slate-50 text-slate-800 font-sans relative">
-        {currentPage !== 'dashboard' && (
+        {currentPage !== 'dashboard' && currentPage !== 'admin_dashboard' && currentPage !== 'user_dashboard' && (
             <SiteHeader
             currentPage={currentPage}
             setPage={setPage}
@@ -536,7 +555,7 @@ const App: React.FC = () => {
             {renderPage()}
         </main>
         
-        {currentPage !== 'dashboard' && <SiteFooter setPage={setPage} />}
+        {currentPage !== 'dashboard' && currentPage !== 'admin_dashboard' && currentPage !== 'user_dashboard' && <SiteFooter setPage={setPage} />}
         
         <QuotaErrorModal isOpen={isQuotaExhausted} onClose={() => setIsQuotaExhausted(false)} />
         <LoginModal 
@@ -553,7 +572,7 @@ const App: React.FC = () => {
           error={searchError}
           onNavigate={handleNavigateFromSearch}
         />
-        {currentPage !== 'dashboard' && (
+        {currentPage !== 'dashboard' && currentPage !== 'admin_dashboard' && currentPage !== 'user_dashboard' && (
             <FloatingChatbot
                 chatHistory={chatHistory}
                 isStreaming={isStreaming}
@@ -562,7 +581,7 @@ const App: React.FC = () => {
             />
         )}
         {/* Floating SEO Checker Button */}
-        {currentPage !== 'dashboard' && <SEOChecker />}
+        {currentPage !== 'dashboard' && currentPage !== 'admin_dashboard' && currentPage !== 'user_dashboard' && <SEOChecker />}
       </div>
   );
 };

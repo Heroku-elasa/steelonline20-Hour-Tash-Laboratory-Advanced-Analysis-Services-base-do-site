@@ -5,6 +5,8 @@ import 'leaflet/dist/leaflet.css';
 import { useLanguage, MarketplaceRequest, CreditCheckResult } from '../types';
 import { checkCreditScore } from '../services/geminiService';
 import { useToast } from './Toast';
+import TrustSafetyPanel from './TrustSafetyPanel';
+import ReviewSystem from './ReviewSystem';
 
 interface SellerWithLocation {
     sellerName: string;
@@ -86,6 +88,12 @@ const MapController: React.FC<{ center: [number, number]; zoom: number }> = ({ c
     return null;
 };
 
+interface ConnectionService {
+    key: string;
+    icon: React.ReactNode;
+    color: string;
+}
+
 const IronSnappPage: React.FC = () => {
     const { t, language } = useLanguage();
     const { addToast } = useToast();
@@ -110,11 +118,61 @@ const IronSnappPage: React.FC = () => {
     
     const [priceFilter, setPriceFilter] = useState<'all' | 'low' | 'medium' | 'high'>('all');
     const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
+    
+    const [showServicesModal, setShowServicesModal] = useState(false);
+    const [contactingSeller, setContactingSeller] = useState<SellerWithLocation | null>(null);
+    const [showTrustSafety, setShowTrustSafety] = useState(false);
+    const [showReviews, setShowReviews] = useState(false);
+    const [reviewSeller, setReviewSeller] = useState<SellerWithLocation | null>(null);
+
+    const connectionServices: ConnectionService[] = [
+        {
+            key: 'notary',
+            icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
+            color: 'from-purple-500 to-purple-600'
+        },
+        {
+            key: 'lawyer',
+            icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg>,
+            color: 'from-blue-500 to-blue-600'
+        },
+        {
+            key: 'contract',
+            icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 3v4a2 2 0 002 2h4" /></svg>,
+            color: 'from-green-500 to-green-600'
+        },
+        {
+            key: 'insurance',
+            icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
+            color: 'from-yellow-500 to-orange-500'
+        },
+        {
+            key: 'escrow',
+            icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>,
+            color: 'from-teal-500 to-cyan-500'
+        },
+        {
+            key: 'inspection',
+            icon: <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>,
+            color: 'from-indigo-500 to-purple-500'
+        }
+    ];
+
+    const handleContactSeller = (seller: SellerWithLocation) => {
+        setContactingSeller(seller);
+        setShowServicesModal(true);
+    };
+
+    const handleServiceRequest = (serviceKey: string) => {
+        const serviceTitle = t(`ironSnapp.connectionServices.${serviceKey}.title`);
+        addToast(`${serviceTitle} - ${t('ironSnapp.connectionServices.requestService')}`, 'success');
+        setShowServicesModal(false);
+    };
 
     const SAMPLE_REQUESTS = [
-        { label: 'Rebar - Tehran', product: 'میلگرد 16 اصفهان', quantity: '25', location: 'Tehran', paymentType: 'cash' },
-        { label: 'Beam - Isfahan', product: 'تیرآهن 180', quantity: '10', location: 'Isfahan', paymentType: 'check' },
-        { label: 'Sheet - Tabriz', product: 'ورق گالوانیزه', quantity: '5', location: 'Tabriz', paymentType: 'cash' },
+        { labelKey: 'rebarTehran', product: 'میلگرد 16 اصفهان', quantity: '25', location: 'تهران', paymentType: 'cash' },
+        { labelKey: 'beamIsfahan', product: 'تیرآهن 180', quantity: '10', location: 'اصفهان', paymentType: 'check' },
+        { labelKey: 'sheetTabriz', product: 'ورق گالوانیزه', quantity: '5', location: 'تبریز', paymentType: 'cash' },
     ];
 
     const applySample = (sample: any) => {
@@ -125,7 +183,7 @@ const IronSnappPage: React.FC = () => {
             paymentType: sample.paymentType as any,
             checkMonths: 2
         });
-        addToast("Sample data loaded!", "info");
+        addToast(t('ironSnapp.toasts.sampleLoaded'), "info");
     };
 
     const searchSellers = async () => {
@@ -175,11 +233,11 @@ const IronSnappPage: React.FC = () => {
                     setMapCenter([data.userLocation.lat, data.userLocation.lon]);
                     setMapZoom(10);
                 }
-                addToast(`${data.totalFound} sellers found!`, 'success');
+                addToast(`${data.totalFound} ${t('ironSnapp.toasts.sellersFound')}`, 'success');
             }
         } catch (error) {
             console.error(error);
-            addToast("Failed to find sellers.", 'error');
+            addToast(t('ironSnapp.toasts.failedToFind'), 'error');
         } finally {
             setLoading(false);
             setCheckingCredit(false);
@@ -195,7 +253,7 @@ const IronSnappPage: React.FC = () => {
     });
 
     const calculateBenefit = (seller: SellerWithLocation) => {
-        if (sellers.length === 0) return { savings: 0, savingsPercent: 0, benefitScore: 0, recommendation: '' };
+        if (sellers.length === 0) return { savings: 0, savingsPercent: 0, benefitScore: 0, recommendationKey: '' };
         
         const maxPrice = Math.max(...sellers.map(s => s.totalPriceNum));
         const minPrice = Math.min(...sellers.map(s => s.totalPriceNum));
@@ -211,22 +269,22 @@ const IronSnappPage: React.FC = () => {
         
         const benefitScore = priceSavings + verifiedBonus + ratingBonus - distancePenalty;
         
-        let recommendation = '';
+        let recommendationKey = '';
         if (seller.totalPriceNum === minPrice) {
-            recommendation = 'Best Price!';
+            recommendationKey = 'bestPrice';
         } else if (savingsVsAvg > 0) {
-            recommendation = 'Below Average';
+            recommendationKey = 'belowAverage';
         } else if (seller.verified && seller.rating && seller.rating >= 4.5) {
-            recommendation = 'Top Rated';
+            recommendationKey = 'topRated';
         } else if (seller.distanceKm < 10) {
-            recommendation = 'Nearby';
+            recommendationKey = 'nearby';
         }
         
         return { 
             savings: priceSavings, 
             savingsPercent, 
             benefitScore,
-            recommendation,
+            recommendationKey,
             savingsVsAvg: Math.round(savingsVsAvg)
         };
     };
@@ -269,7 +327,7 @@ const IronSnappPage: React.FC = () => {
                                 onClick={() => applySample(sample)}
                                 className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full transition-all"
                             >
-                                {sample.label}
+                                {t(`ironSnapp.samples.${sample.labelKey}`)}
                             </button>
                         ))}
                     </div>
@@ -286,14 +344,14 @@ const IronSnappPage: React.FC = () => {
                             type="number" 
                             value={request.quantity}
                             onChange={e => setRequest({...request, quantity: e.target.value})}
-                            placeholder="Quantity (tons)"
+                            placeholder={t('ironSnapp.form.qtyPlaceholder')}
                             className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-corp-red focus:border-transparent"
                         />
                         <input 
                             type="text" 
                             value={request.location}
                             onChange={e => setRequest({...request, location: e.target.value})}
-                            placeholder="Location (City)"
+                            placeholder={t('ironSnapp.form.locationPlaceholder')}
                             className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-corp-red focus:border-transparent"
                         />
                         <select
@@ -313,14 +371,14 @@ const IronSnappPage: React.FC = () => {
                             {loading ? (
                                 <>
                                     <div className="w-5 h-5 border-2 border-dashed rounded-full animate-spin border-white"></div>
-                                    <span>Searching...</span>
+                                    <span>{t('ironSnapp.form.searching')}</span>
                                 </>
                             ) : (
                                 <>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                                     </svg>
-                                    <span>Find Sellers</span>
+                                    <span>{t('ironSnapp.form.findSellers')}</span>
                                 </>
                             )}
                         </button>
@@ -330,7 +388,7 @@ const IronSnappPage: React.FC = () => {
                 {sellers.length > 0 && (
                     <div className="bg-white rounded-xl shadow-lg p-4 mb-4">
                         <div className="flex flex-wrap items-center gap-4">
-                            <span className="text-sm font-medium text-slate-600">Filters:</span>
+                            <span className="text-sm font-medium text-slate-600">{t('ironSnapp.filters.title')}:</span>
                             <div className="flex gap-2">
                                 {(['all', 'low', 'medium', 'high'] as const).map(filter => (
                                     <button
@@ -338,7 +396,7 @@ const IronSnappPage: React.FC = () => {
                                         onClick={() => setPriceFilter(filter)}
                                         className={`px-3 py-1 text-xs font-medium rounded-full transition-all ${priceFilter === filter ? 'bg-corp-red text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                                     >
-                                        {filter === 'all' ? 'All Prices' : filter === 'low' ? 'Budget' : filter === 'medium' ? 'Mid-Range' : 'Premium'}
+                                        {filter === 'all' ? t('ironSnapp.filters.allPrices') : filter === 'low' ? t('ironSnapp.filters.budget') : filter === 'medium' ? t('ironSnapp.filters.midRange') : t('ironSnapp.filters.premium')}
                                     </button>
                                 ))}
                             </div>
@@ -349,10 +407,10 @@ const IronSnappPage: React.FC = () => {
                                     onChange={e => setShowVerifiedOnly(e.target.checked)}
                                     className="rounded text-corp-red focus:ring-corp-red"
                                 />
-                                Verified Only
+                                {t('ironSnapp.filters.verifiedOnly')}
                             </label>
                             <span className="ml-auto text-sm text-slate-500">
-                                {filteredSellers.length} of {sellers.length} sellers
+                                {filteredSellers.length} {t('ironSnapp.filters.of')} {sellers.length} {t('ironSnapp.filters.sellers')}
                             </span>
                         </div>
                     </div>
@@ -365,12 +423,12 @@ const IronSnappPage: React.FC = () => {
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-corp-red" viewBox="0 0 20 20" fill="currentColor">
                                     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                                 </svg>
-                                <span className="font-semibold">Live Seller Map</span>
+                                <span className="font-semibold">{t('ironSnapp.map.title')}</span>
                             </div>
                             <div className="flex items-center gap-3 text-xs">
-                                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500"></span> Best</span>
-                                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-yellow-500"></span> Good</span>
-                                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-500"></span> High</span>
+                                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500"></span> {t('ironSnapp.map.best')}</span>
+                                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-yellow-500"></span> {t('ironSnapp.map.good')}</span>
+                                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-500"></span> {t('ironSnapp.map.high')}</span>
                             </div>
                         </div>
                         <MapContainer
@@ -422,13 +480,13 @@ const IronSnappPage: React.FC = () => {
                                                         <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full">Verified</span>
                                                     )}
                                                 </div>
-                                                {benefit.recommendation && (
+                                                {benefit.recommendationKey && (
                                                     <div className={`text-xs font-bold mb-2 px-2 py-1 rounded-full inline-block ${
-                                                        benefit.recommendation === 'Best Price!' ? 'bg-green-100 text-green-700' :
-                                                        benefit.recommendation === 'Top Rated' ? 'bg-blue-100 text-blue-700' :
+                                                        benefit.recommendationKey === 'bestPrice' ? 'bg-green-100 text-green-700' :
+                                                        benefit.recommendationKey === 'topRated' ? 'bg-blue-100 text-blue-700' :
                                                         'bg-slate-100 text-slate-600'
                                                     }`}>
-                                                        {benefit.recommendation}
+                                                        {t(`ironSnapp.recommendations.${benefit.recommendationKey}`)}
                                                     </div>
                                                 )}
                                                 <p className="text-sm text-slate-600 mb-2">{seller.location}</p>
@@ -475,8 +533,8 @@ const IronSnappPage: React.FC = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
-                                <h3 className="text-lg font-semibold text-slate-700 mb-2">Find Steel Sellers Near You</h3>
-                                <p className="text-sm text-slate-500">Enter your product and location above to see sellers on the map</p>
+                                <h3 className="text-lg font-semibold text-slate-700 mb-2">{t('ironSnapp.noSellers.title')}</h3>
+                                <p className="text-sm text-slate-500">{t('ironSnapp.noSellers.desc')}</p>
                             </div>
                         )}
 
@@ -526,32 +584,32 @@ const IronSnappPage: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {benefit.recommendation && (
+                                    {benefit.recommendationKey && (
                                         <div className={`text-xs font-bold mb-2 px-2 py-1 rounded-full inline-block ${
-                                            benefit.recommendation === 'Best Price!' ? 'bg-green-100 text-green-700' :
-                                            benefit.recommendation === 'Top Rated' ? 'bg-blue-100 text-blue-700' :
-                                            benefit.recommendation === 'Nearby' ? 'bg-purple-100 text-purple-700' :
+                                            benefit.recommendationKey === 'bestPrice' ? 'bg-green-100 text-green-700' :
+                                            benefit.recommendationKey === 'topRated' ? 'bg-blue-100 text-blue-700' :
+                                            benefit.recommendationKey === 'nearby' ? 'bg-purple-100 text-purple-700' :
                                             'bg-slate-100 text-slate-600'
                                         }`}>
-                                            {benefit.recommendation}
+                                            {t(`ironSnapp.recommendations.${benefit.recommendationKey}`)}
                                         </div>
                                     )}
 
                                     <div className="grid grid-cols-2 gap-3 text-sm">
                                         <div>
-                                            <span className="text-slate-500 text-xs">Price</span>
+                                            <span className="text-slate-500 text-xs">{t('ironSnapp.results.price')}</span>
                                             <p className="font-bold text-corp-red">{seller.pricePerUnit}</p>
                                         </div>
                                         <div>
-                                            <span className="text-slate-500 text-xs">Total</span>
+                                            <span className="text-slate-500 text-xs">{t('ironSnapp.results.total')}</span>
                                             <p className="font-semibold text-slate-800">{seller.totalPrice}</p>
                                         </div>
                                         <div>
-                                            <span className="text-slate-500 text-xs">Delivery</span>
+                                            <span className="text-slate-500 text-xs">{t('ironSnapp.results.delivery')}</span>
                                             <p className="text-slate-700">{seller.deliveryTime}</p>
                                         </div>
                                         <div>
-                                            <span className="text-slate-500 text-xs">Payment</span>
+                                            <span className="text-slate-500 text-xs">{t('ironSnapp.results.payment')}</span>
                                             <p className="text-slate-700 text-xs">{seller.paymentFlexibility}</p>
                                         </div>
                                     </div>
@@ -559,13 +617,13 @@ const IronSnappPage: React.FC = () => {
                                     <div className="mt-3 pt-2 border-t border-slate-100 bg-gradient-to-r from-green-50 to-emerald-50 -mx-4 px-4 py-2">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <span className="text-xs text-green-700 font-semibold">You Save</span>
+                                                <span className="text-xs text-green-700 font-semibold">{t('ironSnapp.results.youSave')}</span>
                                                 <p className="font-bold text-green-600">
-                                                    {benefit.savings > 0 ? `${formatNumber(benefit.savings)} تومان` : 'Highest Price'}
+                                                    {benefit.savings > 0 ? `${formatNumber(benefit.savings)} تومان` : t('ironSnapp.results.highestPrice')}
                                                 </p>
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-xs text-slate-500">vs Max</span>
+                                                <span className="text-xs text-slate-500">{t('ironSnapp.results.vsMax')}</span>
                                                 <p className={`font-bold text-lg ${benefit.savingsPercent > 10 ? 'text-green-600' : benefit.savingsPercent > 0 ? 'text-yellow-600' : 'text-red-500'}`}>
                                                     {benefit.savingsPercent > 0 ? `-${benefit.savingsPercent}%` : '0%'}
                                                 </p>
@@ -582,8 +640,14 @@ const IronSnappPage: React.FC = () => {
                                         </div>
                                     )}
 
-                                    <button className="w-full mt-3 py-2 bg-slate-900 text-white text-sm font-bold rounded-lg hover:bg-slate-800 transition-all">
-                                        Contact Seller
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleContactSeller(seller);
+                                        }}
+                                        className="w-full mt-3 py-2 bg-slate-900 text-white text-sm font-bold rounded-lg hover:bg-slate-800 transition-all"
+                                    >
+                                        {t('ironSnapp.contactSeller')}
                                     </button>
                                 </div>
                             );
@@ -591,6 +655,165 @@ const IronSnappPage: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {showServicesModal && contactingSeller && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowServicesModal(false)}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-6 rounded-t-2xl">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-2xl font-bold">{t('ironSnapp.connectionServices.title')}</h2>
+                                    <p className="text-slate-300 mt-1">{t('ironSnapp.connectionServices.subtitle')}</p>
+                                </div>
+                                <button onClick={() => setShowServicesModal(false)} className="text-white/60 hover:text-white p-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <div className="mt-4 bg-white/10 rounded-xl p-4 flex items-center gap-4">
+                                <div className="w-12 h-12 bg-corp-red rounded-full flex items-center justify-center text-white font-bold">
+                                    {contactingSeller.matchScore}
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-lg">{contactingSeller.sellerName}</h3>
+                                    <p className="text-slate-300 text-sm">{contactingSeller.city} • {contactingSeller.pricePerUnit}</p>
+                                </div>
+                                <a 
+                                    href={`tel:${contactingSeller.phone}`} 
+                                    className="mr-auto bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-all"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                                    </svg>
+                                    {t('ironSnapp.connectionServices.callNow')}
+                                </a>
+                            </div>
+                        </div>
+
+                        <div className="p-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {connectionServices.map((service) => {
+                                    const serviceData = t(`ironSnapp.connectionServices.${service.key}`);
+                                    const features = serviceData?.features || [];
+                                    return (
+                                        <div key={service.key} className="bg-white border-2 border-slate-100 rounded-xl p-5 hover:border-slate-300 hover:shadow-lg transition-all group">
+                                            <div className={`w-14 h-14 bg-gradient-to-br ${service.color} rounded-xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform`}>
+                                                {service.icon}
+                                            </div>
+                                            <h3 className="text-lg font-bold text-slate-900 mb-1">
+                                                {serviceData?.title || service.key}
+                                            </h3>
+                                            <p className="text-sm text-slate-600 mb-4">
+                                                {serviceData?.desc || ''}
+                                            </p>
+                                            
+                                            <ul className="space-y-2 mb-4">
+                                                {Array.isArray(features) && features.slice(0, 4).map((feature: string, idx: number) => (
+                                                    <li key={idx} className="text-xs text-slate-500 flex items-center gap-2">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                        </svg>
+                                                        {feature}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                            
+                                            <button 
+                                                onClick={() => handleServiceRequest(service.key)}
+                                                className={`w-full py-2 bg-gradient-to-r ${service.color} text-white text-sm font-bold rounded-lg hover:opacity-90 transition-all`}
+                                            >
+                                                {t('ironSnapp.connectionServices.requestService')}
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <button 
+                                    onClick={() => { setShowServicesModal(false); setShowTrustSafety(true); }}
+                                    className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl p-4 flex items-center gap-4 hover:shadow-lg transition-all"
+                                >
+                                    <div className="bg-white/20 p-3 rounded-full">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                        </svg>
+                                    </div>
+                                    <div className="text-right flex-1">
+                                        <p className="font-bold">{language === 'fa' ? 'مرکز اعتماد و امنیت' : 'Trust & Safety Center'}</p>
+                                        <p className="text-sm text-white/80">{language === 'fa' ? 'وکیل، محضر، پرداخت امن' : 'Lawyer, Notary, Secure Payment'}</p>
+                                    </div>
+                                </button>
+                                
+                                <button 
+                                    onClick={() => { setShowServicesModal(false); setReviewSeller(contactingSeller); setShowReviews(true); }}
+                                    className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl p-4 flex items-center gap-4 hover:shadow-lg transition-all"
+                                >
+                                    <div className="bg-white/20 p-3 rounded-full">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                        </svg>
+                                    </div>
+                                    <div className="text-right flex-1">
+                                        <p className="font-bold">{language === 'fa' ? 'نظرات خریداران' : 'Customer Reviews'}</p>
+                                        <p className="text-sm text-white/80">{language === 'fa' ? 'مشاهده و ثبت نظر' : 'View & Write Reviews'}</p>
+                                    </div>
+                                </button>
+                            </div>
+
+                            <div className="mt-4 bg-slate-50 rounded-xl p-4 flex items-center gap-4">
+                                <div className="bg-slate-200 p-3 rounded-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-sm text-slate-600">
+                                        {language === 'fa' 
+                                            ? 'برای هماهنگی خدمات تکمیلی و انجام معامله امن، با تیم پشتیبانی استیل آنلاین تماس بگیرید.'
+                                            : 'For coordinating additional services and secure transactions, contact Steel Online support team.'}
+                                    </p>
+                                </div>
+                                <a href="tel:02122041655" className="bg-corp-red hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-all whitespace-nowrap">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                                    </svg>
+                                    021-22041655
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <TrustSafetyPanel 
+                isOpen={showTrustSafety}
+                onClose={() => setShowTrustSafety(false)}
+                sellerName={contactingSeller?.sellerName}
+                transactionAmount={contactingSeller ? `${request.quantity} ${language === 'fa' ? 'تن' : 'tons'} - ${contactingSeller.totalPrice}` : undefined}
+            />
+
+            {showReviews && reviewSeller && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowReviews(false)}>
+                    <div className="max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-end mb-2">
+                            <button onClick={() => setShowReviews(false)} className="bg-white rounded-full p-2 shadow-lg hover:bg-slate-100 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <ReviewSystem 
+                            sellerId={reviewSeller.sellerName}
+                            sellerName={reviewSeller.sellerName}
+                            currentUser={null}
+                            onLoginRequired={() => {}}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

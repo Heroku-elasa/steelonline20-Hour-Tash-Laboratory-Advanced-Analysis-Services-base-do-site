@@ -53,6 +53,8 @@ Preferred communication style: Simple, everyday language.
 - Interactive seller cards synced with map markers
 - Credit check integration for check/credit payments
 - Vite proxy configuration to connect frontend to Flask backend API
+- **Buyer-Seller Connection Services**: Professional services modal including notary, legal consultation, contract drafting, insurance, escrow, and quality inspection services
+- **Full Internationalization**: All UI strings use the t() translation function with complete English and Farsi translations for samples, toasts, form elements, filters, map labels, seller card content, and connection services
 
 **State Management**: React Context API for:
 - Language/translation state (`LanguageProvider`)

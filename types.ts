@@ -4,13 +4,17 @@ import { fetchSiteTranslations } from './services/translationService';
 
 // Basic Types
 export type Language = 'en' | 'fa' | 'ar';
-export type Page = 'home' | 'prices' | 'map_finder' | 'test_recommender' | 'sample_dropoff' | 'ai_consultant' | 'content_hub' | 'our_experts' | 'partnerships' | 'blog' | 'article' | 'tools' | 'iron_snapp' | 'dashboard';
+export type Page = 'home' | 'prices' | 'map_finder' | 'test_recommender' | 'sample_dropoff' | 'ai_consultant' | 'content_hub' | 'our_experts' | 'partnerships' | 'blog' | 'article' | 'tools' | 'iron_snapp' | 'dashboard' | 'admin_dashboard' | 'user_dashboard';
 
 // User info from authentication
+export type UserRole = 'user' | 'admin';
+
 export interface User {
     name: string;
     email: string;
     picture?: string;
+    role?: UserRole;
+    phone?: string;
 }
 
 // SEO Types
@@ -431,7 +435,56 @@ const defaultTranslations: any = {
     },
     validation: { required: 'Required', email: 'Invalid email', passwordLength: 'Min 6 chars', fillRequiredFields: 'Please fill required fields' },
     toolsPage: { title: 'Steel Tools', subtitle: 'Calculators & Info', weightCalc: { title: 'Weight Calculator', label: 'Product Name', button: 'Calculate' }, shippingCalc: { title: 'Shipping Estimator', label: 'Route', button: 'Estimate' }, creditInfo: { title: 'Credit Info', desc: 'Payment options' } },
-    ironSnapp: { subtitle: 'Buy steel directly', form: { title: 'Request Quote', productLabel: 'Product', productPlaceholder: 'e.g. Rebar', qtyLabel: 'Qty (Tons)', locationLabel: 'Location', paymentLabel: 'Payment', paymentCash: 'Cash', paymentCheck: 'Check', paymentCredit: 'Credit', monthsLabel: 'Months', submit: 'Request' }, credit: { checking: 'Checking credit...', approved: 'Credit Approved', rejected: 'Credit Rejected', score: 'Score', reason: 'Reason' }, results: { title: 'Offers', score: 'Match', price: 'Price', delivery: 'Delivery', buy: 'Buy' } },
+    ironSnapp: { 
+      subtitle: 'Buy steel directly', 
+      form: { title: 'Request Quote', productLabel: 'Product', productPlaceholder: 'e.g. Rebar', qtyLabel: 'Qty (Tons)', qtyPlaceholder: 'Quantity (tons)', locationLabel: 'Location', locationPlaceholder: 'Location (City)', paymentLabel: 'Payment', paymentCash: 'Cash', paymentCheck: 'Check', paymentCredit: 'Credit', monthsLabel: 'Months', submit: 'Request', findSellers: 'Find Sellers', searching: 'Searching...' }, 
+      credit: { checking: 'Checking credit...', approved: 'Credit Approved', rejected: 'Credit Rejected', score: 'Score', reason: 'Reason' }, 
+      results: { title: 'Offers', score: 'Match', price: 'Price', delivery: 'Delivery', buy: 'Buy', total: 'Total', payment: 'Payment', youSave: 'You Save', vsMax: 'vs Max', highestPrice: 'Highest Price' },
+      recommendations: { bestPrice: 'Best Price!', belowAverage: 'Below Average', topRated: 'Top Rated', nearby: 'Nearby' },
+      filters: { title: 'Filters', allPrices: 'All Prices', budget: 'Budget', midRange: 'Mid-Range', premium: 'Premium', verifiedOnly: 'Verified Only', sellers: 'sellers', of: 'of' },
+      map: { title: 'Live Seller Map', best: 'Best', good: 'Good', high: 'High', yourLocation: 'Your Location', estimatedBenefit: 'Estimated Benefit', vsHighest: 'vs Highest', distance: 'Distance' },
+      noSellers: { title: 'Find Steel Sellers Near You', desc: 'Enter your product and location above to see sellers on the map' },
+      samples: { rebarTehran: 'Rebar - Tehran', beamIsfahan: 'Beam - Isfahan', sheetTabriz: 'Sheet - Tabriz' },
+      toasts: { sampleLoaded: 'Sample data loaded!', sellersFound: 'sellers found!', failedToFind: 'Failed to find sellers.' },
+      contactSeller: 'Contact Seller',
+      connectionServices: {
+        title: 'Transaction Services',
+        subtitle: 'Secure your purchase with professional services',
+        notary: {
+          title: 'Notary Services',
+          desc: 'Official document registration and authentication',
+          features: ['Contract notarization', 'Signature verification', 'Official stamps', 'Legal authentication']
+        },
+        lawyer: {
+          title: 'Legal Consultation',
+          desc: 'Professional legal advice for steel transactions',
+          features: ['Contract review', 'Dispute resolution', 'Legal guidance', 'Rights protection']
+        },
+        contract: {
+          title: 'Contract Drafting',
+          desc: 'Professional contract templates and customization',
+          features: ['Standard templates', 'Custom clauses', 'Payment terms', 'Delivery conditions']
+        },
+        insurance: {
+          title: 'Transaction Insurance',
+          desc: 'Protect your purchase against risks',
+          features: ['Cargo insurance', 'Payment protection', 'Quality guarantee', 'Dispute coverage']
+        },
+        escrow: {
+          title: 'Escrow Service',
+          desc: 'Secure payment holding until delivery',
+          features: ['Secure funds holding', 'Verified delivery', 'Dispute mediation', 'Refund guarantee']
+        },
+        inspection: {
+          title: 'Quality Inspection',
+          desc: 'Third-party quality verification',
+          features: ['Lab testing', 'Weight verification', 'Standards compliance', 'Quality certificate']
+        },
+        requestService: 'Request Service',
+        callNow: 'Call Now',
+        learnMore: 'Learn More'
+      }
+    },
     dashboard: {
         menu: { overview: 'Overview', financial: 'Financial', audit: 'Audit', customers: 'Customers', reports: 'Reports', system: 'System' },
         stats: { totalChecks: 'Total Checks', dueThisWeek: 'Due This Week', cashBalance: 'Cash Balance', controlScore: 'Control Score', documentsReviewed: 'Docs Reviewed', discrepancies: 'Discrepancies', fraudCases: 'Fraud Cases' },
@@ -499,7 +552,56 @@ const defaultTranslations: any = {
     },
     validation: { required: 'الزامی', email: 'ایمیل نامعتبر', passwordLength: 'حداقل ۶ کاراکتر', fillRequiredFields: 'لطفا فیلدهای الزامی را پر کنید' },
     toolsPage: { title: 'ابزارهای فولادی', subtitle: 'ماشین‌حساب و اطلاعات', weightCalc: { title: 'محاسبه وزن', label: 'نام محصول', button: 'محاسبه' }, shippingCalc: { title: 'تخمین هزینه حمل', label: 'مسیر', button: 'تخمین' }, creditInfo: { title: 'اطلاعات اعتباری', desc: 'روش‌های پرداخت' } },
-    ironSnapp: { subtitle: 'خرید مستقیم فولاد', form: { title: 'استعلام قیمت', productLabel: 'محصول', productPlaceholder: 'مثلا میلگرد', qtyLabel: 'مقدار (تن)', locationLabel: 'محل تحویل', paymentLabel: 'نحوه پرداخت', paymentCash: 'نقدی', paymentCheck: 'چک', paymentCredit: 'اعتباری', monthsLabel: 'مدت (ماه)', submit: 'استعلام' }, credit: { checking: 'بررسی اعتبار...', approved: 'تایید اعتبار', rejected: 'رد اعتبار', score: 'امتیاز', reason: 'دلیل' }, results: { title: 'پیشنهادات', score: 'تطابق', price: 'قیمت', delivery: 'تحویل', buy: 'خرید' } },
+    ironSnapp: { 
+      subtitle: 'خرید مستقیم فولاد', 
+      form: { title: 'استعلام قیمت', productLabel: 'محصول', productPlaceholder: 'مثلا میلگرد', qtyLabel: 'مقدار (تن)', qtyPlaceholder: 'مقدار (تن)', locationLabel: 'محل تحویل', locationPlaceholder: 'شهر مقصد', paymentLabel: 'نحوه پرداخت', paymentCash: 'نقدی', paymentCheck: 'چک', paymentCredit: 'اعتباری', monthsLabel: 'مدت (ماه)', submit: 'استعلام', findSellers: 'جستجوی فروشندگان', searching: 'در حال جستجو...' }, 
+      credit: { checking: 'بررسی اعتبار...', approved: 'تایید اعتبار', rejected: 'رد اعتبار', score: 'امتیاز', reason: 'دلیل' }, 
+      results: { title: 'پیشنهادات', score: 'تطابق', price: 'قیمت', delivery: 'تحویل', buy: 'خرید', total: 'جمع کل', payment: 'پرداخت', youSave: 'صرفه‌جویی شما', vsMax: 'نسبت به حداکثر', highestPrice: 'بالاترین قیمت' },
+      recommendations: { bestPrice: 'بهترین قیمت!', belowAverage: 'زیر میانگین', topRated: 'برترین امتیاز', nearby: 'نزدیک شما' },
+      filters: { title: 'فیلترها', allPrices: 'همه قیمت‌ها', budget: 'اقتصادی', midRange: 'متوسط', premium: 'ویژه', verifiedOnly: 'فقط تایید شده', sellers: 'فروشنده', of: 'از' },
+      map: { title: 'نقشه زنده فروشندگان', best: 'عالی', good: 'خوب', high: 'بالا', yourLocation: 'موقعیت شما', estimatedBenefit: 'سود تخمینی', vsHighest: 'نسبت به بالاترین', distance: 'فاصله' },
+      noSellers: { title: 'فروشندگان فولاد را پیدا کنید', desc: 'محصول و موقعیت خود را وارد کنید تا فروشندگان را روی نقشه ببینید' },
+      samples: { rebarTehran: 'میلگرد - تهران', beamIsfahan: 'تیرآهن - اصفهان', sheetTabriz: 'ورق - تبریز' },
+      toasts: { sampleLoaded: 'داده نمونه بارگذاری شد!', sellersFound: 'فروشنده یافت شد!', failedToFind: 'خطا در یافتن فروشنده.' },
+      contactSeller: 'تماس با فروشنده',
+      connectionServices: {
+        title: 'خدمات تکمیلی معامله',
+        subtitle: 'معامله امن با خدمات تخصصی',
+        notary: {
+          title: 'خدمات دفترخانه',
+          desc: 'ثبت رسمی اسناد و مدارک معامله',
+          features: ['ثبت رسمی قرارداد', 'تایید امضا', 'مهر رسمی', 'احراز هویت قانونی']
+        },
+        lawyer: {
+          title: 'مشاوره حقوقی',
+          desc: 'مشاوره تخصصی حقوقی برای معاملات فولاد',
+          features: ['بررسی قرارداد', 'حل اختلاف', 'راهنمایی قانونی', 'حفظ حقوق']
+        },
+        contract: {
+          title: 'تنظیم قرارداد',
+          desc: 'قالب‌های حرفه‌ای قرارداد و سفارشی‌سازی',
+          features: ['قالب‌های استاندارد', 'بندهای سفارشی', 'شرایط پرداخت', 'شرایط تحویل']
+        },
+        insurance: {
+          title: 'بیمه معامله',
+          desc: 'حفاظت از خرید در برابر ریسک‌ها',
+          features: ['بیمه حمل و نقل', 'حفاظت پرداخت', 'ضمانت کیفیت', 'پوشش اختلافات']
+        },
+        escrow: {
+          title: 'سپرده امانی',
+          desc: 'نگهداری امن وجه تا تحویل کالا',
+          features: ['نگهداری امن وجوه', 'تایید تحویل', 'میانجیگری اختلاف', 'ضمانت بازپرداخت']
+        },
+        inspection: {
+          title: 'بازرسی کیفیت',
+          desc: 'تایید کیفیت توسط شخص ثالث',
+          features: ['آزمایش آزمایشگاهی', 'تایید وزن', 'تطابق با استاندارد', 'گواهی کیفیت']
+        },
+        requestService: 'درخواست خدمت',
+        callNow: 'تماس فوری',
+        learnMore: 'اطلاعات بیشتر'
+      }
+    },
     dashboard: {
         menu: { overview: 'نمای کلی', financial: 'مالی', audit: 'حسابرسی', customers: 'مشتریان', reports: 'گزارش‌ها', system: 'سیستم' },
         stats: { totalChecks: 'مجموع چک‌ها', dueThisWeek: 'سررسید هفته', cashBalance: 'موجود نقد', controlScore: 'امتیاز کنترل', documentsReviewed: 'اسناد بررسی شده', discrepancies: 'مغایرت‌ها', fraudCases: 'موارد تقلب' },
