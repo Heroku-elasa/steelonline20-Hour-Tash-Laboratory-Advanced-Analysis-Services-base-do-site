@@ -192,7 +192,23 @@ Required environment variables:
 - `SUPABASE_URL`: Database URL (has default)
 - `SUPABASE_ANON_KEY`: Supabase anonymous key (has default)
 
-Deployment targets:
-- Cloudflare (mentioned in metadata)
-- Replit (this platform)
-- Standard Node.js hosting
+## Deployment Configuration (Updated Dec 2025)
+
+### Cloudflare Pages (Frontend Only)
+- Build command: `npm run build`
+- Output directory: `dist`
+- Uses mock data when backend not available
+- See `CLOUDFLARE_DEPLOYMENT.md` for full instructions
+- Files to exclude: `pyproject.toml`, `backend/`, `*.py`
+
+### Replit Deployment (Full-Stack)
+- Build: `npm run build`
+- Run: `gunicorn --bind=0.0.0.0:5000 --workers=2 backend.scraper_service:app`
+- Flask serves both API endpoints and static frontend files
+- Deployment type: Autoscale
+
+### Required Environment Variables
+- `API_KEY`: Gemini API key (mandatory for AI features)
+- `SUPABASE_URL`: Database URL (has default)
+- `SUPABASE_ANON_KEY`: Supabase anonymous key (has default)
+- `VITE_API_BASE_URL`: Backend URL for Cloudflare deployment (optional)

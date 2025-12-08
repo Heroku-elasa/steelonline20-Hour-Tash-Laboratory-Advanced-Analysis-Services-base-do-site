@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -13,7 +13,9 @@ import os
 import time
 import random
 
-app = Flask(__name__)
+DIST_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'dist')
+
+app = Flask(__name__, static_folder=DIST_DIR, static_url_path='')
 CORS(app)
 
 SELLER_CACHE = {}
@@ -272,6 +274,17 @@ def get_steel_prices():
 def get_warehouses():
     return jsonify(WAREHOUSES)
 
+@app.route('/')
+def serve_index():
+    return send_from_directory(DIST_DIR, 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    if os.path.exists(os.path.join(DIST_DIR, path)):
+        return send_from_directory(DIST_DIR, path)
+    return send_from_directory(DIST_DIR, 'index.html')
+
 if __name__ == '__main__':
-    port = int(os.environ.get('SCRAPER_PORT', 8000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    port = int(os.environ.get('PORT', os.environ.get('SCRAPER_PORT', 8000)))
+    debug = os.environ.get('FLASK_DEBUG', 'true').lower() == 'true'
+    app.run(host='0.0.0.0', port=port, debug=debug)

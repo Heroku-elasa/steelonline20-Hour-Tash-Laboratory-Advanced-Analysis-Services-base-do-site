@@ -32,7 +32,7 @@ export interface WarehouseLocation {
   is_active: boolean;
 }
 
-const API_BASE = '';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 export async function fetchLatestPrices(): Promise<SteelPrice[]> {
   try {
