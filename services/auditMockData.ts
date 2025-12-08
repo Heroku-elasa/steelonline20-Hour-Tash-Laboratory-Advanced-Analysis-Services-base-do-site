@@ -78,19 +78,18 @@ export const mockStats: DashboardStats = {
   internalControlScore: 88,
   // Legacy fields
   dueThisWeekCount: 12,
-  dueThisWeekAmount: 12000, // Ensure this is a number, not a string
+  dueThisWeekAmount: 12000, // Ensure this is a number
   bouncedAmount: 3400,
   controlScore: 88,
   docsReviewed: 450
 };
 
-// Export getters with 'any' return type to bypass strict type checking in legacy components
-// This resolves TS2305 (missing member) and TS2367 (type overlap errors)
-export const getFinancialChecks = (): any[] => mockChecks;
-export const getAuditAlerts = (): any[] => mockAlerts;
-export const getAuditStats = (): any => mockStats;
+// Export getters with specific types
+export const getFinancialChecks = (): CheckItem[] => mockChecks;
+export const getAuditAlerts = (): AuditAlert[] => mockAlerts;
+export const getAuditStats = (): DashboardStats => mockStats;
 
-export const getFraudCases = (): any[] => [
+export const getFraudCases = (): FraudCase[] => [
     {
         id: 1,
         title: "Potential Duplicate Invoice",

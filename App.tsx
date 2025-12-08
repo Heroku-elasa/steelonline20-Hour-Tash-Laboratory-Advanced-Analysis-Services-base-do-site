@@ -26,8 +26,11 @@ const ArticlePage = lazy(() => import('./components/ArticlePage'));
 const ToolsPage = lazy(() => import('./components/ToolsPage'));
 const IronSnappPage = lazy(() => import('./components/IronSnappPage'));
 const DashboardPage = lazy(() => import('./components/DashboardPage'));
+const PricesPage = lazy(() => import('./components/PricesPage'));
+const MapFinderPage = lazy(() => import('./components/MapFinderPage'));
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const apiKey = process.env.API_KEY || '';
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 const systemInstruction = `You are a professional, helpful, and knowledgeable AI assistant for "Steel Online 20", a leading online marketplace for steel and iron products in Iran. Your purpose is to assist users (builders, contractors, traders) by providing accurate information about steel prices, product specifications, and purchasing processes.
 
@@ -204,6 +207,9 @@ const App: React.FC = () => {
     setIsStreaming(true);
 
     try {
+        if (!ai) {
+            throw new Error('API key not configured. Please add your Gemini API key in secrets.');
+        }
         const responseStream = await ai.models.generateContentStream({
             model: 'gemini-2.5-flash',
             contents: historyForApi,
@@ -437,6 +443,10 @@ const App: React.FC = () => {
           switch (currentPage) {
             case 'home':
               return <HomePage setPage={setPage} articles={ARTICLES} onSelectArticle={handleSelectArticle} />;
+            case 'prices':
+              return <PricesPage setPage={setPage} />;
+            case 'map_finder':
+              return <MapFinderPage setPage={setPage} />;
             case 'iron_snapp':
               return <IronSnappPage />;
             case 'test_recommender':

@@ -3,6 +3,7 @@ import React from 'react';
 import { useLanguage, Page, Article } from '../types';
 import SEO from './SEO';
 import SchemaMarkup from './SchemaMarkup';
+import PriceDashboard from './PriceDashboard';
 
 interface HomePageProps {
     setPage: (page: Page) => void;

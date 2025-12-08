@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { 
     TestSubmissionFormInputs,
@@ -19,7 +18,15 @@ import {
     SEOAnalysisResult,
 } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const apiKey = process.env.API_KEY || '';
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
+const checkAI = () => {
+    if (!ai) {
+        throw new Error('API key not configured. Please add your Gemini API key.');
+    }
+    return ai;
+};
 
 // Helper to robustly extract JSON from response text
 const extractJson = (text: string): string => {
@@ -77,12 +84,12 @@ const seoAnalysisSchema = {
         strategy: { 
             type: Type.ARRAY, 
             items: { type: Type.STRING },
-            description: "List of 3 specific technical or content SEO strategies for this page." 
+            description: "List of 3 specific technical or content SEO strategies based on the page metadata." 
         },
         directories: { 
             type: Type.ARRAY, 
             items: { type: Type.STRING },
-            description: "List of 3 relevant local directories or platforms to register this site on (based on being an Iranian steel site)."
+            description: "List of 3 authoritative local directories or platforms to register on for backlinks."
         },
         keywords: { 
             type: Type.ARRAY, 
@@ -99,18 +106,22 @@ export const analyzeSEOStrategy = async (
 ): Promise<SEOAnalysisResult['aiRecommendations']> => {
     const prompt = `
         Act as a Senior SEO Specialist for the Industrial/Steel sector in Iran.
-        Analyze the following page metadata and content for "Steel Online 20":
-        - Title: ${pageData.title}
-        - Description: ${pageData.description}
-        - H1: ${pageData.h1}
-        - Content Snippet: ${pageData.contentSample.substring(0, 300)}...
+        Perform a comprehensive analysis of the following page metadata and content for "Steel Online 20".
+        
+        Page Metadata:
+        - Page Title: "${pageData.title}"
+        - Meta Description: "${pageData.description}"
+        - H1 Tag: "${pageData.h1}"
+        - Content Sample: "${pageData.contentSample.substring(0, 500)}..."
 
-        Provide specific advice in ${language}.
-        1. "strategy": Give 3 specific improvements (e.g. "Add 'Price of Rebar' to title", "Improve H2 hierarchy").
-        2. "directories": Recommend 3 authoritative sites/directories where this business SHOULD register for backlinks (e.g. Ketab Avval, Wikipedia Persian, specialized steel forums).
-        3. "keywords": List 5 relevant LSI keywords to target.
+        Your Task:
+        1. Evaluate the Title, Description, and H1 for keyword optimization and click-through rate (CTR).
+        2. Generate an actionable SEO Strategy based *specifically* on the provided metadata (e.g., "Shorten title to X", "Include keyword Y in Description").
+        3. Identify 3 high-value local directories or platforms where this specific page/business should be registered to improve off-page SEO (e.g. Ketab Avval, Wikipedia Persian, specialized steel forums).
+        4. Suggest 5 LSI keywords relevant to the content.
 
-        Return JSON matching the schema.
+        Provide the output in ${language}.
+        Return ONLY valid JSON matching the schema.
     `;
 
     const response = await ai.models.generateContent({

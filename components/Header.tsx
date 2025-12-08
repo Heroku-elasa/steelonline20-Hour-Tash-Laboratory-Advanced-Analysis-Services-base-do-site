@@ -37,13 +37,11 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({ currentPage, setPage, isAuthent
   
   const navLinks: { key: Page, text: string, action: () => void }[] = [
     { key: 'home', text: t('header.home'), action: () => handlePageChange('home') },
+    { key: 'prices', text: 'قیمت آهن', action: () => handlePageChange('prices') },
     { key: 'iron_snapp', text: t('header.ironSnapp'), action: () => handlePageChange('iron_snapp') },
-    { key: 'test_recommender', text: t('header.recommendationEngine'), action: () => handlePageChange('test_recommender') },
-    { key: 'sample_dropoff', text: t('header.distributorFinder'), action: () => handlePageChange('sample_dropoff') },
+    { key: 'map_finder', text: 'یافتن انبار', action: () => handlePageChange('map_finder') },
     { key: 'tools', text: t('header.tools'), action: () => handlePageChange('tools') },
-    { key: 'content_hub', text: t('header.contentHub'), action: () => handlePageChange('content_hub') },
     { key: 'blog', text: t('header.blog'), action: () => handlePageChange('blog') },
-    { key: 'our_experts', text: t('header.ourTeam'), action: () => handlePageChange('our_experts') },
   ];
 
   const SocialIcon: React.FC<{ href: string; children: React.ReactNode; label: string }> = ({ href, children, label }) => (

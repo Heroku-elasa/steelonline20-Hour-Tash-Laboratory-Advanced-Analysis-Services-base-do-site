@@ -38,7 +38,7 @@ const SEOChecker: React.FC = () => {
         setResult(null);
         setShowHistory(false);
 
-        // 1. Scrape Current Page
+        // 1. Scrape Current Page Metadata
         const title = document.title;
         const description = document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
         const h1 = document.querySelector('h1')?.innerText || '';
@@ -47,7 +47,7 @@ const SEOChecker: React.FC = () => {
         const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href');
         const schema = document.querySelector('script[type="application/ld+json"]');
 
-        // 2. Metrics Logic
+        // 2. Metrics Logic (Basic checks)
         let score = 100;
         
         // Define initial metrics structure
@@ -106,10 +106,11 @@ const SEOChecker: React.FC = () => {
              metrics.canonical.message = 'Canonical tag present.';
         }
 
-        // 3. AI Recommendations
+        // 3. AI Recommendations (Strategy & Directories)
         try {
             const contentSample = document.body.innerText.replace(/\s+/g, ' ').substring(0, 1000);
             
+            // Pass the scraped metadata to the AI service
             const aiData = await analyzeSEOStrategy({
                 title, description, h1, contentSample
             }, language);
@@ -122,13 +123,12 @@ const SEOChecker: React.FC = () => {
 
             setResult(finalResult);
 
-            // Save to Supabase
+            // Save to Supabase (Database)
             saveSEOReport(window.location.href, finalResult).then(({ error }) => {
                 if (!error) {
                     addToast("Report saved to DB.", "success");
                 } else {
                     console.error("Save failed:", error);
-                    // Improved error message
                     addToast(`Save failed: ${error.message || JSON.stringify(error)}`, "error");
                 }
             });
