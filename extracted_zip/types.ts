@@ -4,7 +4,7 @@ import { fetchSiteTranslations } from './services/translationService';
 
 // Basic Types
 export type Language = 'en' | 'fa' | 'ar';
-export type Page = 'home' | 'prices' | 'map_finder' | 'test_recommender' | 'sample_dropoff' | 'ai_consultant' | 'content_hub' | 'our_experts' | 'partnerships' | 'blog' | 'article' | 'tools' | 'iron_snapp' | 'dashboard';
+export type Page = 'home' | 'test_recommender' | 'sample_dropoff' | 'ai_consultant' | 'content_hub' | 'our_experts' | 'partnerships' | 'blog' | 'article' | 'tools' | 'iron_snapp' | 'dashboard';
 
 // User info from authentication
 export interface User {

@@ -10,28 +10,17 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve('./'),
-        '@assets': path.resolve('./attached_assets'),
       },
     },
     define: {
       'process.env.API_KEY': JSON.stringify(env.API_KEY),
-      'process.env.SUPABASE_URL': JSON.stringify(env.SUPABASE_URL || 'https://tejibsqmdxuehluneayl.supabase.co'),
-      'process.env.SUPABASE_ANON_KEY': JSON.stringify(env.SUPABASE_ANON_KEY || ''),
     },
     build: {
       outDir: 'dist',
       emptyOutDir: true,
     },
     server: {
-      port: 5000,
-      host: '0.0.0.0',
-      allowedHosts: true,
-      proxy: {
-        '/api': {
-          target: 'http://localhost:8000',
-          changeOrigin: true,
-        }
-      }
+      port: 3000,
     }
   };
 });
