@@ -1,0 +1,21 @@
+
+{
+  "short_name": "Steel20",
+  "name": "Steel Online 20",
+  "icons": [
+    {
+      "src": "https://i.sstatic.net/zhhxJn5n.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://i.sstatic.net/zhhxJn5n.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#9D003D",
+  "background_color": "#f1f5f9"
+}
